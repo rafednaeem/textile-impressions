@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { ShoppingBag, Menu, X } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { ShoppingBag, Menu, X, User, LogOut, Package, Heart, MapPin, Settings, Shield } from "lucide-react"
 import { useCart } from "@/hooks/useCart"
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import CartDrawer from "./CartDrawer"
+import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
@@ -20,17 +21,57 @@ const navLinks = [
 export default function Header() {
   const { itemCount } = useCart()
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 140)
   })
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUser(data.user)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [supabase])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   const isHome = pathname === "/"
   const showHeader = !isHome || scrolled
+  const isLoggedIn = !!user
+  const isAdmin = user?.app_metadata?.role === "admin"
+  const userInitial = (user?.user_metadata?.full_name || user?.email || "?")[0].toUpperCase()
+
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    await supabase.auth.signOut()
+    setUser(null)
+    setUserMenuOpen(false)
+    setSigningOut(false)
+    router.push("/")
+  }
 
   return (
     <>
@@ -57,7 +98,100 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={userMenuRef}>
+              {isLoggedIn ? (
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white transition-colors hover:bg-brand-forest/90"
+                  aria-label="Account menu"
+                >
+                  {userInitial}
+                </button>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo"
+                  aria-label="Sign in"
+                >
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
+
+              <AnimatePresence>
+                {userMenuOpen && isLoggedIn && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-white shadow-lg"
+                  >
+                    <div className="border-b border-border px-4 py-3">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {user.user_metadata?.full_name || "Account"}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/account/orders"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Package className="h-4 w-4" />
+                        My Orders
+                      </Link>
+                      <Link
+                        href="/account/wishlist"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Heart className="h-4 w-4" />
+                        Wishlist
+                      </Link>
+                      <Link
+                        href="/account/addresses"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Addresses
+                      </Link>
+                      <Link
+                        href="/account"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Settings className="h-4 w-4" />
+                        My Account
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-brand-indigo transition-colors hover:bg-muted"
+                        >
+                          <Shield className="h-4 w-4" />
+                          Admin Panel
+                        </Link>
+                      )}
+                    </div>
+                    <div className="border-t border-border py-1">
+                      <button
+                        onClick={handleSignOut}
+                        disabled={signingOut}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {signingOut ? "Signing out..." : "Sign Out"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => setCartOpen(true)}
               className="relative p-2 text-muted-foreground transition-colors hover:text-brand-indigo"
@@ -109,13 +243,55 @@ export default function Header() {
                 </Link>
               ))}
               <hr className="my-2" />
-              <Link
-                href="/auth/login"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo"
-              >
-                Sign In
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white">
+                      {userInitial}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{user.user_metadata?.full_name || "Account"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <Link href="/account/orders" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo">
+                    <Package className="h-4 w-4" /> My Orders
+                  </Link>
+                  <Link href="/account/wishlist" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo">
+                    <Heart className="h-4 w-4" /> Wishlist
+                  </Link>
+                  <Link href="/account" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo">
+                    <Settings className="h-4 w-4" /> My Account
+                  </Link>
+                  {isAdmin && (
+                    <Link href="/admin" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-brand-indigo transition-colors hover:bg-muted">
+                      <Shield className="h-4 w-4" /> Admin Panel
+                    </Link>
+                  )}
+                  <button
+                    onClick={async () => { await handleSignOut(); setMobileOpen(false) }}
+                    disabled={signingOut}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo"
+                  >
+                    <LogOut className="h-4 w-4" /> {signingOut ? "Signing out..." : "Sign Out"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-brand-indigo">
+                    <User className="h-4 w-4" /> Sign In
+                  </Link>
+                  <Link href="/auth/signup" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-lg bg-brand-forest px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-forest/90">
+                    Create Account
+                  </Link>
+                </>
+              )}
             </nav>
           </motion.div>
         )}
