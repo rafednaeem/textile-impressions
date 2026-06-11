@@ -1,0 +1,60 @@
+import Script from "next/script"
+import type { Metadata } from "next"
+import { storeName, baseUrl, whatsappNumber } from "@/lib/constants"
+import HomeContent from "./HomeContent"
+
+export const revalidate = 600
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: storeName + " — Handcrafted Pakistani Fashion",
+    description:
+      "Discover handcrafted Pakistani fashion blending traditional craftsmanship with contemporary elegance. Shop our curated collection of premium textiles and garments.",
+    openGraph: {
+      title: storeName,
+      description:
+        "Discover handcrafted Pakistani fashion blending traditional craftsmanship with contemporary elegance.",
+      url: baseUrl,
+      siteName: storeName,
+      images: [{ url: `${baseUrl}/og-home.jpg`, width: 1200, height: 630 }],
+      locale: "en_PK",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: storeName,
+      description:
+        "Discover handcrafted Pakistani fashion blending traditional craftsmanship with contemporary elegance.",
+    },
+  }
+}
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: storeName,
+  url: baseUrl,
+  logo: `${baseUrl}/logo.png`,
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: `+${whatsappNumber}`,
+    contactType: "customer service",
+    availableLanguage: ["English", "Urdu"],
+  },
+  sameAs: [
+    `https://wa.me/${whatsappNumber}`,
+    "https://facebook.com/textileimpressions",
+    "https://instagram.com/textileimpressions",
+  ],
+}
+
+export default function HomePage() {
+  return (
+    <>
+      <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
+        {JSON.stringify(organizationSchema)}
+      </Script>
+      <HomeContent />
+    </>
+  )
+}
