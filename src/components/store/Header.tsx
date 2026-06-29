@@ -7,7 +7,8 @@ import { useCart } from "@/hooks/useCart"
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion"
 import { usePathname, useRouter } from "next/navigation"
 import CartDrawer from "./CartDrawer"
-import { createClient } from "@/lib/supabase/client"`r`nimport type { User as SupabaseUser } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
