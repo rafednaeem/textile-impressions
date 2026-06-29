@@ -69,10 +69,11 @@ export async function POST(request: Request) {
     .single()
 
   if (productError) {
+    console.error("Supabase error creating product:", productError)
     if (productError.code === "23505") {
       return NextResponse.json({ error: "Product with this slug or SKU already exists" }, { status: 409 })
     }
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
+    return NextResponse.json({ error: `Failed to create product: ${productError.message} (${productError.details || ''})` }, { status: 500 })
   }
 
   if (images?.length) {

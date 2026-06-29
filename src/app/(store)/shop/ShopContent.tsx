@@ -307,7 +307,10 @@ export default function ShopContent() {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div
+              className="flex flex-col items-center justify-center py-20 text-center"
+              data-testid="shop-empty-state"
+            >
               <div className="rounded-full bg-muted p-4">
                 <SlidersHorizontal className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -342,3 +345,4 @@ export default function ShopContent() {
     </div>
   )
 }
+

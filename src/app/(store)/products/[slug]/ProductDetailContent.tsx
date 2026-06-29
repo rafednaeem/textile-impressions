@@ -255,12 +255,18 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
         </div>
 
         <div className="mt-8 lg:mt-0 lg:w-1/2">
-          <h1 className="font-heading text-3xl font-bold text-brand-forest">
+          <h1
+            className="font-heading text-3xl font-bold text-brand-forest"
+            data-testid="product-heading"
+          >
             {product.name}
           </h1>
 
           <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-brand-forest">
+            <span
+              className="text-2xl font-bold text-brand-forest"
+              data-testid="product-price"
+            >
               Rs. {displayPrice.toLocaleString()}
             </span>
             {hasDiscount && (
@@ -288,7 +294,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
               <h3 className="mb-2 text-sm font-medium">
                 Size{" "}
                 <span className="font-normal text-muted-foreground">
-                  — {selectedSize || "Select"}
+                  - {selectedSize || "Select"}
                 </span>
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -314,7 +320,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
               <h3 className="mb-2 text-sm font-medium">
                 Color{" "}
                 <span className="font-normal text-muted-foreground">
-                  — {selectedColor || "Select"}
+                  - {selectedColor || "Select"}
                 </span>
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -367,6 +373,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
+              data-testid="add-to-cart-button"
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-all hover:bg-brand-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <AnimatePresence mode="wait">
@@ -462,3 +469,4 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
     </div>
   )
 }
+

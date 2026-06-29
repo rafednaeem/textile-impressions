@@ -71,6 +71,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="group relative"
+      data-testid="product-card"
     >
       <Link href={`/products/${slug}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
@@ -115,6 +116,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
+              data-testid="quick-add-button"
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-indigo py-2.5 text-sm font-medium text-brand-ivory shadow-lg transition-colors hover:bg-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShoppingBag className="h-4 w-4" />

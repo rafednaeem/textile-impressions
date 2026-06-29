@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -71,7 +71,7 @@ export default function SkillsStudioContent() {
               Learn. Create. Earn.
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-brand-ivory/80">
-              Professional textile craft training for everyone. From natural dyeing to block printing — build skills that create livelihoods.
+              Professional textile craft training for everyone. From natural dyeing to block printing - build skills that create livelihoods.
             </p>
           </motion.div>
         </div>
@@ -128,7 +128,10 @@ export default function SkillsStudioContent() {
           </div>
         </section>
       ) : filtered.length === 0 ? (
-        <section className="mx-auto max-w-7xl px-4 pb-20 text-center sm:px-6 lg:px-8">
+        <section
+          className="mx-auto max-w-7xl px-4 pb-20 text-center sm:px-6 lg:px-8"
+          data-testid="workshops-empty-state"
+        >
           <div className="rounded-full bg-muted p-4 mx-auto w-fit">
             <Calendar className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -217,6 +220,7 @@ function WorkshopCard({ workshop }: { workshop: Workshop }) {
       <motion.article
         whileHover={{ y: -4 }}
         className="group overflow-hidden rounded-xl border border-border bg-white shadow-sm transition-shadow hover:shadow-lg"
+        data-testid="workshop-card"
       >
         <div className="relative aspect-[16/10] overflow-hidden bg-muted">
           {workshop.cover_image_url ? (
@@ -304,3 +308,4 @@ function WorkshopCard({ workshop }: { workshop: Workshop }) {
     </Link>
   )
 }
+

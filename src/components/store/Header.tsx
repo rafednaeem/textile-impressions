@@ -7,7 +7,7 @@ import { useCart } from "@/hooks/useCart"
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion"
 import { usePathname, useRouter } from "next/navigation"
 import CartDrawer from "./CartDrawer"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"`r`nimport type { User as SupabaseUser } from "@supabase/supabase-js"
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
@@ -26,7 +26,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -196,6 +196,7 @@ export default function Header() {
               onClick={() => setCartOpen(true)}
               className="relative p-2 text-muted-foreground transition-colors hover:text-brand-indigo"
               aria-label="Open cart"
+              data-testid="cart-trigger"
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
@@ -301,3 +302,4 @@ export default function Header() {
     </>
   )
 }
+

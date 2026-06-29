@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -16,6 +16,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState("")
+  const [isPendingVerification, setIsPendingVerification] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState("")
 
   const {
     register,
@@ -28,7 +30,7 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupInput) => {
     setError("")
     const supabase = createClient()
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -45,10 +47,67 @@ export default function SignupPage() {
       return
     }
 
+    if (authData.user && !authData.session) {
+      setRegisteredEmail(data.email)
+      setIsPendingVerification(true)
+      toast.success("Please verify your email address.")
+      return
+    }
+
     toast.success("Account created! Welcome to Textile Impressions.")
     router.push("/account?welcome=true")
     router.refresh()
   }
+
+  if (isPendingVerification) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12"
+      >
+        <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-forest/10 text-brand-forest">
+            <Mail className="h-8 w-8 animate-bounce" />
+          </div>
+
+          <h1 className="font-heading text-3xl font-bold text-brand-forest">Verify Your Email</h1>
+          
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            We have sent a verification link to:
+          </p>
+          
+          <p className="mt-2 text-base font-semibold text-brand-umber bg-brand-ivory/80 rounded-md py-1.5 px-3 inline-block">
+            {registeredEmail}
+          </p>
+          
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            Please check your inbox (and spam folder) and click the link to confirm your account and log in.
+          </p>
+
+          <div className="mt-8 space-y-4">
+            <Link
+              href="/auth/login"
+              className="flex w-full items-center justify-center rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-forest/90"
+            >
+              Go to Sign In
+            </Link>
+            
+            <button
+              onClick={() => {
+                setIsPendingVerification(false)
+                setError("")
+              }}
+              className="text-xs text-muted-foreground underline hover:text-brand-umber transition-colors"
+            >
+              Sign up with a different email
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
 
   return (
     <motion.div
