@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { isCodEligible } from "@/lib/constants"
 
@@ -11,6 +12,8 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient()
+    const serviceRole = getServiceRoleClient()
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
       ...(guestEmail ? { guest_email: guestEmail } : {}),
     }
 
-    const { data: _order, error: orderError } = await supabase
+    const { data: _order, error: orderError } = await serviceRole
       .from("orders")
       .insert({
         user_id: user?.id || null,
@@ -84,14 +87,14 @@ export async function POST(request: Request) {
       total_price: item.unit_price * item.quantity,
     }))
 
-    const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
+    const { error: itemsError } = await serviceRole.from("order_items").insert(orderItems)
     if (itemsError) {
       console.error("Order items insert error:", JSON.stringify(itemsError))
-      await supabase.from("orders").delete().eq("id", order.id)
+      await serviceRole.from("orders").delete().eq("id", order.id)
       return NextResponse.json({ error: "Failed to create order items", details: itemsError?.message, code: itemsError?.code }, { status: 500 })
     }
 
-    const { error: timelineError } = await supabase.from("order_timeline").insert({
+    const { error: timelineError } = await serviceRole.from("order_timeline").insert({
       order_id: order.id,
       status: order.status,
       note: user ? "Order created" : "Guest order created",
@@ -102,7 +105,7 @@ export async function POST(request: Request) {
     }
 
     if (paymentMethod === "bank_transfer") {
-      const { error: payErr } = await supabase.from("payments").insert({
+      const { error: payErr } = await serviceRole.from("payments").insert({
         order_id: order.id,
         method: "bank_transfer",
         status: "submitted",
@@ -111,7 +114,7 @@ export async function POST(request: Request) {
       })
       if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
     } else if (paymentMethod === "cod") {
-      const { error: payErr } = await supabase.from("payments").insert({
+      const { error: payErr } = await serviceRole.from("payments").insert({
         order_id: order.id,
         method: "cod",
         status: "pending",
