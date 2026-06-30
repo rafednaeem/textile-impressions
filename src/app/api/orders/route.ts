@@ -74,20 +74,46 @@ export async function POST(request: Request) {
 
     const order = _order as unknown as { id: string; order_number: string; status: string }
 
-    const orderItems = items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      variant_id: item.variant_id || null,
-      product_name: item.product_name,
-      product_image: item.product_image || null,
-      size: item.size || null,
-      color: item.color || null,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      total_price: item.unit_price * item.quantity,
-    }))
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-    const { error: itemsError } = await serviceRole.from("order_items").insert(orderItems)
+    const resolvedItems = await Promise.all(
+      items.map(async (item: any) => {
+        let productId = item.product_id
+        if (!uuidRegex.test(productId)) {
+          const { data: product } = await serviceRole
+            .from("products")
+            .select("id")
+            .eq("slug", productId)
+            .maybeSingle()
+          if (product) {
+            productId = product.id
+          } else {
+            const { data: productByName } = await serviceRole
+              .from("products")
+              .select("id")
+              .eq("name", item.product_name)
+              .maybeSingle()
+            if (productByName) {
+              productId = productByName.id
+            }
+          }
+        }
+        return {
+          order_id: order.id,
+          product_id: productId,
+          variant_id: item.variant_id || null,
+          product_name: item.product_name,
+          product_image: item.product_image || null,
+          size: item.size || null,
+          color: item.color || null,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.unit_price * item.quantity,
+        }
+      })
+    )
+
+    const { error: itemsError } = await serviceRole.from("order_items").insert(resolvedItems)
     if (itemsError) {
       console.error("Order items insert error:", JSON.stringify(itemsError))
       await serviceRole.from("orders").delete().eq("id", order.id)
