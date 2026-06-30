@@ -1,4 +1,37 @@
--- Guest checkout support: make orders.user_id nullable and update RLS policies
+-- Guest checkout support: make orders.user_id nullable, fix GRANTs, update RLS policies
+
+-- 0. Grant table-level permissions (lost when tables were dropped/recreated in 00005)
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT USAGE ON SCHEMA auth TO anon;
+GRANT USAGE ON SCHEMA auth TO authenticated;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.orders TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.orders TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_items TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payments TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_timeline TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_timeline TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.carts TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.carts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cart_items TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cart_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wishlists TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wishlists TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.addresses TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.addresses TO authenticated;
+GRANT SELECT ON public.profiles TO anon;
+GRANT SELECT ON public.profiles TO authenticated;
+GRANT SELECT ON public.products TO anon;
+GRANT SELECT ON public.products TO authenticated;
+GRANT SELECT ON public.product_images TO anon;
+GRANT SELECT ON public.product_images TO authenticated;
+GRANT SELECT ON public.product_variants TO anon;
+GRANT SELECT ON public.product_variants TO authenticated;
+GRANT SELECT ON public.categories TO anon;
+GRANT SELECT ON public.categories TO authenticated;
 
 -- 1. Make user_id nullable on orders
 ALTER TABLE public.orders ALTER COLUMN user_id DROP NOT NULL;
@@ -32,7 +65,7 @@ CREATE POLICY "payments_insert_own" ON public.payments
     )
   );
 
--- 5. Add order_timeline INSERT policy for guest orders and authenticated order owners
+-- 5. Update order_timeline INSERT policy for guest orders and authenticated order owners
 DROP POLICY IF EXISTS "order_timeline_insert_admin" ON public.order_timeline;
 CREATE POLICY "order_timeline_insert_admin" ON public.order_timeline
   FOR INSERT WITH CHECK (
@@ -42,6 +75,3 @@ CREATE POLICY "order_timeline_insert_admin" ON public.order_timeline
       AND (orders.user_id IS NULL OR orders.user_id = auth.uid())
     )
   );
-
--- 6. Add order_number sequence for guest orders
--- (already exists via UNIQUE constraint, but ensure order_number generation works)
