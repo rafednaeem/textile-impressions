@@ -59,8 +59,8 @@ export async function POST(request: Request) {
       .single()
 
     if (orderError || !_order) {
-      console.error("Order insert error:", orderError)
-      return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+      console.error("Order insert error:", JSON.stringify(orderError))
+      return NextResponse.json({ error: "Failed to create order", details: orderError?.message, code: orderError?.code }, { status: 500 })
     }
 
     const order = _order as unknown as { id: string; order_number: string; status: string }
@@ -80,32 +80,37 @@ export async function POST(request: Request) {
 
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
     if (itemsError) {
-      console.error("Order items insert error:", itemsError)
+      console.error("Order items insert error:", JSON.stringify(itemsError))
       await supabase.from("orders").delete().eq("id", order.id)
-      return NextResponse.json({ error: "Failed to create order items" }, { status: 500 })
+      return NextResponse.json({ error: "Failed to create order items", details: itemsError?.message, code: itemsError?.code }, { status: 500 })
     }
 
-    await supabase.from("order_timeline").insert({
+    const { error: timelineError } = await supabase.from("order_timeline").insert({
       order_id: order.id,
       status: order.status,
       note: user ? "Order created" : "Guest order created",
       created_by: user?.id || null,
     })
+    if (timelineError) {
+      console.error("Order timeline insert error:", JSON.stringify(timelineError))
+    }
 
     if (paymentMethod === "bank_transfer") {
-      await supabase.from("payments").insert({
+      const { error: payErr } = await supabase.from("payments").insert({
         order_id: order.id,
         method: "bank_transfer",
         status: "submitted",
         proof_url: body.proofUrl || null,
         transaction_reference: body.transactionReference || null,
       })
+      if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
     } else if (paymentMethod === "cod") {
-      await supabase.from("payments").insert({
+      const { error: payErr } = await supabase.from("payments").insert({
         order_id: order.id,
         method: "cod",
         status: "pending",
       })
+      if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
     }
 
     if (user) {
@@ -119,8 +124,8 @@ export async function POST(request: Request) {
       orderId: order.id,
       orderNumber: order.order_number,
     })
-  } catch (err) {
-    console.error("Order creation error:", err)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  } catch (err: any) {
+    console.error("Order creation error:", err?.message, err?.stack)
+    return NextResponse.json({ error: "Internal server error", details: err?.message }, { status: 500 })
   }
 }
