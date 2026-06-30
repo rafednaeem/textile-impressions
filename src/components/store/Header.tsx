@@ -50,6 +50,58 @@ export default function Header() {
   }, [supabase])
 
   useEffect(() => {
+    const handleSessionCheck = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const isAdmin = user.app_metadata?.role === "admin"
+
+      if (isAdmin) {
+        localStorage.setItem("admin_session", "1")
+      } else {
+        const hasRememberMe = localStorage.getItem("remember_me") === "1"
+        if (!hasRememberMe) {
+          await supabase.auth.signOut()
+          sessionStorage.clear()
+        }
+      }
+    }
+    handleSessionCheck()
+  }, [supabase])
+
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const isAdmin = user.app_metadata?.role === "admin"
+      const hasRememberMe = localStorage.getItem("remember_me") === "1"
+
+      if (isAdmin || !hasRememberMe) {
+        await supabase.auth.signOut()
+      }
+    }
+
+    const handleAdminStorage = (e: StorageEvent) => {
+      if (e.key === "admin_session" && e.newValue === null) {
+        supabase.auth.signOut()
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener("storage", handleAdminStorage)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      window.removeEventListener("storage", handleAdminStorage)
+    }
+  }, [supabase])
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false)
@@ -68,6 +120,9 @@ export default function Header() {
   const handleSignOut = async () => {
     setSigningOut(true)
     await supabase.auth.signOut()
+    localStorage.removeItem("remember_me")
+    localStorage.removeItem("admin_session")
+    sessionStorage.clear()
     setUser(null)
     setUserMenuOpen(false)
     setSigningOut(false)

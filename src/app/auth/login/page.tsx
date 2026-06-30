@@ -40,6 +40,53 @@ function LoginForm() {
       return
     }
 
+    if (data.rememberMe) {
+      localStorage.setItem("remember_me", "1")
+    } else {
+      localStorage.removeItem("remember_me")
+    }
+
+    const guestCart = sessionStorage.getItem("guest_cart")
+    if (guestCart) {
+      try {
+        const items = JSON.parse(guestCart)
+        if (items.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data: existingCart } = await supabase
+              .from("carts").select("id").eq("user_id", user.id).maybeSingle()
+            let cartId = existingCart?.id
+            if (!cartId) {
+              const { data: newCart } = await supabase
+                .from("carts").insert({ user_id: user.id }).select("id").single()
+              cartId = newCart?.id
+            }
+            if (cartId) {
+              for (const item of items) {
+                const { data: existingItem } = await supabase
+                  .from("cart_items").select("id, quantity")
+                  .eq("cart_id", cartId).eq("product_id", item.product_id).maybeSingle()
+                if (existingItem) {
+                  await supabase.from("cart_items")
+                    .update({ quantity: existingItem.quantity + item.quantity })
+                    .eq("id", existingItem.id)
+                } else {
+                  await supabase.from("cart_items").insert({
+                    cart_id: cartId,
+                    product_id: item.product_id,
+                    variant_id: item.variant_id,
+                    quantity: item.quantity,
+                    price_at_time: item.price_at_time,
+                  })
+                }
+              }
+              sessionStorage.removeItem("guest_cart")
+            }
+          }
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
     toast.success("Welcome back!")
     router.push(redirect)
     router.refresh()
@@ -117,6 +164,15 @@ function LoginForm() {
             Forgot password?
           </Link>
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            {...register("rememberMe")}
+            className="h-4 w-4 rounded border-border text-brand-forest focus:ring-brand-forest/20"
+          />
+          <span className="text-sm text-muted-foreground">Remember me on this device</span>
+        </label>
 
         <button
           type="submit"

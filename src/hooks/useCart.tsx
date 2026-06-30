@@ -41,17 +41,17 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 function generateSessionId(): string {
   if (typeof window === "undefined") return ""
-  const existing = localStorage.getItem("cart_session_id")
+  const existing = sessionStorage.getItem("cart_session_id")
   if (existing) return existing
   const id = crypto.randomUUID()
-  localStorage.setItem("cart_session_id", id)
+  sessionStorage.setItem("cart_session_id", id)
   return id
 }
 
 function getLocalCart(): CartItemDisplay[] {
   if (typeof window === "undefined") return []
   try {
-    const raw = localStorage.getItem("guest_cart")
+    const raw = sessionStorage.getItem("guest_cart")
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
@@ -59,7 +59,7 @@ function getLocalCart(): CartItemDisplay[] {
 }
 
 function setLocalCart(items: CartItemDisplay[]) {
-  localStorage.setItem("guest_cart", JSON.stringify(items))
+  sessionStorage.setItem("guest_cart", JSON.stringify(items))
 }
 
 function getPrice(product: CartItemDisplay["product"]): number {
@@ -323,7 +323,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    localStorage.removeItem("guest_cart")
+    sessionStorage.removeItem("guest_cart")
     await loadDbCart(user.id)
   }, [supabase, ensureDbCart, loadDbCart])
 
