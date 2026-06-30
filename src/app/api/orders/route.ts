@@ -60,7 +60,13 @@ export async function POST(request: Request) {
 
     if (orderError || !_order) {
       console.error("Order insert error:", JSON.stringify(orderError))
-      return NextResponse.json({ error: "Failed to create order", details: orderError?.message, code: orderError?.code }, { status: 500 })
+      return NextResponse.json({
+        error: "Failed to create order",
+        details: orderError?.message,
+        code: orderError?.code,
+        hint: orderError?.hint,
+        debug: { hasUser: !!user, userId: user?.id || null, guestEmail: guestEmail || null },
+      }, { status: 500 })
     }
 
     const order = _order as unknown as { id: string; order_number: string; status: string }
