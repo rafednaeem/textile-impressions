@@ -25,7 +25,7 @@ export default function EditProductPage({
 
   const [form, setForm] = useState({
     name: "", slug: "", description: "", short_description: "", price: "",
-    sale_price: "", sku: "", inventory_count: "0",
+    sale_price: "", inventory_count: "0",
     category_id: "", is_featured: false, is_active: true,
     tags: "", craft_type: "Plain", fabric: "", care_instructions: "",
     sizes: [] as string[], colors: [] as { name: string; hex: string }[],
@@ -50,7 +50,6 @@ export default function EditProductPage({
           short_description: product.short_description || "",
           price: product.price.toString(),
           sale_price: product.sale_price?.toString() || "",
-          sku: product.sku,
           inventory_count: product.inventory_count.toString(),
           category_id: product.category_id || "",
           is_featured: product.is_featured,
@@ -226,7 +225,7 @@ export default function EditProductPage({
 
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="font-heading text-lg font-bold text-brand-forest">Pricing & Inventory</h2>
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="block text-sm font-medium mb-1">Price (PKR) *</label>
               <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
@@ -234,10 +233,6 @@ export default function EditProductPage({
             <div>
               <label className="block text-sm font-medium mb-1">Sale Price</label>
               <input type="number" min="0" step="0.01" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">SKU *</label>
-              <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Inventory Count</label>

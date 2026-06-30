@@ -24,7 +24,7 @@ export default function AdminInventoryPage() {
       .from("products")
       .select("*, product_variants(*)")
 
-    if (search) query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
+    if (search) query = query.ilike("name", `%${search}%`)
 
     query = query.order("inventory_count", { ascending: sortAsc })
 
@@ -136,7 +136,6 @@ export default function AdminInventoryPage() {
                   <input type="checkbox" checked={selectAll} onChange={() => setSelectAll(!selectAll)} className="rounded border-border text-brand-forest" />
                 </th>
                 <th className="px-4 py-3 text-left font-medium">Product</th>
-                <th className="px-4 py-3 text-left font-medium">SKU</th>
                 <th className="px-4 py-3 text-left font-medium">Variants</th>
                 <th className="px-4 py-3 text-right font-medium">Stock</th>
                 <th className="px-4 py-3 text-center font-medium">Actions</th>
@@ -160,7 +159,6 @@ export default function AdminInventoryPage() {
                       />
                     </td>
                     <td className="px-4 py-3 font-medium">{product.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{product.sku}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {variants.map((v: any) => (

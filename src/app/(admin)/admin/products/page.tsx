@@ -25,7 +25,7 @@ export default function AdminProductsPage() {
       .select("*, categories(name), product_images(*)")
 
     if (categoryFilter) query = query.eq("category_id", categoryFilter)
-    if (search) query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
+    if (search) query = query.ilike("name", `%${search}%`)
 
     const { data } = await query.order("created_at", { ascending: false }).limit(100)
     if (data) setProducts(data)
@@ -71,7 +71,7 @@ export default function AdminProductsPage() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            placeholder="Search by name or SKU..."
+            placeholder="Search by name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-4 text-sm focus:border-brand-forest focus:outline-none"
@@ -103,7 +103,6 @@ export default function AdminProductsPage() {
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Product</th>
-                <th className="px-4 py-3 text-left font-medium">SKU</th>
                 <th className="px-4 py-3 text-left font-medium">Category</th>
                 <th className="px-4 py-3 text-right font-medium">Price</th>
                 <th className="px-4 py-3 text-right font-medium">Stock</th>
@@ -126,7 +125,6 @@ export default function AdminProductsPage() {
                         <span className="font-medium hover:text-brand-forest">{product.name}</span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{product.sku}</td>
                     <td className="px-4 py-3 text-muted-foreground">{product.categories?.name || "—"}</td>
                     <td className="px-4 py-3 text-right font-medium">
                       {product.sale_price ? (

@@ -51,7 +51,7 @@ export async function PATCH(
 
   const fields = [
     "name", "slug", "description", "short_description", "price", "sale_price",
-    "sku", "inventory_count", "is_active", "is_featured", "category_id",
+    "inventory_count", "is_active", "is_featured", "category_id",
     "tags", "craft_type", "fabric", "care_instructions",
   ]
 
@@ -62,7 +62,7 @@ export async function PATCH(
   const { error } = await supabase.from("products").update(updateData).eq("id", id)
   if (error) {
     if (error.code === "23505") {
-      return NextResponse.json({ error: "Product with this slug or SKU already exists" }, { status: 409 })
+      return NextResponse.json({ error: "Product with this slug already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
   }

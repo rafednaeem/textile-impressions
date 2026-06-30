@@ -24,7 +24,7 @@ export default function ProductFormPage() {
 
   const [form, setForm] = useState({
     name: "", slug: "", description: "", short_description: "", price: "",
-    sale_price: "", sku: "", inventory_count: "0",
+    sale_price: "", inventory_count: "0",
     category_id: "", is_featured: false,
     tags: "", craft_type: "Plain", fabric: "", care_instructions: "",
     sizes: [] as string[], colors: [] as { name: string; hex: string }[],
@@ -247,7 +247,7 @@ export default function ProductFormPage() {
 
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="font-heading text-lg font-bold text-brand-forest">Pricing & Inventory</h2>
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="block text-sm font-medium mb-1">Price (PKR) *</label>
               <input
@@ -268,15 +268,6 @@ export default function ProductFormPage() {
                 step="0.01"
                 value={form.sale_price}
                 onChange={(e) => setForm({ ...form, sale_price: e.target.value })}
-                className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">SKU *</label>
-              <input
-                value={form.sku}
-                onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                required
                 className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none"
               />
             </div>

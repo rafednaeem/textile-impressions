@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
   if (category) query = query.eq("category_id", category)
   if (search) {
-    query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
+    query = query.ilike("name", `%${search}%`)
   }
 
   const { data: products, count, error } = await query
@@ -51,9 +51,9 @@ export async function POST(request: Request) {
   if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const body = await request.json()
-  const { name, slug, description, short_description, price, sale_price, sku, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, images, sizes, colors } = body
+  const { name, slug, description, short_description, price, sale_price, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, images, sizes, colors } = body
 
-  if (!name || !slug || !sku || price === undefined) {
+  if (!name || !slug || price === undefined) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     .from("products")
     .insert({
       name, slug, description, short_description, price, sale_price: sale_price || null,
-      sku, inventory_count: inventory_count || 0, category_id: category_id || null,
+      inventory_count: inventory_count || 0, category_id: category_id || null,
       is_active: true, is_featured: is_featured || false,
       tags: tags || [], craft_type: craft_type || "Plain", fabric: fabric || null, care_instructions: care_instructions || null,
     })
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   if (productError) {
     console.error("Supabase error creating product:", productError)
     if (productError.code === "23505") {
-      return NextResponse.json({ error: "Product with this slug or SKU already exists" }, { status: 409 })
+      return NextResponse.json({ error: "Product with this slug already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: `Failed to create product: ${productError.message} (${productError.details || ''})` }, { status: 500 })
   }

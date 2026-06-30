@@ -99,7 +99,6 @@ export async function duplicateProduct(productId: string) {
       short_description: original.short_description,
       price: original.price,
       sale_price: original.sale_price,
-      sku: `${original.sku}-CPY`,
       inventory_count: 0,
       is_active: false,
       is_featured: false,

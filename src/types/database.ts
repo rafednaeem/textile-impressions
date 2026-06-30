@@ -49,7 +49,7 @@ export interface Product {
   short_description: string | null
   price: number
   sale_price: number | null
-  sku: string
+  sku: string | null
   inventory_count: number
   is_active: boolean
   is_featured: boolean
