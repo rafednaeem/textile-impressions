@@ -38,14 +38,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (!user) return
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single()
       if (data) setProfile(data)
-      localStorage.setItem("admin_session", "1")
     }
     fetch()
   }, [supabase])
 
   const logout = async () => {
     await supabase.auth.signOut()
-    localStorage.removeItem("admin_session")
     localStorage.removeItem("remember_me")
     sessionStorage.clear()
     router.push("/auth/login")

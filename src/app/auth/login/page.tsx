@@ -45,6 +45,7 @@ function LoginForm() {
     } else {
       localStorage.removeItem("remember_me")
     }
+    sessionStorage.setItem("ti_session_active", "1")
 
     const guestCart = sessionStorage.getItem("guest_cart")
     if (guestCart) {

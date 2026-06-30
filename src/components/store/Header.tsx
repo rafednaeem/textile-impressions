@@ -50,29 +50,7 @@ export default function Header() {
   }, [supabase])
 
   useEffect(() => {
-    const handleSessionCheck = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-
-      const isAdmin = user.app_metadata?.role === "admin"
-
-      if (isAdmin) {
-        localStorage.setItem("admin_session", "1")
-      } else {
-        const hasRememberMe = localStorage.getItem("remember_me") === "1"
-        if (!hasRememberMe) {
-          await supabase.auth.signOut()
-          sessionStorage.clear()
-        }
-      }
-    }
-    handleSessionCheck()
-  }, [supabase])
-
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
+    const validateSession = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -80,26 +58,24 @@ export default function Header() {
 
       const isAdmin = user.app_metadata?.role === "admin"
       const hasRememberMe = localStorage.getItem("remember_me") === "1"
+      const sessionActive = sessionStorage.getItem("ti_session_active") === "1"
 
-      if (isAdmin || !hasRememberMe) {
-        await supabase.auth.signOut()
+      if (isAdmin) {
+        if (!sessionActive) {
+          await supabase.auth.signOut()
+          sessionStorage.clear()
+          router.push("/auth/login")
+        }
+      } else {
+        if (!hasRememberMe && !sessionActive) {
+          await supabase.auth.signOut()
+          sessionStorage.clear()
+          router.push("/auth/login")
+        }
       }
     }
-
-    const handleAdminStorage = (e: StorageEvent) => {
-      if (e.key === "admin_session" && e.newValue === null) {
-        supabase.auth.signOut()
-      }
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    window.addEventListener("storage", handleAdminStorage)
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload)
-      window.removeEventListener("storage", handleAdminStorage)
-    }
-  }, [supabase])
+    validateSession()
+  }, [supabase, router])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -121,7 +97,6 @@ export default function Header() {
     setSigningOut(true)
     await supabase.auth.signOut()
     localStorage.removeItem("remember_me")
-    localStorage.removeItem("admin_session")
     sessionStorage.clear()
     setUser(null)
     setUserMenuOpen(false)
