@@ -817,27 +817,39 @@ INSERT INTO public.site_settings (key, value) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- ============================================================
--- SYNC ADMIN PROFILES: ensure all admin users have matching profiles
+-- SYNC ALL PROFILES: ensure every auth user has a matching profile
 -- ============================================================
+-- The handle_new_user trigger only fires on NEW signups.
+-- After a full schema rebuild, existing users need profiles created.
 DO $$
 DECLARE
-  admin_user RECORD;
+  auth_user RECORD;
 BEGIN
-  FOR admin_user IN
+  FOR auth_user IN
     SELECT id, email, raw_user_meta_data, raw_app_meta_data
     FROM auth.users
-    WHERE (raw_app_meta_data ->> 'role') = 'admin'
   LOOP
-    INSERT INTO public.profiles (id, email, full_name, role)
-    VALUES (
-      admin_user.id,
-      admin_user.email,
-      COALESCE(admin_user.raw_user_meta_data ->> 'full_name', SPLIT_PART(admin_user.email, '@', 1)),
-      'admin'
-    )
-    ON CONFLICT (id) DO UPDATE
-    SET role = 'admin',
-        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
+    IF (auth_user.raw_app_meta_data ->> 'role') = 'admin' THEN
+      INSERT INTO public.profiles (id, email, full_name, role)
+      VALUES (
+        auth_user.id,
+        auth_user.email,
+        COALESCE(auth_user.raw_user_meta_data ->> 'full_name', SPLIT_PART(auth_user.email, '@', 1)),
+        'admin'
+      )
+      ON CONFLICT (id) DO UPDATE
+      SET role = 'admin',
+          full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
+    ELSE
+      INSERT INTO public.profiles (id, email, full_name, role)
+      VALUES (
+        auth_user.id,
+        auth_user.email,
+        COALESCE(auth_user.raw_user_meta_data ->> 'full_name', SPLIT_PART(auth_user.email, '@', 1)),
+        'customer'
+      )
+      ON CONFLICT (id) DO NOTHING;
+    END IF;
   END LOOP;
 END;
 $$;

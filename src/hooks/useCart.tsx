@@ -79,23 +79,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .maybeSingle()
 
-    if (!cart) return
+    if (!cart) {
+      setItems([])
+      return
+    }
 
-    const rawItems = await supabase
+    const { data: rawItems } = await supabase
       .from("cart_items")
-      .select("*")
+      .select("*, products!inner(name, slug, price, sale_price, inventory_count)")
       .eq("cart_id", cart.id)
 
-    if (rawItems.data) {
+    if (rawItems) {
       setItems(
-        rawItems.data.map((ci) => ({
-          id: ci.id as string,
-          cart_id: ci.cart_id as string,
-          product_id: ci.product_id as string,
-          variant_id: ci.variant_id as string | null,
-          quantity: ci.quantity as number,
-          price_at_time: ci.price_at_time as number,
-          product: ci as unknown as CartItemDisplay["product"],
+        rawItems.map((ci: any) => ({
+          id: ci.id,
+          cart_id: ci.cart_id,
+          product_id: ci.product_id,
+          variant_id: ci.variant_id,
+          quantity: ci.quantity,
+          price_at_time: ci.price_at_time,
+          product: ci.products ?? { name: "Unknown", slug: "", price: 0, sale_price: null, inventory_count: 0 },
           image: null,
           variant: null,
         }))

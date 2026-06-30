@@ -59,6 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     if (isOutOfStock) return
     addItem({
       product: {
+        id: productId,
         name,
         slug,
         price,

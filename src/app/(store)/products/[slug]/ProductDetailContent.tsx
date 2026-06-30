@@ -161,6 +161,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
     if (!product || isOutOfStock) return
     addItem({
       product: {
+        id: product.id,
         name: product.name,
         slug: product.slug,
         price: product.price,
