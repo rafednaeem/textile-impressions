@@ -771,6 +771,39 @@ DO $$ BEGIN CREATE POLICY "storage_custom_orders_update_admin" ON storage.object
 DO $$ BEGIN CREATE POLICY "storage_custom_orders_delete_admin" ON storage.objects FOR DELETE USING (bucket_id = 'custom-orders' AND public.is_admin()); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================
+-- SEED: Categories
+-- ============================================================
+DO $$
+DECLARE
+  textile_parent UUID;
+  colors_parent UUID;
+BEGIN
+  INSERT INTO public.categories (id, name, slug, description, sort_order, is_active) VALUES
+    (gen_random_uuid(), 'Textile Products', 'textile-products', 'All textile products', 1, TRUE),
+    (gen_random_uuid(), 'Sustainable Colors & Paints', 'sustainable-colors', 'Natural dyes, paints, and pigments', 2, TRUE)
+  ON CONFLICT (slug) DO NOTHING;
+
+  SELECT id INTO textile_parent FROM public.categories WHERE slug = 'textile-products';
+  SELECT id INTO colors_parent FROM public.categories WHERE slug = 'sustainable-colors';
+
+  IF textile_parent IS NOT NULL THEN
+    INSERT INTO public.categories (name, slug, description, parent_id, sort_order, is_active) VALUES
+      ('Ready to Print or Dye', 'ready-to-print-dye', 'Fabric ready for printing or dyeing', textile_parent, 1, TRUE),
+      ('Finished Products', 'finished-products', 'Ready-to-wear and finished textile products', textile_parent, 2, TRUE),
+      ('Customized Products', 'customized-products', 'Custom order requests', textile_parent, 3, TRUE)
+    ON CONFLICT (slug) DO NOTHING;
+  END IF;
+
+  IF colors_parent IS NOT NULL THEN
+    INSERT INTO public.categories (name, slug, description, parent_id, sort_order, is_active) VALUES
+      ('Natural Dyes', 'natural-dyes', 'Botanical and natural dyes', colors_parent, 1, TRUE),
+      ('Block Printing Paints', 'block-printing-paints', 'Paints for block printing', colors_parent, 2, TRUE),
+      ('Fabric Paints', 'fabric-paints', 'Fabric paints and pigments', colors_parent, 3, TRUE)
+    ON CONFLICT (slug) DO NOTHING;
+  END IF;
+END $$;
+
+-- ============================================================
 -- SEED: Site Settings
 -- ============================================================
 INSERT INTO public.site_settings (key, value) VALUES
