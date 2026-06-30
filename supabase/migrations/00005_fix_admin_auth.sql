@@ -2,9 +2,35 @@
 -- TEXTILE IMPRESSIONS — Full Schema Bootstrap
 -- ============================================================
 -- This migration creates the entire schema from scratch.
--- Safe to run on an empty or partially-populated database.
--- All statements use IF NOT EXISTS / OR REPLACE / ON CONFLICT
--- so they are idempotent.
+-- Drops all existing tables first to handle partially-restored
+-- databases that may be missing columns.
+
+-- ============================================================
+-- DROP EXISTING TABLES (reverse dependency order)
+-- ============================================================
+DROP TABLE IF EXISTS public.incubator_enquiries CASCADE;
+DROP TABLE IF EXISTS public.custom_orders CASCADE;
+DROP TABLE IF EXISTS public.collection_products CASCADE;
+DROP TABLE IF EXISTS public.collections CASCADE;
+DROP TABLE IF EXISTS public.ugc_photos CASCADE;
+DROP TABLE IF EXISTS public.artisans CASCADE;
+DROP TABLE IF EXISTS public.site_settings CASCADE;
+DROP TABLE IF EXISTS public.workshop_registrations CASCADE;
+DROP TABLE IF EXISTS public.workshops CASCADE;
+DROP TABLE IF EXISTS public.wishlists CASCADE;
+DROP TABLE IF EXISTS public.discount_codes CASCADE;
+DROP TABLE IF EXISTS public.order_timeline CASCADE;
+DROP TABLE IF EXISTS public.payments CASCADE;
+DROP TABLE IF EXISTS public.order_items CASCADE;
+DROP TABLE IF EXISTS public.orders CASCADE;
+DROP TABLE IF EXISTS public.cart_items CASCADE;
+DROP TABLE IF EXISTS public.carts CASCADE;
+DROP TABLE IF EXISTS public.addresses CASCADE;
+DROP TABLE IF EXISTS public.product_variants CASCADE;
+DROP TABLE IF EXISTS public.product_images CASCADE;
+DROP TABLE IF EXISTS public.products CASCADE;
+DROP TABLE IF EXISTS public.categories CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
 
 -- ============================================================
 -- EXTENSIONS
