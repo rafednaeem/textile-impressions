@@ -205,7 +205,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const newItem: CartItemDisplay = {
             id: crypto.randomUUID(),
             cart_id: "",
-            product_id: product.slug,
+            product_id: (product as AddItemProduct).id ?? product.slug,
             variant_id: null,
             quantity,
             price_at_time: price,
