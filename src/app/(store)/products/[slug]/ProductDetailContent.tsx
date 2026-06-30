@@ -55,6 +55,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState<string>("Description")
   const [wishlisted, setWishlisted] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
   const [added, setAdded] = useState(false)
 
   useEffect(() => {
@@ -108,6 +109,17 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           .limit(4)
 
         if (relData) setRelated(relData as unknown as Product[])
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: wlData } = await supabase
+          .from("wishlists")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("product_id", prod.id)
+          .maybeSingle()
+        if (wlData) setWishlisted(true)
       }
 
       setLoading(false)
@@ -167,6 +179,40 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
       icon: <ShoppingBag className="h-4 w-4 text-brand-forest" />,
     })
     setTimeout(() => setAdded(false), 2000)
+  }
+
+  const handleWishlist = async () => {
+    if (!product || wishlistLoading) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error("Please sign in to add items to your wishlist")
+      return
+    }
+    setWishlistLoading(true)
+    try {
+      if (wishlisted) {
+        const { error } = await supabase
+          .from("wishlists")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", product.id)
+        if (error) throw error
+        setWishlisted(false)
+      } else {
+        const { error } = await supabase
+          .from("wishlists")
+          .insert({ user_id: user.id, product_id: product.id })
+        if (error) throw error
+        setWishlisted(true)
+        toast(`${product.name} added to wishlist`, {
+          icon: <Heart className="h-4 w-4 text-red-500" />,
+        })
+      }
+    } catch {
+      toast.error("Failed to update wishlist")
+    } finally {
+      setWishlistLoading(false)
+    }
   }
 
   if (loading) {
@@ -395,15 +441,9 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
               </AnimatePresence>
             </button>
             <button
-              onClick={() => {
-                setWishlisted(!wishlisted)
-                if (!wishlisted) {
-                  toast(`${product.name} added to wishlist`, {
-                    icon: <Heart className="h-4 w-4 text-red-500" />,
-                  })
-                }
-              }}
-              className="flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium transition-colors hover:bg-muted"
+              onClick={handleWishlist}
+              disabled={wishlistLoading}
+              className="flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50"
             >
               <Heart
                 className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`}

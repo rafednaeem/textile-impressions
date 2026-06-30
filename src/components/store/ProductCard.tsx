@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingBag } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
+import { createClient } from "@/lib/supabase/client"
 import type { Product } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
 
@@ -23,8 +24,10 @@ const craftTagClasses: Record<string, string> = {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
   const { addItem } = useCart()
-  const { sale_price, price, name, slug, inventory_count, craft_type } = product
+  const supabase = createClient()
+  const { id: productId, sale_price, price, name, slug, inventory_count, craft_type } = product
   const hasDiscount = sale_price != null && sale_price < price
   const displayPrice = sale_price ?? price
   const isLowStock = inventory_count > 0 && inventory_count < 5
@@ -34,6 +37,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const imageUrl = `https://picsum.photos/seed/${slug}/600/800`
   const hoverImageUrl = `https://picsum.photos/seed/${slug}h/600/800`
+
+  useEffect(() => {
+    const checkWishlist = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from("wishlists")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_id", productId)
+        .maybeSingle()
+      if (data) setWishlisted(true)
+    }
+    checkWishlist()
+  }, [supabase, productId])
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -55,16 +73,43 @@ export default function ProductCard({ product }: ProductCardProps) {
     })
   }
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setWishlisted((prev) => !prev)
-    if (!wishlisted) {
-      toast(`${name} added to wishlist`, {
-        icon: <Heart className="h-4 w-4 text-red-500" />,
-      })
+    if (wishlistLoading) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error("Please sign in to add items to your wishlist")
+      return
     }
-  }
+
+    setWishlistLoading(true)
+    try {
+      if (wishlisted) {
+        const { error } = await supabase
+          .from("wishlists")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", productId)
+        if (error) throw error
+        setWishlisted(false)
+      } else {
+        const { error } = await supabase
+          .from("wishlists")
+          .insert({ user_id: user.id, product_id: productId })
+        if (error) throw error
+        setWishlisted(true)
+        toast(`${name} added to wishlist`, {
+          icon: <Heart className="h-4 w-4 text-red-500" />,
+        })
+      }
+    } catch {
+      toast.error("Failed to update wishlist")
+    } finally {
+      setWishlistLoading(false)
+    }
+  }, [supabase, productId, wishlisted, wishlistLoading, name])
 
   return (
     <motion.div
