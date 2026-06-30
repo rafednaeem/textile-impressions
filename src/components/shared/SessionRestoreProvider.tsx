@@ -5,12 +5,14 @@ import { AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import AuthLoadingScreen from "./AuthLoadingScreen"
 
+type SessionState = "checking" | "authenticated" | "unauthenticated"
+
 interface SessionRestoreContextValue {
-  isRestoringSession: boolean
+  sessionState: SessionState
 }
 
 const SessionRestoreContext = createContext<SessionRestoreContextValue>({
-  isRestoringSession: false,
+  sessionState: "unauthenticated",
 })
 
 export function useSessionRestore() {
@@ -18,17 +20,19 @@ export function useSessionRestore() {
 }
 
 export function SessionRestoreProvider({ children }: { children: ReactNode }) {
-  const [isRestoringSession, setIsRestoringSession] = useState(true)
+  const [sessionState, setSessionState] = useState<SessionState>("checking")
   const [showLoading, setShowLoading] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     const restoreSession = async () => {
       if (typeof window === "undefined") return
 
       const hasRememberMe = localStorage.getItem("remember_me") === "1"
 
       if (!hasRememberMe) {
-        setIsRestoringSession(false)
+        if (!cancelled) setSessionState("unauthenticated")
         return
       }
 
@@ -39,27 +43,53 @@ export function SessionRestoreProvider({ children }: { children: ReactNode }) {
       try {
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+          error,
+        } = await Promise.race([
+          supabase.auth.getUser(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Session check timed out")), 8000)
+          ),
+        ])
+
+        if (cancelled) return
+
+        if (error) {
+          console.error("[SessionRestore] Auth error:", error.message)
+          localStorage.removeItem("remember_me")
+          setSessionState("unauthenticated")
+          return
+        }
 
         if (user && user.app_metadata?.role !== "admin") {
           sessionStorage.setItem("ti_session_active", "1")
-
+          setSessionState("authenticated")
           await new Promise((resolve) => setTimeout(resolve, 1200))
         } else {
           localStorage.removeItem("remember_me")
+          setSessionState("unauthenticated")
         }
-      } catch {
-        localStorage.removeItem("remember_me")
+      } catch (err) {
+        console.error("[SessionRestore] Failed to restore session:", err)
+        if (!cancelled) {
+          localStorage.removeItem("remember_me")
+          setSessionState("unauthenticated")
+        }
+      } finally {
+        if (!cancelled) {
+          setShowLoading(false)
+        }
       }
-
-      setIsRestoringSession(false)
     }
 
     restoreSession()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (
-    <SessionRestoreContext.Provider value={{ isRestoringSession }}>
+    <SessionRestoreContext.Provider value={{ sessionState }}>
       <AnimatePresence>
         {showLoading && <AuthLoadingScreen />}
       </AnimatePresence>
