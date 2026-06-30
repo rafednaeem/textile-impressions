@@ -67,6 +67,8 @@ export default function CheckoutPage() {
   const [creating, setCreating] = useState(false)
   const [orderResult, setOrderResult] = useState<any>(null)
 
+  const [guestEmail, setGuestEmail] = useState("")
+
   const [shipping, setShipping] = useState({
     fullName: "",
     phone: "",
@@ -126,10 +128,11 @@ export default function CheckoutPage() {
   }
 
   const uploadProof = async (): Promise<string | null> => {
-    if (!proofFile || !user) return null
+    if (!proofFile) return null
     setUploading(true)
     const ext = proofFile.name.split(".").pop()
-    const fileName = `checkout/${user.id}/${Date.now()}.${ext}`
+    const folder = user ? user.id : `guest-${Date.now()}`
+    const fileName = `checkout/${folder}/${Date.now()}.${ext}`
     const { error } = await supabase.storage
       .from("payment-proofs")
       .upload(fileName, proofFile)
@@ -194,6 +197,7 @@ export default function CheckoutPage() {
         proofUrl,
         transactionReference: transactionRef || null,
         notes: notes || null,
+        guestEmail: user ? null : guestEmail || null,
       }),
     })
 
@@ -218,7 +222,7 @@ export default function CheckoutPage() {
   }
 
   const shippingValid =
-    shipping.fullName && shipping.phone && shipping.addressLine1 && shipping.city && shipping.province
+    shipping.fullName && shipping.phone && shipping.addressLine1 && shipping.city && shipping.province && (user || guestEmail)
 
   const canContinue = () => {
     if (step === 0) return !!shippingValid
@@ -301,6 +305,19 @@ export default function CheckoutPage() {
             )}
 
             <div className="mt-6 space-y-4">
+              {!user && (
+                <div>
+                  <label className="block text-sm font-medium">Email <span className="text-muted-foreground">(for order updates)</span></label>
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium">Full Name</label>
@@ -593,9 +610,11 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/account/orders" className="rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-forest/90">
-                View My Orders
-              </Link>
+              {user && (
+                <Link href="/account/orders" className="rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-forest/90">
+                  View My Orders
+                </Link>
+              )}
               <Link href="/shop" className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:bg-muted">
                 Continue Shopping
               </Link>

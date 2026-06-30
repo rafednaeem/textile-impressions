@@ -14,15 +14,16 @@ export async function POST(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const body = await request.json()
-    const { items, shippingAddress, paymentMethod, notes } = body
+    const { items, shippingAddress, paymentMethod, notes, guestEmail } = body
 
     if (!items?.length || !shippingAddress || !paymentMethod) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    if (!user && !guestEmail) {
+      return NextResponse.json({ error: "Email is required for guest checkout" }, { status: 400 })
     }
 
     if (paymentMethod === "cod" && !isCodEligible(shippingAddress.city)) {
@@ -38,12 +39,17 @@ export async function POST(request: Request) {
 
     const orderStatus = paymentMethod === "cod" ? "cod_pending" : "payment_submitted"
 
+    const enrichedShipping = {
+      ...shippingAddress,
+      ...(guestEmail ? { guest_email: guestEmail } : {}),
+    }
+
     const { data: _order, error: orderError } = await supabase
       .from("orders")
       .insert({
-        user_id: user.id,
+        user_id: user?.id || null,
         status: orderStatus,
-        shipping_address: shippingAddress,
+        shipping_address: enrichedShipping,
         subtotal,
         shipping_cost: shippingCost,
         total,
@@ -53,6 +59,7 @@ export async function POST(request: Request) {
       .single()
 
     if (orderError || !_order) {
+      console.error("Order insert error:", orderError)
       return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
     }
 
@@ -73,6 +80,7 @@ export async function POST(request: Request) {
 
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
     if (itemsError) {
+      console.error("Order items insert error:", itemsError)
       await supabase.from("orders").delete().eq("id", order.id)
       return NextResponse.json({ error: "Failed to create order items" }, { status: 500 })
     }
@@ -80,8 +88,8 @@ export async function POST(request: Request) {
     await supabase.from("order_timeline").insert({
       order_id: order.id,
       status: order.status,
-      note: "Order created",
-      created_by: user.id,
+      note: user ? "Order created" : "Guest order created",
+      created_by: user?.id || null,
     })
 
     if (paymentMethod === "bank_transfer") {
@@ -100,10 +108,12 @@ export async function POST(request: Request) {
       })
     }
 
-    await supabase.from("cart_items").delete().in(
-      "product_id",
-      items.map((i: any) => i.product_id)
-    )
+    if (user) {
+      await supabase.from("cart_items").delete().in(
+        "product_id",
+        items.map((i: any) => i.product_id)
+      )
+    }
 
     return NextResponse.json({
       orderId: order.id,
