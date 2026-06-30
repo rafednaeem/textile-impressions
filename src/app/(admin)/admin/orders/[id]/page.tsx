@@ -124,9 +124,15 @@ export default function AdminOrderDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="text-sm font-semibold text-brand-forest">Customer</h3>
-          <p className="mt-2 text-sm font-medium">{order.profiles?.full_name || "Unknown"}</p>
-          <p className="text-sm text-muted-foreground">{order.profiles?.email}</p>
-          <p className="text-sm text-muted-foreground">{order.profiles?.phone || order.shipping_address?.phone}</p>
+          {order.profiles ? (
+            <>
+              <p className="mt-2 text-sm font-medium">{order.profiles.full_name || "Unknown"}</p>
+              <p className="text-sm text-muted-foreground">{order.profiles.email}</p>
+              <p className="text-sm text-muted-foreground">{order.profiles.phone || order.shipping_address?.phone}</p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm italic text-muted-foreground">Guest checkout</p>
+          )}
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">

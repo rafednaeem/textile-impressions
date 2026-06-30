@@ -231,7 +231,7 @@ export interface CartItem {
 export interface Order {
   id: string
   order_number: string
-  user_id: string
+  user_id: string | null
   status: OrderStatus
   shipping_address: Record<string, unknown>
   subtotal: number

@@ -24,7 +24,7 @@ export async function GET(
     return NextResponse.json({ error: "Order not found" }, { status: 404 })
   }
 
-  if (order.user_id !== user.id) {
+  if (order.user_id !== null && order.user_id !== user.id) {
     if (user.app_metadata?.role === "admin") {
       return NextResponse.json(order)
     }
