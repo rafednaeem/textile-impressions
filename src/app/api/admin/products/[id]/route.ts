@@ -1,29 +1,21 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/supabase/admin"
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { supabase, error } = await requireAdmin()
+  if (error) return error
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-  if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-
-  const { data: product, error } = await supabase
+  const { data: product, error: queryError } = await supabase
     .from("products")
     .select("*, categories(name), product_images(*), product_variants(*)")
     .eq("id", id)
     .single()
 
-  if (error || !product) {
+  if (queryError || !product) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 })
   }
 
@@ -35,16 +27,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-  if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const { supabase, error } = await requireAdmin()
+  if (error) return error
 
   const body = await request.json()
   const updateData: any = {}
@@ -59,9 +43,9 @@ export async function PATCH(
     if (body[field] !== undefined) updateData[field] = body[field]
   }
 
-  const { error } = await supabase.from("products").update(updateData).eq("id", id)
-  if (error) {
-    if (error.code === "23505") {
+  const { error: updateError } = await supabase.from("products").update(updateData).eq("id", id)
+  if (updateError) {
+    if (updateError.code === "23505") {
       return NextResponse.json({ error: "Product with this slug already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
@@ -115,19 +99,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { supabase, error } = await requireAdmin()
+  if (error) return error
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-  if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-
-  const { error } = await supabase.from("products").delete().eq("id", id)
-  if (error) return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
+  const { error: deleteError } = await supabase.from("products").delete().eq("id", id)
+  if (deleteError) return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
 
   return NextResponse.json({ success: true })
 }

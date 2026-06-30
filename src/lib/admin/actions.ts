@@ -1,22 +1,9 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Unauthorized")
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-  if (profile?.role !== "admin") throw new Error("Forbidden")
-  return { supabase, user }
-}
+import { requireAdminThrow } from "@/lib/supabase/admin"
 
 export async function verifyPayment(orderId: string) {
-  const { supabase, user } = await requireAdmin()
+  const { supabase, user } = await requireAdminThrow()
 
   const { error } = await supabase
     .from("payments")
@@ -35,7 +22,7 @@ export async function verifyPayment(orderId: string) {
 }
 
 export async function rejectPayment(orderId: string, reason: string) {
-  const { supabase, user } = await requireAdmin()
+  const { supabase, user } = await requireAdminThrow()
 
   const { error } = await supabase
     .from("payments")
@@ -53,7 +40,7 @@ export async function rejectPayment(orderId: string, reason: string) {
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
-  const { supabase, user } = await requireAdmin()
+  const { supabase, user } = await requireAdminThrow()
 
   const { error } = await supabase
     .from("orders")
@@ -71,7 +58,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 }
 
 export async function toggleProductActive(productId: string, isActive: boolean) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
   const { error } = await supabase
     .from("products")
     .update({ is_active: isActive })
@@ -80,7 +67,7 @@ export async function toggleProductActive(productId: string, isActive: boolean) 
 }
 
 export async function duplicateProduct(productId: string) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
 
   const { data: original } = await supabase
     .from("products")
@@ -116,13 +103,13 @@ export async function duplicateProduct(productId: string) {
 }
 
 export async function deleteProduct(productId: string) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
   const { error } = await supabase.from("products").delete().eq("id", productId)
   if (error) throw new Error("Failed to delete product")
 }
 
 export async function createDiscountCode(formData: FormData) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
 
   const data = {
     code: (formData.get("code") as string)?.toUpperCase(),
@@ -143,13 +130,13 @@ export async function createDiscountCode(formData: FormData) {
 }
 
 export async function deleteDiscountCode(id: string) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
   const { error } = await supabase.from("discount_codes").delete().eq("id", id)
   if (error) throw new Error("Failed to delete discount code")
 }
 
 export async function updateDiscountCode(id: string, formData: FormData) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
 
   const data = {
     code: (formData.get("code") as string)?.toUpperCase(),
@@ -170,7 +157,7 @@ export async function updateDiscountCode(id: string, formData: FormData) {
 }
 
 export async function updateInventory(productId: string, count: number) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
   const { error } = await supabase
     .from("products")
     .update({ inventory_count: count })
@@ -179,7 +166,7 @@ export async function updateInventory(productId: string, count: number) {
 }
 
 export async function bulkUpdateInventory(updates: { id: string; count: number }[]) {
-  const { supabase } = await requireAdmin()
+  const { supabase } = await requireAdminThrow()
   for (const update of updates) {
     const { error } = await supabase
       .from("products")

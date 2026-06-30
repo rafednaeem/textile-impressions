@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ChevronLeft, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { WORKSHOP_FORMATS, WORKSHOP_LEVELS, WORKSHOP_STATUSES } from "@/lib/constants"
-
-function slugify(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-}
 
 export default function NewWorkshopPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     title: "",
@@ -47,39 +41,34 @@ export default function NewWorkshopPage() {
     }
     setSaving(true)
 
-    const slug = slugify(form.title)
-    const { error } = await supabase.from("workshops").insert({
-      title: form.title.trim(),
-      slug,
-      description: form.description || null,
-      short_description: form.short_description || null,
-      instructor_name: form.instructor_name,
-      format: form.format,
-      level: form.level,
-      date_start: form.date_start ? new Date(form.date_start).toISOString() : null,
-      date_end: form.date_end ? new Date(form.date_end).toISOString() : null,
-      duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
-      location_address: form.location_address || null,
-      online_meeting_platform: form.online_meeting_platform || null,
-      online_meeting_url: form.online_meeting_url || null,
-      max_seats: form.max_seats ? parseInt(form.max_seats) : null,
-      seats_remaining: form.max_seats ? parseInt(form.max_seats) : null,
-      fee: parseFloat(form.fee) || 0,
-      materials_included: form.materials_included,
-      materials_list: form.materials_list || null,
-      status: form.status,
-      is_featured: form.is_featured,
-    })
+    try {
+      const res = await fetch("/api/admin/workshops", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          date_start: form.date_start ? new Date(form.date_start).toISOString() : null,
+          date_end: form.date_end ? new Date(form.date_end).toISOString() : null,
+          duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
+          max_seats: form.max_seats ? parseInt(form.max_seats) : null,
+          fee: parseFloat(form.fee) || 0,
+        }),
+      })
 
-    setSaving(false)
+      const data = await res.json()
 
-    if (error) {
-      toast.error(error.message || "Failed to create workshop")
-      return
+      if (!res.ok) {
+        toast.error(data.error || "Failed to create workshop")
+        return
+      }
+
+      toast.success("Workshop created")
+      router.push("/admin/skills-studio")
+    } catch {
+      toast.error("Failed to create workshop")
+    } finally {
+      setSaving(false)
     }
-
-    toast.success("Workshop created")
-    router.push("/admin/skills-studio")
   }
 
   const input = "block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-brand-forest focus:outline-none focus:ring-1 focus:ring-brand-forest"

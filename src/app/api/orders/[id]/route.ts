@@ -25,6 +25,9 @@ export async function GET(
   }
 
   if (order.user_id !== user.id) {
+    if (user.app_metadata?.role === "admin") {
+      return NextResponse.json(order)
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
