@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist_Mono, Inter, Lato } from "next/font/google";
 import "./globals.css";
+import { SessionRestoreProvider } from "@/components/shared/SessionRestoreProvider";
+import AppShell from "@/components/shared/AppShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,7 +46,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${cormorantGaramond.variable} ${lato.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SessionRestoreProvider>
+          <AppShell>{children}</AppShell>
+        </SessionRestoreProvider>
+      </body>
     </html>
   );
 }
