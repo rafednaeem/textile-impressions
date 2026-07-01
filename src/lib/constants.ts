@@ -73,3 +73,11 @@ export const WORKSHOP_STATUS_LABELS: Record<string, string> = {
   completed: 'Completed',
   cancelled: 'Cancelled',
 }
+
+export const WORKSHOP_PAYMENT_STATUS_LABELS: Record<string, string> = {
+  none: 'No Payment',
+  awaiting: 'Awaiting Payment',
+  submitted: 'Proof Submitted',
+  verified: 'Verified',
+  rejected: 'Rejected',
+}
