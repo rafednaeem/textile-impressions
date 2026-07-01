@@ -34,6 +34,22 @@ export const metadata: Metadata = {
   },
   description:
     "Discover handcrafted Pakistani fashion — kurtas, dupattas, suits, co-ords, and accessories. Premium quality, traditional craftsmanship.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    title: "Textile Impressions",
+    capable: true,
+    statusBarStyle: "default",
+  },
+  other: { "theme-color": "#8B4513" },
 };
 
 export default function RootLayout({
