@@ -23,6 +23,8 @@ interface Registration {
     fee: number
     format: string
     date_start: string | null
+    online_meeting_url: string | null
+    location_address: string | null
   } | null
   payments: {
     id: string
