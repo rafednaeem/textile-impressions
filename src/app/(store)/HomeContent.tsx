@@ -8,7 +8,6 @@ import { ChevronDown, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Artisan, Product, UgcPhoto } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
-import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 import ImpactCounters from "@/components/store/ImpactCounters"
 
 const fadeUp = {
@@ -157,7 +156,7 @@ export default function HomeContent() {
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((product) => (
-                <ProductCard key={product.id} product={product} imageUrl={getProductImage(product)} hoverImageUrl={getProductHoverImage(product)} />
+                <ProductCard key={product.id} product={product} />
               ))}
             </motion.div>
           </div>

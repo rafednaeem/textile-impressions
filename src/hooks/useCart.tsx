@@ -10,7 +10,6 @@ import {
 } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { CartItem, Product, ProductVariant } from "@/types/database"
-import { getProductImage } from "@/lib/product-image"
 
 type CartItemDisplay = CartItem & {
   product: Pick<Product, "name" | "slug" | "price" | "sale_price" | "inventory_count">
@@ -100,7 +99,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           quantity: ci.quantity,
           price_at_time: ci.price_at_time,
           product: ci.products ?? { name: "Unknown", slug: "", price: 0, sale_price: null, inventory_count: 0 },
-          image: getProductImage(ci.products),
+          image: (() => {
+            const imgs = ci.products?.product_images?.filter((i: any) => i.url) ?? []
+            const primary = imgs.find((i: any) => i.is_primary)
+            return primary?.url ?? imgs[0]?.url ?? null
+          })(),
           variant: null,
         }))
       )

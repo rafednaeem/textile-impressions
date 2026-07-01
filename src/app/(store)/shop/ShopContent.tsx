@@ -7,7 +7,6 @@ import { SlidersHorizontal, ChevronDown, ChevronRight, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
-import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 
 const PAGE_SIZE = 12
 
@@ -327,7 +326,7 @@ export default function ShopContent() {
             <>
               <motion.div initial="initial" animate="animate" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} imageUrl={getProductImage(product)} hoverImageUrl={getProductHoverImage(product)} />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </motion.div>
               {totalPages > 1 && (

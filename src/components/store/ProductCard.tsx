@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingBag } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { Product } from "@/types/database"
@@ -12,8 +12,6 @@ import { useCart } from "@/hooks/useCart"
 
 interface ProductCardProps {
   product: Product
-  imageUrl?: string | null
-  hoverImageUrl?: string | null
 }
 
 const craftTagClasses: Record<string, string> = {
@@ -24,12 +22,17 @@ const craftTagClasses: Record<string, string> = {
   Plain: "bg-gray-200 text-gray-700",
 }
 
-export default function ProductCard({ product, imageUrl, hoverImageUrl }: ProductCardProps) {
+const slideTransition = { duration: 0.35, ease: "easeInOut" as const }
+
+export default function ProductCard({ product }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [hoverIdx, setHoverIdx] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
   const { addItem } = useCart()
   const supabase = createClient()
-  const { id: productId, sale_price, price, name, slug, inventory_count, craft_type } = product
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const { id: productId, sale_price, price, name, slug, inventory_count, craft_type, product_images } = product
   const hasDiscount = sale_price != null && sale_price < price
   const displayPrice = sale_price ?? price
   const isLowStock = inventory_count > 0 && inventory_count < 5
@@ -37,10 +40,13 @@ export default function ProductCard({ product, imageUrl, hoverImageUrl }: Produc
   const craftType = craft_type || "Plain"
   const craftClass = craftTagClasses[craftType] || "bg-gray-200 text-gray-700"
 
-  const fallbackImage = `https://picsum.photos/seed/${slug}/600/800`
-  const fallbackHover = `https://picsum.photos/seed/${slug}h/600/800`
-  const displayImage = imageUrl ?? fallbackImage
-  const displayHover = hoverImageUrl ?? fallbackHover
+  const allImages = (product_images?.filter((img) => img.url) ?? []) as { url: string; is_primary: boolean }[]
+  const imageCount = allImages.length
+  const fallbackUrl = `https://picsum.photos/seed/${slug}/600/800`
+  const primaryImage = imageCount > 0 ? (allImages.find((img) => img.is_primary)?.url ?? allImages[0].url) : null
+  const defaultUrl = primaryImage ?? fallbackUrl
+  const currentUrl = isHovered && imageCount > 1 ? allImages[hoverIdx].url : defaultUrl
+  const hasMultipleImages = imageCount > 1
 
   useEffect(() => {
     const checkWishlist = async () => {
@@ -57,6 +63,31 @@ export default function ProductCard({ product, imageUrl, hoverImageUrl }: Produc
     checkWishlist()
   }, [supabase, productId])
 
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
+
+  const handleMouseEnter = () => {
+    setIsHovered(true)
+    if (hasMultipleImages) {
+      setHoverIdx(0)
+      intervalRef.current = setInterval(() => {
+        setHoverIdx((prev) => (prev + 1) % imageCount)
+      }, 600)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    setHoverIdx(0)
+  }
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -70,11 +101,11 @@ export default function ProductCard({ product, imageUrl, hoverImageUrl }: Produc
         sale_price,
         inventory_count,
       },
-      image: displayImage,
+      image: defaultUrl,
     })
     toast(`${name} added to cart`, {
       description: "View your cart to checkout",
-            icon: <ShoppingBag className="h-4 w-4 text-brand-indigo" />,
+      icon: <ShoppingBag className="h-4 w-4 text-brand-indigo" />,
     })
   }
 
@@ -122,23 +153,29 @@ export default function ProductCard({ product, imageUrl, hoverImageUrl }: Produc
       animate={{ opacity: 1, y: 0 }}
       className="group relative"
       data-testid="product-card"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Link href={`/products/${slug}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
-          <Image
-            src={displayImage}
-            alt={name}
-            fill
-            className="object-cover transition-opacity duration-500 group-hover:opacity-0"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          <Image
-            src={displayHover}
-            alt={`${name} alternate view`}
-            fill
-            className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
+          <AnimatePresence mode="sync">
+            <motion.div
+              key={currentUrl}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={slideTransition}
+              className="absolute inset-0"
+            >
+              <Image
+                src={currentUrl}
+                alt={name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            </motion.div>
+          </AnimatePresence>
 
           <span className={`absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${craftClass}`}>
             {craftType}
