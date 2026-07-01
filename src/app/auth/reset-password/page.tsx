@@ -32,11 +32,13 @@ function ResetContent() {
   const emailForm = useForm({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { email: "" },
+    mode: "onBlur",
   })
 
   const passwordForm = useForm({
     resolver: zodResolver(newPasswordSchema),
     defaultValues: { password: "", confirmPassword: "" },
+    mode: "onBlur",
   })
 
   const sendResetEmail = async (data: { email: string }) => {
@@ -117,11 +119,19 @@ function ResetContent() {
           <input
             type="password"
             {...passwordForm.register("password")}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+            aria-invalid={!!passwordForm.formState.errors.password}
+            aria-describedby={passwordForm.formState.errors.password ? "new-password-error" : undefined}
+            className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+              passwordForm.formState.errors.password
+                ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                : passwordForm.formState.touchedFields?.password && passwordForm.formState.dirtyFields?.password
+                  ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                  : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+            }`}
             placeholder="••••••••"
           />
           {passwordForm.formState.errors.password && (
-            <p className="mt-1 text-xs text-red-500">
+            <p id="new-password-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
               {passwordForm.formState.errors.password.message}
             </p>
           )}
@@ -131,11 +141,19 @@ function ResetContent() {
           <input
             type="password"
             {...passwordForm.register("confirmPassword")}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+            aria-invalid={!!passwordForm.formState.errors.confirmPassword}
+            aria-describedby={passwordForm.formState.errors.confirmPassword ? "confirm-password-error" : undefined}
+            className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+              passwordForm.formState.errors.confirmPassword
+                ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                : passwordForm.formState.touchedFields?.confirmPassword && passwordForm.formState.dirtyFields?.confirmPassword
+                  ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                  : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+            }`}
             placeholder="••••••••"
           />
           {passwordForm.formState.errors.confirmPassword && (
-            <p className="mt-1 text-xs text-red-500">
+            <p id="confirm-password-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
               {passwordForm.formState.errors.confirmPassword.message}
             </p>
           )}
@@ -170,9 +188,22 @@ function ResetContent() {
         <input
           type="email"
           {...emailForm.register("email")}
-          className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+          aria-invalid={!!emailForm.formState.errors.email}
+          aria-describedby={emailForm.formState.errors.email ? "reset-email-error" : undefined}
+          className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+            emailForm.formState.errors.email
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+              : emailForm.formState.touchedFields?.email && emailForm.formState.dirtyFields?.email
+                ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+          }`}
           placeholder="you@example.com"
         />
+        {emailForm.formState.errors.email && (
+          <p id="reset-email-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+            {emailForm.formState.errors.email.message}
+          </p>
+        )}
       </div>
       <button
         type="submit"

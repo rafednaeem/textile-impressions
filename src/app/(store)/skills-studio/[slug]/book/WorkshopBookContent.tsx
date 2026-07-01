@@ -9,6 +9,7 @@ import { motion } from "framer-motion"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS } from "@/lib/constants"
 import { workshopRegisterSchema } from "@/lib/validations"
+import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 export default function WorkshopBookContent({ workshop }: { workshop: Workshop }) {
   const router = useRouter()
@@ -22,8 +23,39 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
     phone: "",
   })
 
+  const validation = useFieldValidation(
+    workshopRegisterSchema.pick({ guestName: true, guestEmail: true, guestPhone: true }),
+    { guestName: form.name, guestEmail: form.email, guestPhone: form.phone || "" }
+  )
+
+  const updateField = (name: string, value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }))
+    const mappedKey = name === "name" ? "guestName" : name === "email" ? "guestEmail" : "guestPhone"
+    if (errors[mappedKey]) setErrors((prev) => ({ ...prev, [mappedKey]: "" }))
+    validation.handleChange(mappedKey)
+  }
+
+  const getFieldBorder = (name: string) => {
+    const mappedKey = name === "name" ? "guestName" : name === "email" ? "guestEmail" : "guestPhone"
+    const error = errors[mappedKey] || validation.errors[mappedKey]
+    if (error) return "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+    if (validation.getFieldState(mappedKey) === "valid" && form[name as keyof typeof form]) return "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+    return "border-border focus:border-brand-forest"
+  }
+
+  const getErrorMessage = (name: string) => {
+    const mappedKey = name === "name" ? "guestName" : name === "email" ? "guestEmail" : "guestPhone"
+    return errors[mappedKey] || validation.errors[mappedKey]
+  }
+
+  const handleBlur = (name: string) => {
+    const mappedKey = name === "name" ? "guestName" : name === "email" ? "guestEmail" : "guestPhone"
+    validation.handleBlur(mappedKey)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    validation.markAllTouched()
     const result = workshopRegisterSchema.safeParse({
       workshopId: workshop.id,
       guestName: form.name,
@@ -124,12 +156,15 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => { setForm({ ...form, name: e.target.value }); if (errors.guestName) setErrors((p) => ({ ...p, guestName: "" })) }}
-                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
+                onChange={(e) => updateField("name", e.target.value)}
+                onBlur={() => handleBlur("name")}
+                aria-invalid={!!getErrorMessage("name")}
+                aria-describedby={getErrorMessage("name") ? "ws-name-error" : undefined}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-colors ${getFieldBorder("name")}`}
                 placeholder="Fatima Ahmed"
               />
             </div>
-            {errors.guestName && <p className="mt-1 text-xs text-red-500">{errors.guestName}</p>}
+            {getErrorMessage("name") && <p id="ws-name-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("name")}</p>}
           </div>
 
           <div>
@@ -139,12 +174,15 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <input
                 type="email"
                 value={form.email}
-                onChange={(e) => { setForm({ ...form, email: e.target.value }); if (errors.guestEmail) setErrors((p) => ({ ...p, guestEmail: "" })) }}
-                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestEmail ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
+                onChange={(e) => updateField("email", e.target.value)}
+                onBlur={() => handleBlur("email")}
+                aria-invalid={!!getErrorMessage("email")}
+                aria-describedby={getErrorMessage("email") ? "ws-email-error" : undefined}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-colors ${getFieldBorder("email")}`}
                 placeholder="fatima@example.com"
               />
             </div>
-            {errors.guestEmail && <p className="mt-1 text-xs text-red-500">{errors.guestEmail}</p>}
+            {getErrorMessage("email") && <p id="ws-email-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("email")}</p>}
           </div>
 
           <div>
@@ -154,12 +192,15 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (errors.guestPhone) setErrors((p) => ({ ...p, guestPhone: "" })) }}
-                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestPhone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
+                onChange={(e) => updateField("phone", e.target.value)}
+                onBlur={() => handleBlur("phone")}
+                aria-invalid={!!getErrorMessage("phone")}
+                aria-describedby={getErrorMessage("phone") ? "ws-phone-error" : undefined}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-colors ${getFieldBorder("phone")}`}
                 placeholder="03XXXXXXXXX"
               />
             </div>
-            {errors.guestPhone && <p className="mt-1 text-xs text-red-500">{errors.guestPhone}</p>}
+            {getErrorMessage("phone") && <p id="ws-phone-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("phone")}</p>}
           </div>
 
           <button

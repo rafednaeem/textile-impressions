@@ -22,6 +22,7 @@ import { useCart } from "@/hooks/useCart"
 import { FREE_SHIPPING_THRESHOLD } from "@/constants"
 import { isCodEligible } from "@/lib/constants"
 import { checkoutShippingSchema, checkoutPaymentSchema } from "@/lib/validations"
+import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 const PROVINCES = [
   "Punjab",
@@ -92,6 +93,11 @@ export default function CheckoutPage() {
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({})
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({})
+
+  const shippingValidation = useFieldValidation(checkoutShippingSchema, {
+    ...shipping,
+    guestEmail: user ? undefined : guestEmail,
+  })
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -290,6 +296,7 @@ export default function CheckoutPage() {
   }
 
   const handleShippingContinue = () => {
+    shippingValidation.markAllTouched()
     if (validateShipping()) setStep(1)
   }
 
@@ -380,55 +387,213 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     value={guestEmail}
-                    onChange={(e) => { setGuestEmail(e.target.value); if (shippingErrors.guestEmail) setShippingErrors((p) => ({ ...p, guestEmail: "" })) }}
-                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.guestEmail ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
+                    onChange={(e) => {
+                      setGuestEmail(e.target.value)
+                      if (shippingErrors.guestEmail) setShippingErrors((p) => ({ ...p, guestEmail: "" }))
+                      shippingValidation.handleChange("guestEmail")
+                    }}
+                    onBlur={() => {
+                      shippingValidation.handleBlur("guestEmail")
+                    }}
+                    aria-invalid={!!(shippingErrors.guestEmail || shippingValidation.errors.guestEmail)}
+                    aria-describedby={(shippingErrors.guestEmail || shippingValidation.errors.guestEmail) ? "guestEmail-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.guestEmail || shippingValidation.errors.guestEmail)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("guestEmail") === "valid" && guestEmail
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
                     placeholder="you@example.com"
                   />
-                  {shippingErrors.guestEmail && <p className="mt-1 text-xs text-red-500">{shippingErrors.guestEmail}</p>}
+                  {(shippingErrors.guestEmail || shippingValidation.errors.guestEmail) && (
+                    <p id="guestEmail-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.guestEmail || shippingValidation.errors.guestEmail}
+                    </p>
+                  )}
                 </div>
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium">Full Name</label>
-                  <input value={shipping.fullName} onChange={(e) => { setShipping({ ...shipping, fullName: e.target.value }); if (shippingErrors.fullName) setShippingErrors((p) => ({ ...p, fullName: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.fullName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Fatima Ahmed" />
-                  {shippingErrors.fullName && <p className="mt-1 text-xs text-red-500">{shippingErrors.fullName}</p>}
+                  <input
+                    value={shipping.fullName}
+                    onChange={(e) => {
+                      setShipping({ ...shipping, fullName: e.target.value })
+                      if (shippingErrors.fullName) setShippingErrors((p) => ({ ...p, fullName: "" }))
+                      shippingValidation.handleChange("fullName")
+                    }}
+                    onBlur={() => shippingValidation.handleBlur("fullName")}
+                    aria-invalid={!!(shippingErrors.fullName || shippingValidation.errors.fullName)}
+                    aria-describedby={(shippingErrors.fullName || shippingValidation.errors.fullName) ? "fullName-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.fullName || shippingValidation.errors.fullName)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("fullName") === "valid" && shipping.fullName
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
+                    placeholder="Fatima Ahmed"
+                  />
+                  {(shippingErrors.fullName || shippingValidation.errors.fullName) && (
+                    <p id="fullName-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.fullName || shippingValidation.errors.fullName}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Phone</label>
-                  <input value={shipping.phone} onChange={(e) => { setShipping({ ...shipping, phone: e.target.value }); if (shippingErrors.phone) setShippingErrors((p) => ({ ...p, phone: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.phone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="03XXXXXXXXX" />
-                  {shippingErrors.phone && <p className="mt-1 text-xs text-red-500">{shippingErrors.phone}</p>}
+                  <input
+                    value={shipping.phone}
+                    onChange={(e) => {
+                      setShipping({ ...shipping, phone: e.target.value })
+                      if (shippingErrors.phone) setShippingErrors((p) => ({ ...p, phone: "" }))
+                      shippingValidation.handleChange("phone")
+                    }}
+                    onBlur={() => shippingValidation.handleBlur("phone")}
+                    aria-invalid={!!(shippingErrors.phone || shippingValidation.errors.phone)}
+                    aria-describedby={(shippingErrors.phone || shippingValidation.errors.phone) ? "phone-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.phone || shippingValidation.errors.phone)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("phone") === "valid" && shipping.phone
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
+                    placeholder="03XXXXXXXXX"
+                  />
+                  {(shippingErrors.phone || shippingValidation.errors.phone) && (
+                    <p id="phone-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.phone || shippingValidation.errors.phone}
+                    </p>
+                  )}
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium">Address Line 1</label>
-                <input value={shipping.addressLine1} onChange={(e) => { setShipping({ ...shipping, addressLine1: e.target.value }); if (shippingErrors.addressLine1) setShippingErrors((p) => ({ ...p, addressLine1: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.addressLine1 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="House #, Street" />
-                {shippingErrors.addressLine1 && <p className="mt-1 text-xs text-red-500">{shippingErrors.addressLine1}</p>}
+                <input
+                  value={shipping.addressLine1}
+                  onChange={(e) => {
+                    setShipping({ ...shipping, addressLine1: e.target.value })
+                    if (shippingErrors.addressLine1) setShippingErrors((p) => ({ ...p, addressLine1: "" }))
+                    shippingValidation.handleChange("addressLine1")
+                  }}
+                  onBlur={() => shippingValidation.handleBlur("addressLine1")}
+                  aria-invalid={!!(shippingErrors.addressLine1 || shippingValidation.errors.addressLine1)}
+                  aria-describedby={(shippingErrors.addressLine1 || shippingValidation.errors.addressLine1) ? "addressLine1-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                    (shippingErrors.addressLine1 || shippingValidation.errors.addressLine1)
+                      ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                      : shippingValidation.getFieldState("addressLine1") === "valid" && shipping.addressLine1
+                        ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                  }`}
+                  placeholder="House #, Street"
+                />
+                {(shippingErrors.addressLine1 || shippingValidation.errors.addressLine1) && (
+                  <p id="addressLine1-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                    {shippingErrors.addressLine1 || shippingValidation.errors.addressLine1}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium">Address Line 2 <span className="text-muted-foreground">(optional)</span></label>
-                <input value={shipping.addressLine2} onChange={(e) => { setShipping({ ...shipping, addressLine2: e.target.value }); if (shippingErrors.addressLine2) setShippingErrors((p) => ({ ...p, addressLine2: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.addressLine2 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Area / Landmark" />
-                {shippingErrors.addressLine2 && <p className="mt-1 text-xs text-red-500">{shippingErrors.addressLine2}</p>}
+                <input
+                  value={shipping.addressLine2}
+                  onChange={(e) => {
+                    setShipping({ ...shipping, addressLine2: e.target.value })
+                    if (shippingErrors.addressLine2) setShippingErrors((p) => ({ ...p, addressLine2: "" }))
+                  }}
+                  className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                  placeholder="Area / Landmark"
+                />
+                {shippingErrors.addressLine2 && <p className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{shippingErrors.addressLine2}</p>}
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium">City</label>
-                  <input value={shipping.city} onChange={(e) => { setShipping({ ...shipping, city: e.target.value }); if (shippingErrors.city) setShippingErrors((p) => ({ ...p, city: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.city ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Karachi" />
-                  {shippingErrors.city && <p className="mt-1 text-xs text-red-500">{shippingErrors.city}</p>}
+                  <input
+                    value={shipping.city}
+                    onChange={(e) => {
+                      setShipping({ ...shipping, city: e.target.value })
+                      if (shippingErrors.city) setShippingErrors((p) => ({ ...p, city: "" }))
+                      shippingValidation.handleChange("city")
+                    }}
+                    onBlur={() => shippingValidation.handleBlur("city")}
+                    aria-invalid={!!(shippingErrors.city || shippingValidation.errors.city)}
+                    aria-describedby={(shippingErrors.city || shippingValidation.errors.city) ? "city-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.city || shippingValidation.errors.city)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("city") === "valid" && shipping.city
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
+                    placeholder="Karachi"
+                  />
+                  {(shippingErrors.city || shippingValidation.errors.city) && (
+                    <p id="city-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.city || shippingValidation.errors.city}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Province</label>
-                  <select value={shipping.province} onChange={(e) => { setShipping({ ...shipping, province: e.target.value }); if (shippingErrors.province) setShippingErrors((p) => ({ ...p, province: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.province ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}>
+                  <select
+                    value={shipping.province}
+                    onChange={(e) => {
+                      setShipping({ ...shipping, province: e.target.value })
+                      if (shippingErrors.province) setShippingErrors((p) => ({ ...p, province: "" }))
+                      shippingValidation.handleChange("province")
+                    }}
+                    onBlur={() => shippingValidation.handleBlur("province")}
+                    aria-invalid={!!(shippingErrors.province || shippingValidation.errors.province)}
+                    aria-describedby={(shippingErrors.province || shippingValidation.errors.province) ? "province-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.province || shippingValidation.errors.province)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("province") === "valid" && shipping.province
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
+                  >
                     <option value="">Select</option>
                     {PROVINCES.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
-                  {shippingErrors.province && <p className="mt-1 text-xs text-red-500">{shippingErrors.province}</p>}
+                  {(shippingErrors.province || shippingValidation.errors.province) && (
+                    <p id="province-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.province || shippingValidation.errors.province}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Postal Code <span className="text-muted-foreground">(optional)</span></label>
-                  <input value={shipping.postalCode} onChange={(e) => { setShipping({ ...shipping, postalCode: e.target.value }); if (shippingErrors.postalCode) setShippingErrors((p) => ({ ...p, postalCode: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.postalCode ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="54000" />
-                  {shippingErrors.postalCode && <p className="mt-1 text-xs text-red-500">{shippingErrors.postalCode}</p>}
+                  <input
+                    value={shipping.postalCode}
+                    onChange={(e) => {
+                      setShipping({ ...shipping, postalCode: e.target.value })
+                      if (shippingErrors.postalCode) setShippingErrors((p) => ({ ...p, postalCode: "" }))
+                      shippingValidation.handleChange("postalCode")
+                    }}
+                    onBlur={() => shippingValidation.handleBlur("postalCode")}
+                    aria-invalid={!!(shippingErrors.postalCode || shippingValidation.errors.postalCode)}
+                    aria-describedby={(shippingErrors.postalCode || shippingValidation.errors.postalCode) ? "postalCode-error" : undefined}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${
+                      (shippingErrors.postalCode || shippingValidation.errors.postalCode)
+                        ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                        : shippingValidation.getFieldState("postalCode") === "valid" && shipping.postalCode
+                          ? "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                          : "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+                    }`}
+                    placeholder="54000"
+                  />
+                  {(shippingErrors.postalCode || shippingValidation.errors.postalCode) && (
+                    <p id="postalCode-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+                      {shippingErrors.postalCode || shippingValidation.errors.postalCode}
+                    </p>
+                  )}
                 </div>
               </div>
               {user && (

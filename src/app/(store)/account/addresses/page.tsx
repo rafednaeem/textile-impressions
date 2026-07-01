@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { MapPin, Plus, Trash2, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { addressSchema } from "@/lib/validations"
+import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan", "Gilgit-Baltistan", "AJK"]
 
@@ -16,6 +17,16 @@ export default function AddressesPage() {
   const [form, setForm] = useState({
     fullName: "", phone: "", addressLine1: "", addressLine2: "",
     city: "", province: "", postalCode: "", isDefault: false,
+  })
+
+  const validation = useFieldValidation(addressSchema, {
+    fullName: form.fullName,
+    phone: form.phone,
+    addressLine1: form.addressLine1,
+    addressLine2: form.addressLine2 || undefined,
+    city: form.city,
+    province: form.province,
+    postalCode: form.postalCode || undefined,
   })
 
   const fetchAddresses = async () => {
@@ -32,7 +43,23 @@ export default function AddressesPage() {
 
   useEffect(() => { fetchAddresses() }, [])
 
+  const updateField = (name: string, value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }))
+    validation.handleChange(name)
+  }
+
+  const getFieldBorder = (name: string) => {
+    const error = errors[name] || validation.errors[name]
+    if (error) return "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+    if (validation.getFieldState(name) === "valid" && form[name as keyof typeof form]) return "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+    return "border-border focus:border-brand-forest"
+  }
+
+  const getErrorMessage = (name: string) => errors[name] || validation.errors[name]
+
   const save = async () => {
+    validation.markAllTouched()
     const result = addressSchema.safeParse({
       fullName: form.fullName,
       phone: form.phone,
@@ -74,6 +101,7 @@ export default function AddressesPage() {
 
     setForm({ fullName: "", phone: "", addressLine1: "", addressLine2: "", city: "", province: "", postalCode: "", isDefault: false })
     setErrors({})
+    validation.clearErrors()
     setAdding(false)
     fetchAddresses()
   }
@@ -153,43 +181,88 @@ export default function AddressesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-sm">Full Name</label>
-                <input value={form.fullName} onChange={(e) => { setForm({ ...form, fullName: e.target.value }); if (errors.fullName) setErrors((p) => ({ ...p, fullName: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.fullName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-                {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+                <input
+                  value={form.fullName}
+                  onChange={(e) => updateField("fullName", e.target.value)}
+                  onBlur={() => validation.handleBlur("fullName")}
+                  aria-invalid={!!getErrorMessage("fullName")}
+                  aria-describedby={getErrorMessage("fullName") ? "addr-name-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("fullName")}`}
+                />
+                {getErrorMessage("fullName") && <p id="addr-name-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("fullName")}</p>}
               </div>
               <div>
                 <label className="block text-sm">Phone</label>
-                <input value={form.phone} onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (errors.phone) setErrors((p) => ({ ...p, phone: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.phone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-                {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+                <input
+                  value={form.phone}
+                  onChange={(e) => updateField("phone", e.target.value)}
+                  onBlur={() => validation.handleBlur("phone")}
+                  aria-invalid={!!getErrorMessage("phone")}
+                  aria-describedby={getErrorMessage("phone") ? "addr-phone-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("phone")}`}
+                />
+                {getErrorMessage("phone") && <p id="addr-phone-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("phone")}</p>}
               </div>
             </div>
             <div>
               <label className="block text-sm">Address Line 1</label>
-              <input value={form.addressLine1} onChange={(e) => { setForm({ ...form, addressLine1: e.target.value }); if (errors.addressLine1) setErrors((p) => ({ ...p, addressLine1: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.addressLine1 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-              {errors.addressLine1 && <p className="mt-1 text-xs text-red-500">{errors.addressLine1}</p>}
+              <input
+                value={form.addressLine1}
+                onChange={(e) => updateField("addressLine1", e.target.value)}
+                onBlur={() => validation.handleBlur("addressLine1")}
+                aria-invalid={!!getErrorMessage("addressLine1")}
+                aria-describedby={getErrorMessage("addressLine1") ? "addr-addr1-error" : undefined}
+                className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("addressLine1")}`}
+              />
+              {getErrorMessage("addressLine1") && <p id="addr-addr1-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("addressLine1")}</p>}
             </div>
             <div>
               <label className="block text-sm">Address Line 2 <span className="text-muted-foreground">(optional)</span></label>
-              <input value={form.addressLine2} onChange={(e) => { setForm({ ...form, addressLine2: e.target.value }); if (errors.addressLine2) setErrors((p) => ({ ...p, addressLine2: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.addressLine2 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-              {errors.addressLine2 && <p className="mt-1 text-xs text-red-500">{errors.addressLine2}</p>}
+              <input
+                value={form.addressLine2}
+                onChange={(e) => updateField("addressLine2", e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm outline-none transition-colors focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+              />
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <label className="block text-sm">City</label>
-                <input value={form.city} onChange={(e) => { setForm({ ...form, city: e.target.value }); if (errors.city) setErrors((p) => ({ ...p, city: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.city ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-                {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
+                <input
+                  value={form.city}
+                  onChange={(e) => updateField("city", e.target.value)}
+                  onBlur={() => validation.handleBlur("city")}
+                  aria-invalid={!!getErrorMessage("city")}
+                  aria-describedby={getErrorMessage("city") ? "addr-city-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("city")}`}
+                />
+                {getErrorMessage("city") && <p id="addr-city-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("city")}</p>}
               </div>
               <div>
                 <label className="block text-sm">Province</label>
-                <select value={form.province} onChange={(e) => { setForm({ ...form, province: e.target.value }); if (errors.province) setErrors((p) => ({ ...p, province: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.province ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}>
+                <select
+                  value={form.province}
+                  onChange={(e) => updateField("province", e.target.value)}
+                  onBlur={() => validation.handleBlur("province")}
+                  aria-invalid={!!getErrorMessage("province")}
+                  aria-describedby={getErrorMessage("province") ? "addr-province-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("province")}`}
+                >
                   <option value="">Select</option>
                   {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
-                {errors.province && <p className="mt-1 text-xs text-red-500">{errors.province}</p>}
+                {getErrorMessage("province") && <p id="addr-province-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("province")}</p>}
               </div>
               <div>
                 <label className="block text-sm">Postal Code <span className="text-muted-foreground">(optional)</span></label>
-                <input value={form.postalCode} onChange={(e) => { setForm({ ...form, postalCode: e.target.value }); if (errors.postalCode) setErrors((p) => ({ ...p, postalCode: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.postalCode ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
-                {errors.postalCode && <p className="mt-1 text-xs text-red-500">{errors.postalCode}</p>}
+                <input
+                  value={form.postalCode}
+                  onChange={(e) => updateField("postalCode", e.target.value)}
+                  onBlur={() => validation.handleBlur("postalCode")}
+                  aria-invalid={!!getErrorMessage("postalCode")}
+                  aria-describedby={getErrorMessage("postalCode") ? "addr-postal-error" : undefined}
+                  className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm outline-none transition-colors ${getFieldBorder("postalCode")}`}
+                />
+                {getErrorMessage("postalCode") && <p id="addr-postal-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("postalCode")}</p>}
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">
@@ -199,7 +272,7 @@ export default function AddressesPage() {
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={save} className="rounded-full bg-brand-forest px-6 py-2 text-sm font-medium text-white">Save</button>
-            <button onClick={() => setAdding(false)} className="rounded-full border border-border px-6 py-2 text-sm font-medium">Cancel</button>
+            <button onClick={() => { setAdding(false); setErrors({}); validation.clearErrors() }} className="rounded-full border border-border px-6 py-2 text-sm font-medium">Cancel</button>
           </div>
         </div>
       )}

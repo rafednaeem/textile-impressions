@@ -21,10 +21,24 @@ function LoginForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, touchedFields, dirtyFields },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    mode: "onBlur",
   })
+
+  const getFieldState = (fieldName: keyof LoginInput) => {
+    if (errors[fieldName]) return "error"
+    if (touchedFields[fieldName] && dirtyFields[fieldName] && !errors[fieldName]) return "valid"
+    return "idle"
+  }
+
+  const getFieldBorder = (fieldName: keyof LoginInput) => {
+    const state = getFieldState(fieldName)
+    if (state === "error") return "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+    if (state === "valid") return "border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+    return "border-border focus:border-brand-forest focus:ring-2 focus:ring-brand-forest/20"
+  }
 
   const onSubmit = async (data: LoginInput) => {
     setError("")
@@ -123,11 +137,15 @@ function LoginForm() {
             type="email"
             autoComplete="email"
             {...register("email")}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none focus:ring-2 focus:ring-brand-forest/20"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none transition-colors ${getFieldBorder("email")}`}
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+            <p id="email-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
@@ -141,19 +159,24 @@ function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               {...register("password")}
-              className="block w-full rounded-lg border border-border bg-background px-4 py-2.5 pr-10 text-sm focus:border-brand-forest focus:outline-none focus:ring-2 focus:ring-brand-forest/20"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "password-error" : undefined}
+              className={`block w-full rounded-lg border bg-background px-4 py-2.5 pr-10 text-sm outline-none transition-colors ${getFieldBorder("password")}`}
               placeholder="••••••••"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
+            <p id="password-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
