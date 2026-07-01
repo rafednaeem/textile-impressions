@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { storeName, baseUrl } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
+import { canonicalUrl, organizationSchema, websiteSchema, breadcrumbSchema } from "@/lib/seo"
 import HomeContent from "./HomeContent"
 
 export const revalidate = 600
@@ -12,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: storeName + " — Handcrafted Pakistani Fashion",
     description:
       "Discover handcrafted Pakistani fashion blending traditional craftsmanship with contemporary elegance. Shop our curated collection of premium textiles and garments.",
+    alternates: { canonical: canonicalUrl("/") },
     openGraph: {
       title: storeName,
       description:
@@ -37,12 +39,8 @@ export default async function HomePage() {
   const s = extractSettings(data)
   const whatsapp = s.store_whatsapp || "923001234567"
 
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: storeName,
-    url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+  const orgSchema = {
+    ...organizationSchema,
     contactPoint: {
       "@type": "ContactPoint",
       telephone: `+${whatsapp}`,
@@ -58,8 +56,14 @@ export default async function HomePage() {
 
   return (
     <>
-      <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
-        {JSON.stringify(organizationSchema)}
+      <Script id="organization-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(orgSchema)}
+      </Script>
+      <Script id="website-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(websiteSchema())}
+      </Script>
+      <Script id="breadcrumb-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(breadcrumbSchema([{ name: "Home", url: canonicalUrl("/") }]))}
       </Script>
       <HomeContent />
     </>

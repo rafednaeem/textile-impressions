@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import { storeName } from "@/lib/constants"
 
 export const metadata: Metadata = {
-  title: `My Account — ${storeName}`,
+  title: `Reset Password — ${storeName}`,
   robots: { index: false, follow: false },
 }
 
-export default function AccountLayout({
+export default function AuthResetLayout({
   children,
 }: {
   children: React.ReactNode

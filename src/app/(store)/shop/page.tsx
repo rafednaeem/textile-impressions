@@ -1,7 +1,9 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import Script from "next/script"
 import { createClient } from "@/lib/supabase/server"
 import { storeName, baseUrl } from "@/lib/constants"
+import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
 import ShopContent from "./ShopContent"
 import ProductGridSkeleton from "@/components/store/ProductGridSkeleton"
 
@@ -27,6 +29,7 @@ export async function generateMetadata({
       return {
         title: `${data.name} — ${storeName}`,
         description: `Shop our ${data.name} collection at ${storeName}. Handcrafted Pakistani fashion with premium quality.`,
+        alternates: { canonical: canonicalUrl(`/shop?category=${categorySlug}`) },
         openGraph: {
           title: `${data.name} — ${storeName}`,
           description: `Shop our ${data.name} collection at ${storeName}.`,
@@ -39,6 +42,7 @@ export async function generateMetadata({
   return {
     title: `Shop All — ${storeName}`,
     description: `Browse our complete collection of handcrafted Pakistani fashion at ${storeName}. Discover premium textiles, embroidered suits, and more.`,
+    alternates: { canonical: canonicalUrl("/shop") },
     openGraph: {
       title: `Shop All — ${storeName}`,
       description: `Browse our complete collection of handcrafted Pakistani fashion at ${storeName}.`,
@@ -48,9 +52,19 @@ export async function generateMetadata({
 }
 
 export default function ShopPage() {
+  const breadcrumb = breadcrumbSchema([
+    { name: "Home", url: canonicalUrl("/") },
+    { name: "Shop", url: canonicalUrl("/shop") },
+  ])
+
   return (
-    <Suspense fallback={<ProductGridSkeleton />}>
-      <ShopContent />
-    </Suspense>
+    <>
+      <Script id="breadcrumb-shop" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(breadcrumb)}
+      </Script>
+      <Suspense fallback={<ProductGridSkeleton />}>
+        <ShopContent />
+      </Suspense>
+    </>
   )
 }

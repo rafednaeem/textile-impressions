@@ -1,55 +1,47 @@
 import type { MetadataRoute } from "next"
+import { siteUrl } from "@/lib/seo"
 import { createClient } from "@/lib/supabase/server"
-import { baseUrl } from "@/lib/constants"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient()
 
-  const [productsRes, categoriesRes] = await Promise.all([
-    supabase.from("products").select("slug, updated_at").eq("is_active", true),
-    supabase.from("categories").select("slug, updated_at").eq("is_active", true),
+  const staticPages = [
+    { url: siteUrl, priority: 1, changeFrequency: "weekly" as const },
+    { url: `${siteUrl}/shop`, priority: 0.9, changeFrequency: "weekly" as const },
+    { url: `${siteUrl}/craft-guide`, priority: 0.6, changeFrequency: "monthly" as const },
+    { url: `${siteUrl}/lookbook`, priority: 0.7, changeFrequency: "weekly" as const },
+    { url: `${siteUrl}/colors`, priority: 0.5, changeFrequency: "weekly" as const },
+    { url: `${siteUrl}/skills-studio`, priority: 0.8, changeFrequency: "daily" as const },
+    { url: `${siteUrl}/custom-orders`, priority: 0.5, changeFrequency: "monthly" as const },
+    { url: `${siteUrl}/incubator`, priority: 0.6, changeFrequency: "monthly" as const },
+  ]
+
+  const [{ data: products }, { data: categories }, { data: workshops }] = await Promise.all([
+    supabase.from("products").select("slug, updated_at").eq("is_published", true),
+    supabase.from("categories").select("slug, updated_at"),
+    supabase.from("workshops").select("slug, updated_at").eq("status", "published").not("slug", "is", null),
   ])
 
-  const products = (productsRes.data || []).map((p: any) => ({
-    url: `${baseUrl}/products/${p.slug}`,
-    lastModified: new Date(p.updated_at),
-    changeFrequency: "weekly" as const,
+  const productUrls: MetadataRoute.Sitemap = (products ?? []).map((p) => ({
+    url: `${siteUrl}/products/${p.slug}`,
     priority: 0.8,
+    changeFrequency: "weekly",
+    lastModified: new Date(p.updated_at),
   }))
 
-  const categories = (categoriesRes.data || []).map((c: any) => ({
-    url: `${baseUrl}/shop?category=${c.slug}`,
-    lastModified: new Date(c.updated_at),
-    changeFrequency: "weekly" as const,
+  const categoryUrls: MetadataRoute.Sitemap = (categories ?? []).map((c) => ({
+    url: `${siteUrl}/shop?category=${c.slug}`,
     priority: 0.7,
+    changeFrequency: "weekly",
+    lastModified: new Date(c.updated_at),
   }))
 
-  return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/shop`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    ...products,
-    ...categories,
-  ]
+  const workshopUrls: MetadataRoute.Sitemap = (workshops ?? []).map((w) => ({
+    url: `${siteUrl}/skills-studio/${w.slug}`,
+    priority: 0.8,
+    changeFrequency: "weekly",
+    lastModified: new Date(w.updated_at),
+  }))
+
+  return [...staticPages, ...productUrls, ...categoryUrls, ...workshopUrls]
 }

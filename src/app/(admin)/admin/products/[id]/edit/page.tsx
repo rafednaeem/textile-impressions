@@ -307,7 +307,7 @@ export default function EditProductPage({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {images.map((img, i) => (
               <div key={i} className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
-                <img src={img.url} alt="" className="h-full w-full object-cover" />
+                <img src={img.url} alt="Product image preview" className="h-full w-full object-cover" />
                 {i === 0 && <span className="absolute left-1 top-1 rounded bg-brand-forest px-1.5 py-0.5 text-[10px] text-white">Primary</span>}
                 <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
                   <button type="button" onClick={() => moveImage(i, "up")} disabled={i === 0} className="rounded bg-white p-1 disabled:opacity-30"><GripVertical className="h-3 w-3 rotate-90 text-brand-forest" /></button>

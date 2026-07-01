@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Geist_Mono, Inter, Lato } from "next/font/google";
 import "./globals.css";
 import { SessionRestoreProvider } from "@/components/shared/SessionRestoreProvider";
 import AppShell from "@/components/shared/AppShell";
+import { siteName, siteDescription, siteUrl, siteLocale, defaultOgImage, ogImageWidth, ogImageHeight, twitterHandle } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,12 +29,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Textile Impressions — Pakistani Handcrafted Fashion",
-    template: "%s — Textile Impressions",
+    default: `${siteName} — Pakistani Handcrafted Fashion`,
+    template: `%s — ${siteName}`,
   },
-  description:
-    "Discover handcrafted Pakistani fashion — kurtas, dupattas, suits, co-ords, and accessories. Premium quality, traditional craftsmanship.",
+  description: siteDescription,
+  generator: "Next.js",
+  applicationName: siteName,
+  keywords: [
+    "Pakistani fashion",
+    "handcrafted clothing",
+    "kurtas",
+    "dupattas",
+    "block print",
+    "Ajrak",
+    "Pakistani suits",
+    "textile impressions",
+    "Pakistani handcrafted fashion",
+    "traditional Pakistani clothing",
+    "Karachi fashion",
+    "Pakistan textile",
+  ],
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
+  formatDetection: {
+    telephone: true,
+    email: true,
+    address: true,
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "48x48" },
@@ -45,11 +70,51 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
-    title: "Textile Impressions",
+    title: siteName,
     capable: true,
     statusBarStyle: "default",
   },
-  other: { "theme-color": "#8B4513" },
+  openGraph: {
+    type: "website",
+    locale: siteLocale,
+    siteName: siteName,
+    title: siteName,
+    description: siteDescription,
+    url: siteUrl,
+    images: [
+      {
+        url: defaultOgImage,
+        width: ogImageWidth,
+        height: ogImageHeight,
+        alt: siteName,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: twitterHandle,
+    creator: twitterHandle,
+    title: siteName,
+    description: siteDescription,
+    images: [defaultOgImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#8B4513",
 };
 
 export default function RootLayout({

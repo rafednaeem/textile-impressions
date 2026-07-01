@@ -379,7 +379,7 @@ export default function ProductFormPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {images.map((img, i) => (
               <div key={i} className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
-                <img src={img.url} alt={`Product ${i + 1}`} className="h-full w-full object-cover" />
+                <img src={img.url} alt={`Product image ${i + 1}`} className="h-full w-full object-cover" />
                 {i === 0 && (
                   <span className="absolute left-1 top-1 rounded bg-brand-forest px-1.5 py-0.5 text-[10px] text-white">Primary</span>
                 )}

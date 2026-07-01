@@ -32,6 +32,11 @@ export default async function Footer() {
             </h4>
             <ul className="space-y-2 text-sm text-white/70">
               <li>
+                <Link href="/" className="transition-colors hover:text-white">
+                  Home
+                </Link>
+              </li>
+              <li>
                 <Link href="/shop" className="transition-colors hover:text-white">
                   Shop All
                 </Link>
@@ -59,6 +64,11 @@ export default async function Footer() {
               <li>
                 <Link href="/incubator" className="transition-colors hover:text-white">
                   Incubator
+                </Link>
+              </li>
+              <li>
+                <Link href="/craft-guide" className="transition-colors hover:text-white">
+                  Craft Guide
                 </Link>
               </li>
             </ul>

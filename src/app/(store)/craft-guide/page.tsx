@@ -1,10 +1,14 @@
 import type { Metadata } from "next"
+import Script from "next/script"
 import Image from "next/image"
+import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
+import { storeName } from "@/lib/constants"
 
 export const metadata: Metadata = {
-  title: "Pakistani Textile Craft Guide",
+  title: `Pakistani Textile Craft Guide — ${storeName}`,
   description:
     "Learn about block printing in Pakistan, Ajrak, natural dyes, and caring for handcrafted textiles.",
+  alternates: { canonical: canonicalUrl("/craft-guide") },
   keywords: [
     "what is block printing Pakistan",
     "Ajrak textile Pakistan",
@@ -58,31 +62,39 @@ const articles = [
 
 export default function CraftGuidePage() {
   return (
-    <div className="bg-brand-ivory pb-20 pt-28 text-brand-umber">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Craft guide</p>
-        <h1 className="mt-4 font-heading text-5xl font-semibold text-brand-indigo">Pakistani textile traditions, explained</h1>
-      </div>
-      <div className="mx-auto mt-12 max-w-4xl space-y-16 px-4 sm:px-6 lg:px-8">
-        {articles.map((article) => (
-          <article key={article.title} className="overflow-hidden rounded-lg border border-border bg-white">
-            <div className="relative aspect-[5/3]">
-              <Image src={article.image} alt={article.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 896px" />
-            </div>
-            <div className="p-6 sm:p-8">
-              <span className="inline-flex rounded-full bg-brand-saffron/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-crimson">
-                {article.tag}
-              </span>
-              <h2 className="mt-4 font-heading text-4xl font-semibold text-brand-indigo">{article.title}</h2>
-              <div className="mt-5 space-y-4 leading-7 text-muted-foreground">
-                {article.body.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
+    <>
+      <Script id="breadcrumb-craft-guide" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(breadcrumbSchema([
+          { name: "Home", url: canonicalUrl("/") },
+          { name: "Craft Guide", url: canonicalUrl("/craft-guide") },
+        ]))}
+      </Script>
+      <div className="bg-brand-ivory pb-20 pt-28 text-brand-umber">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Craft guide</p>
+          <h1 className="mt-4 font-heading text-5xl font-semibold text-brand-indigo">Pakistani textile traditions, explained</h1>
+        </div>
+        <div className="mx-auto mt-12 max-w-4xl space-y-16 px-4 sm:px-6 lg:px-8">
+          {articles.map((article) => (
+            <article key={article.title} className="overflow-hidden rounded-lg border border-border bg-white">
+              <div className="relative aspect-[5/3]">
+                <Image src={article.image} alt={article.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 896px" />
               </div>
-            </div>
-          </article>
-        ))}
+              <div className="p-6 sm:p-8">
+                <span className="inline-flex rounded-full bg-brand-saffron/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-crimson">
+                  {article.tag}
+                </span>
+                <h2 className="mt-4 font-heading text-4xl font-semibold text-brand-indigo">{article.title}</h2>
+                <div className="mt-5 space-y-4 leading-7 text-muted-foreground">
+                  {article.body.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -1,11 +1,29 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getServiceRoleClient } from "@/lib/supabase/service-role"
+import { storeName } from "@/lib/constants"
 import WorkshopPaymentContent from "./WorkshopPaymentContent"
 
 interface Props {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ registration?: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = await createClient()
+  const { data: workshop } = await supabase
+    .from("workshops")
+    .select("title")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single()
+
+  return {
+    title: workshop ? `Payment: ${workshop.title} - ${storeName}` : `Payment - ${storeName}`,
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function WorkshopPaymentPage({ params, searchParams }: Props) {

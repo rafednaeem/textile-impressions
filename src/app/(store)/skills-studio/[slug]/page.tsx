@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import Script from "next/script"
 import { notFound } from "next/navigation"
 import { storeName, baseUrl } from "@/lib/constants"
+import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
 import { createClient } from "@/lib/supabase/server"
 import WorkshopDetailContent from "./WorkshopDetailContent"
 
@@ -23,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${workshop.title} - ${storeName}`,
     description: workshop.short_description || workshop.description?.slice(0, 160) || "",
+    alternates: { canonical: canonicalUrl(`/skills-studio/${slug}`) },
     openGraph: {
       title: workshop.title,
       description: workshop.short_description || workshop.description?.slice(0, 160) || "",
@@ -60,10 +63,38 @@ export default async function WorkshopDetailPage({ params }: Props) {
     userRegistrationStatus = reg?.status || null
   }
 
+  const eventSchema = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: workshop.title,
+    description: workshop.short_description || workshop.description || undefined,
+    url: `${baseUrl}/skills-studio/${slug}`,
+    eventStatus: "https://schema.org/EventScheduled",
+    organizer: {
+      "@type": "Organization",
+      name: storeName,
+      url: baseUrl,
+    },
+  }
+
+  const breadcrumb = breadcrumbSchema([
+    { name: "Home", url: canonicalUrl("/") },
+    { name: "Skills Studio", url: canonicalUrl("/skills-studio") },
+    { name: workshop.title, url: canonicalUrl(`/skills-studio/${slug}`) },
+  ])
+
   return (
-    <WorkshopDetailContent
-      workshop={workshop as any}
-      userRegistrationStatus={userRegistrationStatus}
-    />
+    <>
+      <Script id="event-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(eventSchema)}
+      </Script>
+      <Script id="breadcrumb-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(breadcrumb)}
+      </Script>
+      <WorkshopDetailContent
+        workshop={workshop as any}
+        userRegistrationStatus={userRegistrationStatus}
+      />
+    </>
   )
 }

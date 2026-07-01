@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { baseUrl } from "@/lib/constants"
+import { siteUrl } from "@/lib/seo"
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,9 +7,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/auth/"],
+        disallow: ["/admin/", "/account/", "/auth/", "/api/", "/checkout/"],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${siteUrl}/sitemap.xml`,
   }
 }
