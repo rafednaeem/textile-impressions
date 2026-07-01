@@ -102,8 +102,15 @@ function LoginForm() {
       } catch { /* ignore parse errors */ }
     }
 
+    // Determine role-based redirect
+    const { data: { user } } = await supabase.auth.getUser()
+    const isAdmin = user?.app_metadata?.role === "admin"
+    const target = isAdmin
+      ? (redirect.startsWith("/admin") ? redirect : "/admin")
+      : redirect
+
     toast.success("Welcome back!")
-    router.push(redirect)
+    router.push(target)
     router.refresh()
   }
 
