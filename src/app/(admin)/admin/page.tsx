@@ -4,17 +4,17 @@ export const dynamic = "force-dynamic"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { DollarSign, ShoppingBag, Clock, AlertTriangle, ArrowRight, TrendingUp, Package } from "lucide-react"
+import { DollarSign, ShoppingBag, Clock, AlertTriangle, ArrowRight, Package } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts"
 
 export default function AdminDashboard() {
   const supabase = createClient()
   const [kpi, setKpi] = useState({ revenue: 0, orders: 0, pendingPayments: 0, lowStock: 0 })
   const [ordersPerDay, setOrdersPerDay] = useState<any[]>([])
-  const [revenueByCategory, setRevenueByCategory] = useState<any[]>([])
+
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -66,20 +66,6 @@ export default function AdminDashboard() {
       }
       setOrdersPerDay(Object.values(dayMap))
 
-      const { data: catRev } = await supabase
-        .from("order_items")
-        .select("product:products!inner(category:categories!inner(name)), total_price")
-        .gte("order_id", fourteenDaysAgo)
-
-      const catMap: Record<string, number> = {}
-      for (const item of catRev || []) {
-        const catName = (item as any).product?.category?.name || "Uncategorized"
-        catMap[catName] = (catMap[catName] || 0) + Number(item.total_price)
-      }
-      setRevenueByCategory(
-        Object.entries(catMap).map(([name, value]) => ({ name, revenue: value }))
-      )
-
       setLoading(false)
     }
     fetch()
@@ -93,10 +79,7 @@ export default function AdminDashboard() {
             <div key={i} className="h-28 rounded-xl bg-muted" />
           ))}
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="h-72 rounded-xl bg-muted" />
-          <div className="h-72 rounded-xl bg-muted" />
-        </div>
+        <div className="h-72 rounded-xl bg-muted" />
       </div>
     )
   }
@@ -150,47 +133,24 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-4 text-sm font-semibold">Orders Per Day (Last 14 Days)</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={ordersPerDay}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                }}
-              />
-              <Line type="monotone" dataKey="orders" stroke="#1a3a2a" strokeWidth={2} dot={{ fill: "#1a3a2a" }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-4 text-sm font-semibold">Revenue by Category</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={revenueByCategory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                }}
-                formatter={(value: any) => [`Rs. ${Number(value).toLocaleString()}`, "Revenue"]}
-              />
-              <Bar dataKey="revenue" fill="#c1623d" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h2 className="mb-4 text-sm font-semibold">Orders Per Day (Last 14 Days)</h2>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={ordersPerDay}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+            <Tooltip
+              contentStyle={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                fontSize: "13px",
+              }}
+            />
+            <Line type="monotone" dataKey="orders" stroke="#1a3a2a" strokeWidth={2} dot={{ fill: "#1a3a2a" }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
