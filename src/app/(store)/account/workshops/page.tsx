@@ -43,7 +43,7 @@ export default function WorkshopsPage() {
         .not("status", "eq", "cancelled")
         .order("registered_at", { ascending: false })
 
-      if (data) setRegistrations(data as Registration[])
+      if (data) setRegistrations(data as unknown as Registration[])
       setLoading(false)
     }
     fetch()
