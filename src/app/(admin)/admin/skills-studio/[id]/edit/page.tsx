@@ -1,23 +1,26 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { toast } from "sonner"
 import { ChevronLeft, Loader2, ImagePlus, X } from "lucide-react"
 import { WORKSHOP_FORMATS, WORKSHOP_LEVELS, WORKSHOP_STATUSES } from "@/lib/constants"
 
-export default function NewWorkshopPage() {
+export default function EditWorkshopPage() {
   const router = useRouter()
+  const params = useParams()
+  const id = params.id as string
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     title: "",
     description: "",
     short_description: "",
-    instructor_name: "Textile Impressions",
+    instructor_name: "",
     cover_image_url: "",
     format: "in_person" as string,
     level: "all_levels" as string,
@@ -35,7 +38,44 @@ export default function NewWorkshopPage() {
     is_featured: false,
   })
 
-  const set = (key: string, value: any) => setForm((prev) => ({ ...prev, [key]: value }))
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/admin/workshops/${id}`)
+        if (!res.ok) throw new Error()
+        const w = await res.json()
+        setForm({
+          title: w.title || "",
+          description: w.description || "",
+          short_description: w.short_description || "",
+          instructor_name: w.instructor_name || "",
+          cover_image_url: w.cover_image_url || "",
+          format: w.format || "in_person",
+          level: w.level || "all_levels",
+          date_start: w.date_start ? new Date(w.date_start).toISOString().slice(0, 16) : "",
+          date_end: w.date_end ? new Date(w.date_end).toISOString().slice(0, 16) : "",
+          duration_minutes: w.duration_minutes ? String(w.duration_minutes) : "",
+          location_address: w.location_address || "",
+          online_meeting_platform: w.online_meeting_platform || "",
+          online_meeting_url: w.online_meeting_url || "",
+          max_seats: w.max_seats ? String(w.max_seats) : "",
+          fee: String(w.fee ?? 0),
+          materials_included: w.materials_included || false,
+          materials_list: w.materials_list || "",
+          status: w.status || "draft",
+          is_featured: w.is_featured || false,
+        })
+      } catch {
+        toast.error("Failed to load workshop")
+        router.push("/admin/skills-studio")
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [id, router])
+
+  const set = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -61,10 +101,9 @@ export default function NewWorkshopPage() {
       return
     }
     setSaving(true)
-
     try {
-      const res = await fetch("/api/admin/workshops", {
-        method: "POST",
+      const res = await fetch(`/api/admin/workshops/${id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
@@ -75,18 +114,15 @@ export default function NewWorkshopPage() {
           fee: parseFloat(form.fee) || 0,
         }),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
-        toast.error(data.error || "Failed to create workshop")
+        toast.error(data.error || "Failed to update workshop")
         return
       }
-
-      toast.success("Workshop created")
+      toast.success("Workshop updated")
       router.push("/admin/skills-studio")
     } catch {
-      toast.error("Failed to create workshop")
+      toast.error("Failed to update workshop")
     } finally {
       setSaving(false)
     }
@@ -95,14 +131,28 @@ export default function NewWorkshopPage() {
   const input = "block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-brand-forest focus:outline-none focus:ring-1 focus:ring-brand-forest"
   const label = "block text-sm font-medium mb-1"
 
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Link href="/admin/skills-studio" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+          <ChevronLeft className="h-4 w-4" /> Back to Skills Studio
+        </Link>
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-48 rounded bg-muted" />
+          <div className="h-64 rounded-xl bg-muted" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-3xl">
       <Link href="/admin/skills-studio" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
         <ChevronLeft className="h-4 w-4" /> Back to Skills Studio
       </Link>
 
-      <h1 className="text-2xl font-bold">New Workshop</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Create a new workshop or training session.</p>
+      <h1 className="text-2xl font-bold">Edit Workshop</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Update workshop details.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
@@ -262,7 +312,7 @@ export default function NewWorkshopPage() {
           </Link>
           <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-brand-forest px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-forest/90 disabled:opacity-50">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {saving ? "Creating..." : "Create Workshop"}
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

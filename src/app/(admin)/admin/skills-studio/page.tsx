@@ -64,6 +64,9 @@ export default async function AdminSkillsStudioPage() {
                 <td className="px-4 py-3">{w.fee === 0 ? "Free" : `Rs. ${w.fee}`}</td>
                 <td className="px-4 py-3">{w.seats_remaining ?? w.max_seats ?? "-"}</td>
                 <td className="px-4 py-3 space-x-2">
+                  <Link href={`/admin/skills-studio/${w.id}/edit`} className="text-sm text-brand-forest hover:underline">
+                    Edit
+                  </Link>
                   <Link href={`/admin/skills-studio/${w.id}/registrations`} className="text-sm text-brand-terracotta hover:underline">
                     Registrations
                   </Link>
