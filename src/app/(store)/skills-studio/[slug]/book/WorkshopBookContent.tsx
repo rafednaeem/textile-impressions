@@ -1,21 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ChevronLeft, Loader2, Check, User, Mail, Phone } from "lucide-react"
-import { motion } from "framer-motion"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS } from "@/lib/constants"
 import { workshopRegisterSchema } from "@/lib/validations"
 import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 export default function WorkshopBookContent({ workshop }: { workshop: Workshop }) {
-  const router = useRouter()
   const isFree = workshop.fee === 0
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [registrationId, setRegistrationId] = useState<string | null>(null)
+  const [registrationStatus, setRegistrationStatus] = useState<string>("")
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     name: "",
@@ -25,7 +24,7 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
 
   const validation = useFieldValidation(
     workshopRegisterSchema.pick({ guestName: true, guestEmail: true, guestPhone: true }),
-    { guestName: form.name, guestEmail: form.email, guestPhone: form.phone || "" }
+    { guestName: form.name, guestEmail: form.email, guestPhone: form.phone }
   )
 
   const updateField = (name: string, value: string) => {
@@ -60,7 +59,7 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
       workshopId: workshop.id,
       guestName: form.name,
       guestEmail: form.email,
-      guestPhone: form.phone || undefined,
+      guestPhone: form.phone,
     })
     if (!result.success) {
       const fieldErrors: Record<string, string> = {}
@@ -82,7 +81,7 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
           workshopId: workshop.id,
           guestName: form.name,
           guestEmail: form.email,
-          guestPhone: form.phone || null,
+          guestPhone: form.phone,
         }),
       })
 
@@ -94,30 +93,55 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
         return
       }
 
+      setRegistrationId(data.registrationId)
+      setRegistrationStatus(data.status)
       setSuccess(true)
-      toast.success("Registration confirmed!")
+      toast.success(data.message || "Registration successful!")
     } catch {
       toast.error("Something went wrong. Please try again.")
       setSubmitting(false)
     }
   }
 
-  if (success) {
+  if (success && registrationId) {
+    const isWaitlisted = registrationStatus === "waitlisted"
+    const needsPayment = !isFree && !isWaitlisted
+
     return (
       <div className="bg-brand-ivory px-4 pb-20 pt-32 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-lg text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <Check className="h-8 w-8 text-green-600" />
           </div>
-          <h1 className="mt-4 font-heading text-2xl font-bold text-brand-forest">You are registered!</h1>
+          <h1 className="mt-4 font-heading text-2xl font-bold text-brand-forest">
+            {isWaitlisted ? "Added to Waiting List" : "Registration Received!"}
+          </h1>
           <p className="mt-2 text-muted-foreground">
-            {isFree
-              ? "Your spot has been confirmed. We will send you the meeting details closer to the date."
-              : "Your registration is pending payment. Please complete the payment to confirm your spot."}
+            {isWaitlisted
+              ? "This workshop is currently full. You have been added to the waiting list and will be notified if a spot opens up."
+              : needsPayment
+                ? "To confirm your spot, please complete the payment and upload your proof."
+                : "Your spot has been confirmed. We will send you the meeting details closer to the date."}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             A confirmation has been sent to {form.email}
           </p>
+
+          {needsPayment && (
+            <div className="mt-6 rounded-xl border border-border bg-white p-6 text-left">
+              <p className="font-medium text-brand-forest">Next Step: Complete Payment</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Transfer <strong>Rs. {workshop.fee.toLocaleString()}</strong> to our bank account and upload your payment proof to confirm your registration.
+              </p>
+              <Link
+                href={`/skills-studio/${workshop.slug}/book/payment?registration=${registrationId}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white hover:bg-brand-forest/90"
+              >
+                Complete Payment
+              </Link>
+            </div>
+          )}
+
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href={`/skills-studio/${workshop.slug}`} className="rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white hover:bg-brand-forest/90">
               Back to Workshop
@@ -186,7 +210,7 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Phone <span className="text-muted-foreground">(optional)</span></label>
+            <label className="block text-sm font-medium">Phone *</label>
             <div className="relative mt-1">
               <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -209,7 +233,7 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
             className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white disabled:opacity-50 hover:bg-brand-forest/90"
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {submitting ? "Registering..." : isFree ? "Confirm Registration" : `Pay Rs. ${workshop.fee.toLocaleString()} & Register`}
+            {submitting ? "Registering..." : isFree ? "Confirm Registration" : `Register & Pay Rs. ${workshop.fee.toLocaleString()}`}
           </button>
         </form>
       </div>

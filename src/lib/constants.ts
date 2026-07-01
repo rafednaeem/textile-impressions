@@ -13,8 +13,21 @@ export type WorkshopLevel = typeof WORKSHOP_LEVELS[number]
 export const WORKSHOP_STATUSES = ['draft', 'published', 'completed', 'cancelled'] as const
 export type WorkshopStatus = typeof WORKSHOP_STATUSES[number]
 
-export const WORKSHOP_REGISTRATION_STATUSES = ['registered', 'waitlisted', 'cancelled', 'attended'] as const
+export const WORKSHOP_REGISTRATION_STATUSES = ['pending', 'awaiting_payment', 'payment_submitted', 'payment_under_review', 'confirmed', 'waitlisted', 'cancelled', 'attended', 'no_show', 'completed'] as const
 export type WorkshopRegistrationStatus = typeof WORKSHOP_REGISTRATION_STATUSES[number]
+
+export const WORKSHOP_REGISTRATION_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  awaiting_payment: 'Awaiting Payment',
+  payment_submitted: 'Payment Submitted',
+  payment_under_review: 'Payment Under Review',
+  confirmed: 'Confirmed',
+  waitlisted: 'Waitlisted',
+  cancelled: 'Cancelled',
+  attended: 'Attended',
+  no_show: 'No Show',
+  completed: 'Completed',
+}
 
 export const COD_CITIES = ['karachi'] as const
 export type CodCity = typeof COD_CITIES[number]

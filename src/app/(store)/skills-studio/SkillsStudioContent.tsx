@@ -290,7 +290,7 @@ function WorkshopCard({ workshop }: { workshop: Workshop }) {
             {spotsLeft !== null && (
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 shrink-0" />
-                <span>{spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}</span>
+                <span>{spotsLeft > 0 ? `${spotsLeft} spots left` : "Waitlist Available"}</span>
               </div>
             )}
           </div>

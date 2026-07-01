@@ -44,5 +44,26 @@ export default async function WorkshopDetailPage({ params }: Props) {
 
   if (!workshop) notFound()
 
-  return <WorkshopDetailContent workshop={workshop as any} />
+  // Check if current user has a confirmed registration
+  let userRegistrationStatus: string | null = null
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    const { data: reg } = await supabase
+      .from("workshop_registrations")
+      .select("status")
+      .eq("workshop_id", workshop.id)
+      .eq("user_id", user.id)
+      .in("status", ["confirmed", "awaiting_payment", "payment_submitted", "waitlisted"])
+      .maybeSingle()
+
+    userRegistrationStatus = reg?.status || null
+  }
+
+  return (
+    <WorkshopDetailContent
+      workshop={workshop as any}
+      userRegistrationStatus={userRegistrationStatus}
+    />
+  )
 }

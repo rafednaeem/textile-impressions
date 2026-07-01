@@ -169,9 +169,14 @@ export interface WorkshopRegistration {
   guest_name: string | null
   guest_email: string | null
   guest_phone: string | null
-  payment_order_id: string | null
-  status: 'registered' | 'waitlisted' | 'cancelled' | 'attended'
+  status: 'pending' | 'awaiting_payment' | 'payment_submitted' | 'payment_under_review' | 'confirmed' | 'waitlisted' | 'cancelled' | 'attended' | 'no_show' | 'completed'
+  payment_status: 'none' | 'awaiting' | 'submitted' | 'verified' | 'rejected'
   meeting_link_sent: boolean
+  admin_notes: string | null
+  cancelled_at: string | null
+  cancellation_reason: string | null
+  checked_in_at: string | null
+  waitlisted_at: string | null
   registered_at: string
 }
 
@@ -179,6 +184,30 @@ export interface SiteSetting {
   key: string
   value: string
   updated_at: string
+}
+
+export interface WorkshopPayment {
+  id: string
+  registration_id: string
+  amount: number
+  method: 'bank_transfer' | 'easypaisa' | 'jazzcash' | 'stripe'
+  status: 'pending' | 'submitted' | 'verified' | 'rejected'
+  proof_url: string | null
+  transaction_ref: string | null
+  rejection_reason: string | null
+  verified_at: string | null
+  verified_by: string | null
+  created_at: string
+}
+
+export interface AdminNotification {
+  id: string
+  type: string
+  title: string
+  message: string | null
+  metadata: Record<string, unknown>
+  read: boolean
+  created_at: string
 }
 
 export interface ProductImage {
@@ -431,6 +460,18 @@ export interface Database {
         Row: WorkshopRegistration
         Insert: Omit<WorkshopRegistration, "id" | "registered_at">
         Update: Partial<Omit<WorkshopRegistration, "id">>
+        Relationships: []
+      }
+      workshop_payments: {
+        Row: WorkshopPayment
+        Insert: Omit<WorkshopPayment, "id" | "created_at">
+        Update: Partial<Omit<WorkshopPayment, "id">>
+        Relationships: []
+      }
+      admin_notifications: {
+        Row: AdminNotification
+        Insert: Omit<AdminNotification, "id" | "created_at">
+        Update: Partial<Omit<AdminNotification, "id">>
         Relationships: []
       }
       site_settings: {

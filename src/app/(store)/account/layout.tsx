@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Heart, MapPin, LogOut } from "lucide-react"
+import { User, Package, Heart, MapPin, LogOut, GraduationCap } from "lucide-react"
 import AuthGuard from "@/components/shared/AuthGuard"
 
 const navItems = [
   { label: "Overview", href: "/account", icon: User },
   { label: "Orders", href: "/account/orders", icon: Package },
+  { label: "Workshops", href: "/account/workshops", icon: GraduationCap },
   { label: "Wishlist", href: "/account/wishlist", icon: Heart },
   { label: "Addresses", href: "/account/addresses", icon: MapPin },
 ]

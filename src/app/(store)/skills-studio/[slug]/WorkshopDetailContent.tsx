@@ -20,10 +20,18 @@ function formatTime(dateStr: string | null) {
   return new Date(dateStr).toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit" })
 }
 
-export default function WorkshopDetailContent({ workshop }: { workshop: Workshop }) {
+export default function WorkshopDetailContent({
+  workshop,
+  userRegistrationStatus,
+}: {
+  workshop: Workshop
+  userRegistrationStatus?: string | null
+}) {
   const isFree = workshop.fee === 0
   const isFull = workshop.seats_remaining !== null && workshop.seats_remaining <= 0
   const spotsLeft = workshop.seats_remaining ?? null
+  const isConfirmed = userRegistrationStatus === "confirmed"
+  const showMeetingLink = isConfirmed && workshop.online_meeting_url && workshop.format !== "in_person"
 
   return (
     <div className="bg-brand-ivory">
@@ -134,12 +142,16 @@ export default function WorkshopDetailContent({ workshop }: { workshop: Workshop
                     <div>
                       <p className="font-medium text-brand-forest">Online Session</p>
                       <p className="text-muted-foreground capitalize">{workshop.online_meeting_platform || "Online"}</p>
-                      {workshop.online_meeting_url && (
-                        <a href={workshop.online_meeting_url} target="_blank" rel="noopener noreferrer"
+                      {showMeetingLink ? (
+                        <a href={workshop.online_meeting_url!} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-brand-terracotta hover:underline">
-                          Meeting Link <ExternalLink className="h-3 w-3" />
+                          Join Meeting <ExternalLink className="h-3 w-3" />
                         </a>
-                      )}
+                      ) : workshop.online_meeting_url ? (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Meeting link will be available after registration confirmation
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 )}
@@ -156,7 +168,12 @@ export default function WorkshopDetailContent({ workshop }: { workshop: Workshop
 
               <div className="mt-6">
                 {isFull ? (
-                  <div className="text-center text-sm font-medium text-muted-foreground">This workshop is fully booked.</div>
+                  <Link
+                    href={`/skills-studio/${workshop.slug}/book`}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-brand-forest px-6 py-3 text-sm font-medium text-brand-forest transition-colors hover:bg-brand-forest/5"
+                  >
+                    Join Waiting List
+                  </Link>
                 ) : (
                   <Link
                     href={`/skills-studio/${workshop.slug}/book`}

@@ -2,7 +2,20 @@ export type WorkshopFormat = 'in_person' | 'online' | 'hybrid'
 export type WorkshopLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels'
 export type WorkshopStatus = 'draft' | 'published' | 'completed' | 'cancelled'
 
-export type WorkshopRegistrationStatus = 'registered' | 'waitlisted' | 'cancelled' | 'attended'
+export type WorkshopRegistrationStatus =
+  | 'pending'
+  | 'awaiting_payment'
+  | 'payment_submitted'
+  | 'payment_under_review'
+  | 'confirmed'
+  | 'waitlisted'
+  | 'cancelled'
+  | 'attended'
+  | 'no_show'
+  | 'completed'
+
+export type WorkshopPaymentStatus = 'none' | 'awaiting' | 'submitted' | 'verified' | 'rejected'
+export type WorkshopPaymentMethod = 'bank_transfer' | 'easypaisa' | 'jazzcash' | 'stripe'
 
 export interface Workshop {
   id: string
@@ -41,10 +54,39 @@ export interface WorkshopRegistration {
   guest_name: string | null
   guest_email: string | null
   guest_phone: string | null
-  payment_order_id: string | null
   status: WorkshopRegistrationStatus
+  payment_status: WorkshopPaymentStatus
   meeting_link_sent: boolean
+  admin_notes: string | null
+  cancelled_at: string | null
+  cancellation_reason: string | null
+  checked_in_at: string | null
+  waitlisted_at: string | null
   registered_at: string
+}
+
+export interface WorkshopPayment {
+  id: string
+  registration_id: string
+  amount: number
+  method: WorkshopPaymentMethod
+  status: 'pending' | 'submitted' | 'verified' | 'rejected'
+  proof_url: string | null
+  transaction_ref: string | null
+  rejection_reason: string | null
+  verified_at: string | null
+  verified_by: string | null
+  created_at: string
+}
+
+export interface AdminNotification {
+  id: string
+  type: string
+  title: string
+  message: string | null
+  metadata: Record<string, unknown>
+  read: boolean
+  created_at: string
 }
 
 export interface SiteSetting {
@@ -80,10 +122,45 @@ export const WORKSHOP_STATUS_LABELS: Record<WorkshopStatus, string> = {
 }
 
 export const WORKSHOP_REGISTRATION_STATUS_LABELS: Record<WorkshopRegistrationStatus, string> = {
-  registered: 'Registered',
+  pending: 'Pending',
+  awaiting_payment: 'Awaiting Payment',
+  payment_submitted: 'Payment Submitted',
+  payment_under_review: 'Payment Under Review',
+  confirmed: 'Confirmed',
   waitlisted: 'Waitlisted',
   cancelled: 'Cancelled',
   attended: 'Attended',
+  no_show: 'No Show',
+  completed: 'Completed',
+}
+
+export const WORKSHOP_REGISTRATION_STATUS_COLORS: Record<WorkshopRegistrationStatus, string> = {
+  pending: 'bg-yellow-100 text-yellow-700',
+  awaiting_payment: 'bg-orange-100 text-orange-700',
+  payment_submitted: 'bg-blue-100 text-blue-700',
+  payment_under_review: 'bg-purple-100 text-purple-700',
+  confirmed: 'bg-green-100 text-green-700',
+  waitlisted: 'bg-gray-100 text-gray-700',
+  cancelled: 'bg-red-100 text-red-700',
+  attended: 'bg-emerald-100 text-emerald-700',
+  no_show: 'bg-amber-100 text-amber-700',
+  completed: 'bg-slate-100 text-slate-700',
+}
+
+export const WORKSHOP_PAYMENT_STATUS_LABELS: Record<WorkshopPaymentStatus, string> = {
+  none: 'No Payment',
+  awaiting: 'Awaiting Payment',
+  submitted: 'Proof Submitted',
+  verified: 'Verified',
+  rejected: 'Rejected',
+}
+
+export const WORKSHOP_PAYMENT_STATUS_COLORS: Record<WorkshopPaymentStatus, string> = {
+  none: 'bg-gray-100 text-gray-600',
+  awaiting: 'bg-orange-100 text-orange-700',
+  submitted: 'bg-blue-100 text-blue-700',
+  verified: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 }
 
 export const COD_CITIES = ['karachi'] as const

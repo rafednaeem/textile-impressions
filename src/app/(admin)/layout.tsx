@@ -7,6 +7,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, Boxes, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import NotificationBell from "@/components/admin/NotificationBell"
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -110,6 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
           <div className="flex-1" />
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">View Store</Link>
+          <NotificationBell />
           <div className="hidden items-center gap-3 lg:flex">
             <div className="text-right">
               <p className="text-sm font-medium">{profile?.full_name || "Admin"}</p>

@@ -339,7 +339,26 @@ export const workshopRegisterSchema = z.object({
   workshopId: z.string().uuid(),
   guestName: nameRefine("Name"),
   guestEmail: emailRefine(),
-  guestPhone: pkPhoneOptional,
+  guestPhone: pkPhone,
+})
+
+export const workshopPaymentSchema = z.object({
+  registrationId: z.string().uuid(),
+  transactionRef: z.string().trim().min(3, "Transaction reference is required").optional().or(z.literal("")),
+})
+
+export const workshopAdminUpdateSchema = z.object({
+  status: z.enum([
+    'pending', 'awaiting_payment', 'payment_submitted', 'payment_under_review',
+    'confirmed', 'waitlisted', 'cancelled', 'attended', 'no_show', 'completed',
+  ]).optional(),
+  adminNotes: z.string().max(2000).optional().or(z.literal("")),
+  cancellationReason: z.string().max(500).optional().or(z.literal("")),
+})
+
+export const workshopLookupSchema = z.object({
+  email: emailRefine(),
+  workshopId: z.string().uuid().optional(),
 })
 
 export const customOrderSchema = z.object({
@@ -376,5 +395,8 @@ export type CheckoutShippingInput = z.infer<typeof checkoutShippingSchema>
 export type CheckoutPaymentInput = z.infer<typeof checkoutPaymentSchema>
 export type OrderApiInput = z.infer<typeof orderApiSchema>
 export type WorkshopRegisterInput = z.infer<typeof workshopRegisterSchema>
+export type WorkshopPaymentInput = z.infer<typeof workshopPaymentSchema>
+export type WorkshopAdminUpdateInput = z.infer<typeof workshopAdminUpdateSchema>
+export type WorkshopLookupInput = z.infer<typeof workshopLookupSchema>
 export type CustomOrderInput = z.infer<typeof customOrderSchema>
 export type IncubatorEnquiryInput = z.infer<typeof incubatorEnquirySchema>
