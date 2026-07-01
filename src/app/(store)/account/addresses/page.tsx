@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { MapPin, Plus, Trash2, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { addressSchema } from "@/lib/validations"
 
 const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan", "Gilgit-Baltistan", "AJK"]
 
@@ -11,6 +12,7 @@ export default function AddressesPage() {
   const [addresses, setAddresses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     fullName: "", phone: "", addressLine1: "", addressLine2: "",
     city: "", province: "", postalCode: "", isDefault: false,
@@ -31,6 +33,26 @@ export default function AddressesPage() {
   useEffect(() => { fetchAddresses() }, [])
 
   const save = async () => {
+    const result = addressSchema.safeParse({
+      fullName: form.fullName,
+      phone: form.phone,
+      addressLine1: form.addressLine1,
+      addressLine2: form.addressLine2 || undefined,
+      city: form.city,
+      province: form.province,
+      postalCode: form.postalCode || undefined,
+    })
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setErrors(fieldErrors)
+      return
+    }
+    setErrors({})
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -40,17 +62,18 @@ export default function AddressesPage() {
 
     await supabase.from("addresses").insert({
       user_id: user.id,
-      full_name: form.fullName,
-      phone: form.phone,
-      address_line1: form.addressLine1,
-      address_line2: form.addressLine2 || null,
-      city: form.city,
-      province: form.province,
-      postal_code: form.postalCode || null,
+      full_name: result.data.fullName,
+      phone: result.data.phone,
+      address_line1: result.data.addressLine1,
+      address_line2: result.data.addressLine2 || null,
+      city: result.data.city,
+      province: result.data.province,
+      postal_code: result.data.postalCode || null,
       is_default: form.isDefault || addresses.length === 0,
     })
 
     setForm({ fullName: "", phone: "", addressLine1: "", addressLine2: "", city: "", province: "", postalCode: "", isDefault: false })
+    setErrors({})
     setAdding(false)
     fetchAddresses()
   }
@@ -130,36 +153,43 @@ export default function AddressesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-sm">Full Name</label>
-                <input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+                <input value={form.fullName} onChange={(e) => { setForm({ ...form, fullName: e.target.value }); if (errors.fullName) setErrors((p) => ({ ...p, fullName: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.fullName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+                {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
               </div>
               <div>
                 <label className="block text-sm">Phone</label>
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+                <input value={form.phone} onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (errors.phone) setErrors((p) => ({ ...p, phone: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.phone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+                {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
               </div>
             </div>
             <div>
               <label className="block text-sm">Address Line 1</label>
-              <input value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+              <input value={form.addressLine1} onChange={(e) => { setForm({ ...form, addressLine1: e.target.value }); if (errors.addressLine1) setErrors((p) => ({ ...p, addressLine1: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.addressLine1 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+              {errors.addressLine1 && <p className="mt-1 text-xs text-red-500">{errors.addressLine1}</p>}
             </div>
             <div>
               <label className="block text-sm">Address Line 2 <span className="text-muted-foreground">(optional)</span></label>
-              <input value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+              <input value={form.addressLine2} onChange={(e) => { setForm({ ...form, addressLine2: e.target.value }); if (errors.addressLine2) setErrors((p) => ({ ...p, addressLine2: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.addressLine2 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+              {errors.addressLine2 && <p className="mt-1 text-xs text-red-500">{errors.addressLine2}</p>}
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <label className="block text-sm">City</label>
-                <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+                <input value={form.city} onChange={(e) => { setForm({ ...form, city: e.target.value }); if (errors.city) setErrors((p) => ({ ...p, city: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.city ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+                {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
               </div>
               <div>
                 <label className="block text-sm">Province</label>
-                <select value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none">
+                <select value={form.province} onChange={(e) => { setForm({ ...form, province: e.target.value }); if (errors.province) setErrors((p) => ({ ...p, province: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.province ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}>
                   <option value="">Select</option>
                   {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
+                {errors.province && <p className="mt-1 text-xs text-red-500">{errors.province}</p>}
               </div>
               <div>
                 <label className="block text-sm">Postal Code <span className="text-muted-foreground">(optional)</span></label>
-                <input value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+                <input value={form.postalCode} onChange={(e) => { setForm({ ...form, postalCode: e.target.value }); if (errors.postalCode) setErrors((p) => ({ ...p, postalCode: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none ${errors.postalCode ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} />
+                {errors.postalCode && <p className="mt-1 text-xs text-red-500">{errors.postalCode}</p>}
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">

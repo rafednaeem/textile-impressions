@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { ArrowRight, Hammer, LineChart, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Artisan } from "@/types/database"
+import { incubatorEnquirySchema } from "@/lib/validations"
 
 const services = [
   { title: "Studio Access", description: "Shared textile studio space for sampling, finishing, photography, and small batch production.", icon: Hammer },
@@ -19,6 +20,7 @@ export default function IncubatorPage() {
   const supabase = createClient()
   const [artisans, setArtisans] = useState<Artisan[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     supabase.from("artisans").select("*").eq("is_featured", true).order("sort_order").limit(6).then(({ data }) => {
@@ -28,9 +30,20 @@ export default function IncubatorPage() {
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitting(true)
     const form = event.currentTarget
     const body = Object.fromEntries(new FormData(form))
+    const result = incubatorEnquirySchema.safeParse(body)
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setErrors(fieldErrors)
+      return
+    }
+    setErrors({})
+    setSubmitting(true)
     const res = await fetch("/api/incubator-enquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -108,9 +121,18 @@ export default function IncubatorPage() {
         <form onSubmit={submit} className="rounded-lg border border-border bg-white p-6 shadow-sm">
           <h2 className="font-heading text-3xl font-semibold text-brand-indigo">Apply for incubation</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <input name="name" required placeholder="Name" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
-            <input name="phone" required placeholder="Phone" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
-            <input name="craft_type" required placeholder="Craft type" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo sm:col-span-2" />
+            <div>
+              <input name="name" placeholder="Name" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.name ? "border-red-400" : "border-border"}`} />
+              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            </div>
+            <div>
+              <input name="phone" placeholder="Phone" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.phone ? "border-red-400" : "border-border"}`} />
+              {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+            </div>
+            <div className="sm:col-span-2">
+              <input name="craft_type" placeholder="Craft type" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.craft_type ? "border-red-400" : "border-border"}`} />
+              {errors.craft_type && <p className="mt-1 text-xs text-red-500">{errors.craft_type}</p>}
+            </div>
             <textarea name="description" rows={5} placeholder="Brief description" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo sm:col-span-2" />
           </div>
           <button disabled={submitting} className="mt-5 rounded-full bg-brand-saffron px-7 py-3 text-sm font-bold text-brand-umber disabled:opacity-60">

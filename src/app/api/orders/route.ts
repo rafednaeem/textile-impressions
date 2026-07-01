@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { isCodEligible } from "@/lib/constants"
+import { orderApiSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
   try {
@@ -19,11 +20,13 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser()
 
     const body = await request.json()
-    const { items, shippingAddress, paymentMethod, notes, guestEmail } = body
-
-    if (!items?.length || !shippingAddress || !paymentMethod) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    const parsed = orderApiSchema.safeParse(body)
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message }))
+      return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
     }
+
+    const { items, shippingAddress, paymentMethod, notes, guestEmail, proofUrl, transactionReference } = parsed.data
 
     if (!user && !guestEmail) {
       return NextResponse.json({ error: "Email is required for guest checkout" }, { status: 400 })
@@ -135,8 +138,8 @@ export async function POST(request: Request) {
         order_id: order.id,
         method: "bank_transfer",
         status: "submitted",
-        proof_url: body.proofUrl || null,
-        transaction_reference: body.transactionReference || null,
+        proof_url: proofUrl || null,
+        transaction_reference: transactionReference || null,
       })
       if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
     } else if (paymentMethod === "cod") {

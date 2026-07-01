@@ -2,20 +2,38 @@
 
 import { useState } from "react"
 import { Upload } from "lucide-react"
+import { customOrderSchema } from "@/lib/validations"
 
 const garmentTypes = ["kurta", "suit", "dupatta", "other"]
 const budgetRanges = ["Under PKR 10,000", "PKR 10,000 - 20,000", "PKR 20,000 - 40,000", "PKR 40,000+"]
 
 export default function CustomOrdersPage() {
   const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitting(true)
     const form = event.currentTarget
+    const fd = new FormData(form)
+    const raw: Record<string, string> = {}
+    for (const key of ["name", "phone", "garment_type", "fabric_preference", "color_preference", "size", "quantity", "budget_range", "deadline", "notes"]) {
+      raw[key] = String(fd.get(key) || "")
+    }
+    const result = customOrderSchema.safeParse(raw)
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setErrors(fieldErrors)
+      return
+    }
+    setErrors({})
+    setSubmitting(true)
     const res = await fetch("/api/custom-orders", {
       method: "POST",
-      body: new FormData(form),
+      body: fd,
     })
     const data = await res.json()
     setSubmitting(false)
@@ -40,12 +58,21 @@ export default function CustomOrdersPage() {
 
         <form onSubmit={submit} className="mt-10 rounded-lg border border-border bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
-            <input name="name" required placeholder="Name" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
-            <input name="phone" required placeholder="Phone" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
-            <select name="garment_type" required className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo">
-              <option value="">Garment type</option>
-              {garmentTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-            </select>
+            <div>
+              <input name="name" placeholder="Name" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.name ? "border-red-400" : "border-border"}`} />
+              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            </div>
+            <div>
+              <input name="phone" placeholder="Phone" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.phone ? "border-red-400" : "border-border"}`} />
+              {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+            </div>
+            <div>
+              <select name="garment_type" className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo w-full ${errors.garment_type ? "border-red-400" : "border-border"}`}>
+                <option value="">Garment type</option>
+                {garmentTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
+              {errors.garment_type && <p className="mt-1 text-xs text-red-500">{errors.garment_type}</p>}
+            </div>
             <input name="fabric_preference" placeholder="Fabric preference" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
             <input name="color_preference" placeholder="Colour" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />
             <input name="size" placeholder="Size" className="rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-brand-indigo" />

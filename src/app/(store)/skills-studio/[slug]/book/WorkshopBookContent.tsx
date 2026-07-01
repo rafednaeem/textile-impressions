@@ -8,23 +8,38 @@ import { ChevronLeft, Loader2, Check, User, Mail, Phone } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS } from "@/lib/constants"
+import { workshopRegisterSchema } from "@/lib/validations"
 
 export default function WorkshopBookContent({ workshop }: { workshop: Workshop }) {
   const router = useRouter()
   const isFree = workshop.fee === 0
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
   })
 
-  const valid = form.name.trim() && form.email.trim() && form.email.includes("@")
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!valid) return
+    const result = workshopRegisterSchema.safeParse({
+      workshopId: workshop.id,
+      guestName: form.name,
+      guestEmail: form.email,
+      guestPhone: form.phone || undefined,
+    })
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setErrors(fieldErrors)
+      return
+    }
+    setErrors({})
     setSubmitting(true)
 
     try {
@@ -108,13 +123,13 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                required
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="block w-full rounded-lg border border-border bg-white pl-10 pr-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+                onChange={(e) => { setForm({ ...form, name: e.target.value }); if (errors.guestName) setErrors((p) => ({ ...p, guestName: "" })) }}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
                 placeholder="Fatima Ahmed"
               />
             </div>
+            {errors.guestName && <p className="mt-1 text-xs text-red-500">{errors.guestName}</p>}
           </div>
 
           <div>
@@ -123,13 +138,13 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="email"
-                required
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="block w-full rounded-lg border border-border bg-white pl-10 pr-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+                onChange={(e) => { setForm({ ...form, email: e.target.value }); if (errors.guestEmail) setErrors((p) => ({ ...p, guestEmail: "" })) }}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestEmail ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
                 placeholder="fatima@example.com"
               />
             </div>
+            {errors.guestEmail && <p className="mt-1 text-xs text-red-500">{errors.guestEmail}</p>}
           </div>
 
           <div>
@@ -139,16 +154,17 @@ export default function WorkshopBookContent({ workshop }: { workshop: Workshop }
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="block w-full rounded-lg border border-border bg-white pl-10 pr-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+                onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (errors.guestPhone) setErrors((p) => ({ ...p, guestPhone: "" })) }}
+                className={`block w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none ${errors.guestPhone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
                 placeholder="03XXXXXXXXX"
               />
             </div>
+            {errors.guestPhone && <p className="mt-1 text-xs text-red-500">{errors.guestPhone}</p>}
           </div>
 
           <button
             type="submit"
-            disabled={!valid || submitting}
+            disabled={submitting}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white disabled:opacity-50 hover:bg-brand-forest/90"
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

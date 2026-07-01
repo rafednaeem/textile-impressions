@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
+import { customOrderSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
   const supabase = await createClient()
   const formData = await request.formData()
 
-  const name = String(formData.get("name") || "")
-  const phone = String(formData.get("phone") || "")
-  const garment_type = String(formData.get("garment_type") || "")
-  const budget_range = String(formData.get("budget_range") || "")
-  const deadline = String(formData.get("deadline") || "")
-
-  if (!name || !phone || !garment_type) {
-    return NextResponse.json({ error: "Name, phone, and garment type are required" }, { status: 400 })
+  const raw: Record<string, string> = {}
+  for (const key of ["name", "phone", "garment_type", "fabric_preference", "color_preference", "size", "quantity", "budget_range", "deadline", "notes"]) {
+    raw[key] = String(formData.get(key) || "")
   }
+
+  const parsed = customOrderSchema.safeParse(raw)
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message }))
+    return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
+  }
+
+  const { name, phone, garment_type, fabric_preference, color_preference, size, quantity, budget_range, deadline, notes } = parsed.data
 
   const referenceImages: string[] = []
   const files = formData.getAll("reference_images").filter((file): file is File => file instanceof File && file.size > 0)

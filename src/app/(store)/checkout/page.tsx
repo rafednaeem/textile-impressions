@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/hooks/useCart"
 import { FREE_SHIPPING_THRESHOLD } from "@/constants"
 import { isCodEligible } from "@/lib/constants"
+import { checkoutShippingSchema, checkoutPaymentSchema } from "@/lib/validations"
 
 const PROVINCES = [
   "Punjab",
@@ -89,6 +90,8 @@ export default function CheckoutPage() {
   const [transactionRef, setTransactionRef] = useState("")
   const [notes, setNotes] = useState("")
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
+  const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({})
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -173,6 +176,10 @@ export default function CheckoutPage() {
   }
 
   const placeOrder = async () => {
+    if (!canContinue()) {
+      toast.error("Please fix the errors before placing your order.")
+      return
+    }
     setCreating(true)
     let proofUrl: string | null = null
     if (proofFile && paymentMethod === "bank_transfer") {
@@ -246,11 +253,48 @@ export default function CheckoutPage() {
     clearCart()
   }
 
-  const shippingValid =
-    shipping.fullName && shipping.phone && shipping.addressLine1 && shipping.city && shipping.province && (user || guestEmail)
+  const validateShipping = () => {
+    const result = checkoutShippingSchema.safeParse({
+      ...shipping,
+      guestEmail: user ? undefined : guestEmail,
+    })
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setShippingErrors(fieldErrors)
+      return false
+    }
+    setShippingErrors({})
+    return true
+  }
+
+  const validatePayment = () => {
+    const result = checkoutPaymentSchema.safeParse({
+      paymentMethod,
+      transactionReference: transactionRef || undefined,
+    })
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as string
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message
+      }
+      setPaymentErrors(fieldErrors)
+      return false
+    }
+    setPaymentErrors({})
+    return true
+  }
+
+  const handleShippingContinue = () => {
+    if (validateShipping()) setStep(1)
+  }
 
   const canContinue = () => {
-    if (step === 0) return !!shippingValid
+    if (step === 0) return true
     if (step === 1) {
       if (!paymentMethod) return false
       if (paymentMethod === "cod" && !isCodEligible(shipping.city)) return false
@@ -336,48 +380,55 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none"
+                    onChange={(e) => { setGuestEmail(e.target.value); if (shippingErrors.guestEmail) setShippingErrors((p) => ({ ...p, guestEmail: "" })) }}
+                    className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.guestEmail ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}
                     placeholder="you@example.com"
-                    required
                   />
+                  {shippingErrors.guestEmail && <p className="mt-1 text-xs text-red-500">{shippingErrors.guestEmail}</p>}
                 </div>
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium">Full Name</label>
-                  <input value={shipping.fullName} onChange={(e) => setShipping({ ...shipping, fullName: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="Fatima Ahmed" />
+                  <input value={shipping.fullName} onChange={(e) => { setShipping({ ...shipping, fullName: e.target.value }); if (shippingErrors.fullName) setShippingErrors((p) => ({ ...p, fullName: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.fullName ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Fatima Ahmed" />
+                  {shippingErrors.fullName && <p className="mt-1 text-xs text-red-500">{shippingErrors.fullName}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Phone</label>
-                  <input value={shipping.phone} onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="03XXXXXXXXX" />
+                  <input value={shipping.phone} onChange={(e) => { setShipping({ ...shipping, phone: e.target.value }); if (shippingErrors.phone) setShippingErrors((p) => ({ ...p, phone: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.phone ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="03XXXXXXXXX" />
+                  {shippingErrors.phone && <p className="mt-1 text-xs text-red-500">{shippingErrors.phone}</p>}
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium">Address Line 1</label>
-                <input value={shipping.addressLine1} onChange={(e) => setShipping({ ...shipping, addressLine1: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="House #, Street" />
+                <input value={shipping.addressLine1} onChange={(e) => { setShipping({ ...shipping, addressLine1: e.target.value }); if (shippingErrors.addressLine1) setShippingErrors((p) => ({ ...p, addressLine1: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.addressLine1 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="House #, Street" />
+                {shippingErrors.addressLine1 && <p className="mt-1 text-xs text-red-500">{shippingErrors.addressLine1}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium">Address Line 2 <span className="text-muted-foreground">(optional)</span></label>
-                <input value={shipping.addressLine2} onChange={(e) => setShipping({ ...shipping, addressLine2: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="Area / Landmark" />
+                <input value={shipping.addressLine2} onChange={(e) => { setShipping({ ...shipping, addressLine2: e.target.value }); if (shippingErrors.addressLine2) setShippingErrors((p) => ({ ...p, addressLine2: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.addressLine2 ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Area / Landmark" />
+                {shippingErrors.addressLine2 && <p className="mt-1 text-xs text-red-500">{shippingErrors.addressLine2}</p>}
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium">City</label>
-                  <input value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="Karachi" />
+                  <input value={shipping.city} onChange={(e) => { setShipping({ ...shipping, city: e.target.value }); if (shippingErrors.city) setShippingErrors((p) => ({ ...p, city: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.city ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="Karachi" />
+                  {shippingErrors.city && <p className="mt-1 text-xs text-red-500">{shippingErrors.city}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Province</label>
-                  <select value={shipping.province} onChange={(e) => setShipping({ ...shipping, province: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none">
+                  <select value={shipping.province} onChange={(e) => { setShipping({ ...shipping, province: e.target.value }); if (shippingErrors.province) setShippingErrors((p) => ({ ...p, province: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.province ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`}>
                     <option value="">Select</option>
                     {PROVINCES.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
+                  {shippingErrors.province && <p className="mt-1 text-xs text-red-500">{shippingErrors.province}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Postal Code <span className="text-muted-foreground">(optional)</span></label>
-                  <input value={shipping.postalCode} onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="54000" />
+                  <input value={shipping.postalCode} onChange={(e) => { setShipping({ ...shipping, postalCode: e.target.value }); if (shippingErrors.postalCode) setShippingErrors((p) => ({ ...p, postalCode: "" })) }} className={`mt-1 block w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:outline-none ${shippingErrors.postalCode ? "border-red-400 focus:border-red-500" : "border-border focus:border-brand-forest"}`} placeholder="54000" />
+                  {shippingErrors.postalCode && <p className="mt-1 text-xs text-red-500">{shippingErrors.postalCode}</p>}
                 </div>
               </div>
               {user && (
@@ -390,9 +441,8 @@ export default function CheckoutPage() {
 
             <div className="mt-8 flex justify-end">
               <button
-                onClick={() => setStep(1)}
-                disabled={!shippingValid}
-                className="flex items-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white disabled:opacity-50"
+                onClick={handleShippingContinue}
+                className="flex items-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white hover:bg-brand-forest/90"
               >
                 Continue to Payment <ChevronRight className="h-4 w-4" />
               </button>
@@ -497,7 +547,7 @@ export default function CheckoutPage() {
                 <ChevronLeft className="h-4 w-4" /> Back
               </button>
               <button
-                onClick={() => setStep(2)}
+                onClick={() => { if (canContinue()) setStep(2) }}
                 disabled={!canContinue()}
                 className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-forest px-6 py-3 text-sm font-medium text-white disabled:opacity-50"
               >
