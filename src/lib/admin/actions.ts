@@ -108,54 +108,6 @@ export async function deleteProduct(productId: string) {
   if (error) throw new Error("Failed to delete product")
 }
 
-export async function createDiscountCode(formData: FormData) {
-  const { supabase } = await requireAdminThrow()
-
-  const data = {
-    code: (formData.get("code") as string)?.toUpperCase(),
-    type: formData.get("type") as string,
-    value: parseFloat(formData.get("value") as string),
-    min_order_amount: formData.get("min_order_amount")
-      ? parseFloat(formData.get("min_order_amount") as string)
-      : null,
-    max_uses: formData.get("max_uses")
-      ? parseInt(formData.get("max_uses") as string)
-      : null,
-    is_active: formData.get("is_active") === "on",
-    expires_at: (formData.get("expires_at") as string) || null,
-  }
-
-  const { error } = await supabase.from("discount_codes").insert(data)
-  if (error) throw new Error(error.message)
-}
-
-export async function deleteDiscountCode(id: string) {
-  const { supabase } = await requireAdminThrow()
-  const { error } = await supabase.from("discount_codes").delete().eq("id", id)
-  if (error) throw new Error("Failed to delete discount code")
-}
-
-export async function updateDiscountCode(id: string, formData: FormData) {
-  const { supabase } = await requireAdminThrow()
-
-  const data = {
-    code: (formData.get("code") as string)?.toUpperCase(),
-    type: formData.get("type") as string,
-    value: parseFloat(formData.get("value") as string),
-    min_order_amount: formData.get("min_order_amount")
-      ? parseFloat(formData.get("min_order_amount") as string)
-      : null,
-    max_uses: formData.get("max_uses")
-      ? parseInt(formData.get("max_uses") as string)
-      : null,
-    is_active: formData.get("is_active") === "on",
-    expires_at: (formData.get("expires_at") as string) || null,
-  }
-
-  const { error } = await supabase.from("discount_codes").update(data).eq("id", id)
-  if (error) throw new Error(error.message)
-}
-
 export async function updateInventory(productId: string, count: number) {
   const { supabase } = await requireAdminThrow()
   const { error } = await supabase

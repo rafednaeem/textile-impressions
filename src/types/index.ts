@@ -7,7 +7,6 @@ export type {
   ProductImage,
   ProductVariant,
   Artisan,
-  UgcPhoto,
   Collection,
   CollectionProduct,
   CustomOrder,
@@ -21,7 +20,5 @@ export type {
   Payment,
   PaymentMethod,
   OrderTimeline,
-  DiscountCode,
-  DiscountType,
   Wishlist,
 } from "./database"

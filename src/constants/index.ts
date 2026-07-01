@@ -18,8 +18,6 @@ export const PAYMENT_METHODS = [
   "cod",
 ] as const
 
-export const DISCOUNT_TYPES = ["percentage", "fixed"] as const
-
 export const SHIPPING_COST = 200
 
 export const FREE_SHIPPING_THRESHOLD = 2000

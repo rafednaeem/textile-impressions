@@ -6,7 +6,7 @@ import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { Artisan, Product, UgcPhoto } from "@/types/database"
+import type { Artisan, Product } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
 import ImpactCounters from "@/components/store/ImpactCounters"
 
@@ -56,21 +56,13 @@ const fallbackArtisans: Artisan[] = [
   },
 ]
 
-const fallbackUgc = Array.from({ length: 6 }, (_, index) => ({
-  id: `ugc-${index + 1}`,
-  customer_name: `Customer look ${index + 1}`,
-  image_url: `https://picsum.photos/seed/textile-look-${index + 1}/600/${index % 2 ? 820 : 700}`,
-  product_id: null,
-  is_approved: true,
-  submitted_via: "whatsapp",
-  created_at: "",
-})) satisfies UgcPhoto[]
+const fallbackUgc: { id: string; customer_name: string; image_url: string }[] = []
 
 export default function HomeContent() {
   const supabase = createClient()
   const [featured, setFeatured] = useState<Product[]>([])
   const [artisans, setArtisans] = useState<Artisan[]>(fallbackArtisans)
-  const [ugcPhotos, setUgcPhotos] = useState<UgcPhoto[]>(fallbackUgc)
+  const [ugcPhotos, setUgcPhotos] = useState(fallbackUgc)
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null)
   const [whatsappNumber, setWhatsappNumber] = useState("")
 
@@ -219,23 +211,25 @@ export default function HomeContent() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <h2 className="font-heading text-4xl font-semibold text-brand-indigo">As worn by our customers</h2>
-            <a href={shareHref} target="_blank" rel="noreferrer" className="rounded-full border border-brand-indigo px-5 py-2 text-sm font-bold text-brand-indigo transition hover:bg-brand-indigo hover:text-brand-ivory">
-              Share your look
-            </a>
-          </motion.div>
-          <motion.div {...fadeUp} className="columns-2 gap-3 md:columns-3 lg:columns-6">
-            {ugcPhotos.map((photo) => (
-              <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-lg bg-muted">
-                <Image src={photo.image_url} alt={photo.customer_name} width={500} height={700} className="h-auto w-full object-cover" sizes="(max-width: 768px) 50vw, 16vw" />
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      {ugcPhotos.length > 0 && (
+        <section className="py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp} className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <h2 className="font-heading text-4xl font-semibold text-brand-indigo">As worn by our customers</h2>
+              <a href={shareHref} target="_blank" rel="noreferrer" className="rounded-full border border-brand-indigo px-5 py-2 text-sm font-bold text-brand-indigo transition hover:bg-brand-indigo hover:text-brand-ivory">
+                Share your look
+              </a>
+            </motion.div>
+            <motion.div {...fadeUp} className="columns-2 gap-3 md:columns-3 lg:columns-6">
+              {ugcPhotos.map((photo) => (
+                <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-lg bg-muted">
+                  <Image src={photo.image_url} alt={photo.customer_name} width={500} height={700} className="h-auto w-full object-cover" sizes="(max-width: 768px) 50vw, 16vw" />
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       <AnimatePresence>
         {selectedArtisan && (

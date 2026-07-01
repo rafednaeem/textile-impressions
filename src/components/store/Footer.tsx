@@ -37,6 +37,11 @@ export default async function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/lookbook" className="transition-colors hover:text-white">
+                  Lookbook
+                </Link>
+              </li>
+              <li>
                 <Link href="/colors" className="transition-colors hover:text-white">
                   Colors & Paints
                 </Link>

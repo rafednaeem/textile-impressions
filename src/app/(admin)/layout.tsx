@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  LayoutDashboard, ShoppingBag, Package, Users, Boxes, Tag, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap,
+  LayoutDashboard, ShoppingBag, Package, Users, Boxes, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -14,11 +14,10 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/inventory", label: "Inventory", icon: Boxes },
-  { href: "/admin/discounts", label: "Discount Codes", icon: Tag },
   { href: "/admin/skills-studio", label: "Skills Studio", icon: GraduationCap },
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/artisans", label: "Artisans", icon: Palette },
-  { href: "/admin/ugc-photos", label: "UGC Photos", icon: Images },
+  { href: "/admin/ugc-photos", label: "Customer Looks", icon: Images },
   { href: "/admin/collections", label: "Collections", icon: Camera },
   { href: "/admin/custom-orders", label: "Custom Orders", icon: ClipboardList },
   { href: "/admin/incubator-enquiries", label: "Incubator Enquiries", icon: Handshake },
