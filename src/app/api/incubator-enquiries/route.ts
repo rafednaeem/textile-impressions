@@ -12,10 +12,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
   }
 
-  const { name, phone, craft_type, description } = parsed.data
+  const { name, email, phone, craft_type, description } = parsed.data
 
   const { error } = await supabase.from("incubator_enquiries").insert({
     name,
+    email,
     phone,
     craft_type,
     description: description || null,

@@ -24,6 +24,7 @@ export default function IncubatorPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     name: "",
+    email: "",
     phone: "",
     craft_type: "",
     description: "",
@@ -75,7 +76,7 @@ export default function IncubatorPage() {
     const data = await res.json()
     setSubmitting(false)
     if (res.ok) {
-      setForm({ name: "", phone: "", craft_type: "", description: "" })
+      setForm({ name: "", email: "", phone: "", craft_type: "", description: "" })
       setErrors({})
       validation.clearErrors()
       window.open(data.whatsappUrl, "_blank", "noopener,noreferrer")
@@ -165,12 +166,26 @@ export default function IncubatorPage() {
                 value={form.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
                 onBlur={() => validation.handleBlur("phone")}
-                placeholder="Phone"
+                placeholder="Phone (03XXXXXXXXX)"
                 aria-invalid={!!getErrorMessage("phone")}
                 aria-describedby={getErrorMessage("phone") ? "inc-phone-error" : undefined}
                 className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none w-full transition-colors ${getFieldBorder("phone")}`}
               />
               {getErrorMessage("phone") && <p id="inc-phone-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("phone")}</p>}
+            </div>
+            <div className="sm:col-span-2">
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                onBlur={() => validation.handleBlur("email")}
+                placeholder="Email"
+                aria-invalid={!!getErrorMessage("email")}
+                aria-describedby={getErrorMessage("email") ? "inc-email-error" : undefined}
+                className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none w-full transition-colors ${getFieldBorder("email")}`}
+              />
+              {getErrorMessage("email") && <p id="inc-email-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("email")}</p>}
             </div>
             <div className="sm:col-span-2">
               <input

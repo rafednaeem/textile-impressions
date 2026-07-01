@@ -260,7 +260,7 @@ export const resetPasswordSchema = z.object({
 
 export const shippingAddressSchema = z.object({
   fullName: nameRefine("Full name"),
-  phone: z.string().trim().min(1, "Phone number is required"),
+  phone: pkPhone,
   addressLine1: addressLineRefine(),
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
@@ -270,13 +270,13 @@ export const shippingAddressSchema = z.object({
 
 export const checkoutShippingSchema = z.object({
   fullName: nameRefine("Full name"),
-  phone: z.string().trim().min(1, "Phone number is required"),
+  phone: pkPhone,
   addressLine1: addressLineRefine(),
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
   province: z.string().trim().min(1, "Province is required"),
   postalCode: z.string().trim().optional().or(z.literal("")),
-  guestEmail: z.string().trim().optional().or(z.literal("")),
+  guestEmail: emailRefine().optional().or(z.literal("")),
 })
 
 export const checkoutPaymentSchema = z.object({
@@ -288,7 +288,7 @@ export const checkoutPaymentSchema = z.object({
 
 export const addressSchema = z.object({
   fullName: nameRefine("Full name"),
-  phone: z.string().trim().min(1, "Phone number is required"),
+  phone: pkPhone,
   addressLine1: addressLineRefine(),
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
@@ -339,12 +339,13 @@ export const workshopRegisterSchema = z.object({
   workshopId: z.string().uuid(),
   guestName: nameRefine("Name"),
   guestEmail: emailRefine(),
-  guestPhone: z.string().trim().optional().or(z.literal("")),
+  guestPhone: pkPhoneOptional,
 })
 
 export const customOrderSchema = z.object({
   name: nameRefine("Name"),
-  phone: z.string().trim().min(1, "Phone number is required"),
+  email: emailRefine(),
+  phone: pkPhone,
   garment_type: z.string().min(1, "Garment type is required"),
   fabric_preference: z.string().optional().or(z.literal("")),
   color_preference: z.string().optional().or(z.literal("")),
@@ -357,7 +358,8 @@ export const customOrderSchema = z.object({
 
 export const incubatorEnquirySchema = z.object({
   name: nameRefine("Name"),
-  phone: z.string().trim().min(1, "Phone number is required"),
+  email: emailRefine(),
+  phone: pkPhone,
   craft_type: z.string().min(1, "Craft type is required"),
   description: z.string().optional().or(z.literal("")),
 })

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const formData = await request.formData()
 
   const raw: Record<string, string> = {}
-  for (const key of ["name", "phone", "garment_type", "fabric_preference", "color_preference", "size", "quantity", "budget_range", "deadline", "notes"]) {
+  for (const key of ["name", "email", "phone", "garment_type", "fabric_preference", "color_preference", "size", "quantity", "budget_range", "deadline", "notes"]) {
     raw[key] = String(formData.get(key) || "")
   }
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
   }
 
-  const { name, phone, garment_type, fabric_preference, color_preference, size, quantity, budget_range, deadline, notes } = parsed.data
+  const { name, email, phone, garment_type, fabric_preference, color_preference, size, quantity, budget_range, deadline, notes } = parsed.data
 
   const referenceImages: string[] = []
   const files = formData.getAll("reference_images").filter((file): file is File => file instanceof File && file.size > 0)
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
 
   const { error } = await supabase.from("custom_orders").insert({
     name,
+    email,
     phone,
     garment_type,
     fabric_preference: String(formData.get("fabric_preference") || "") || null,

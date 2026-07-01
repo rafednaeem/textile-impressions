@@ -260,6 +260,10 @@ export default function CheckoutPage() {
   }
 
   const validateShipping = () => {
+    if (!user && !guestEmail.trim()) {
+      setShippingErrors({ guestEmail: "Email is required for guest checkout" })
+      return false
+    }
     const result = checkoutShippingSchema.safeParse({
       ...shipping,
       guestEmail: user ? undefined : guestEmail,
@@ -393,7 +397,11 @@ export default function CheckoutPage() {
                       shippingValidation.handleChange("guestEmail")
                     }}
                     onBlur={() => {
-                      shippingValidation.handleBlur("guestEmail")
+                      if (!guestEmail.trim()) {
+                        setShippingErrors((p) => ({ ...p, guestEmail: "Email is required for guest checkout" }))
+                      } else {
+                        shippingValidation.handleBlur("guestEmail")
+                      }
                     }}
                     aria-invalid={!!(shippingErrors.guestEmail || shippingValidation.errors.guestEmail)}
                     aria-describedby={(shippingErrors.guestEmail || shippingValidation.errors.guestEmail) ? "guestEmail-error" : undefined}

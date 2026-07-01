@@ -13,6 +13,7 @@ export default function CustomOrdersPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     name: "",
+    email: "",
     phone: "",
     garment_type: "",
     fabric_preference: "",
@@ -71,7 +72,7 @@ export default function CustomOrdersPage() {
     const data = await res.json()
     setSubmitting(false)
     if (res.ok) {
-      setForm({ name: "", phone: "", garment_type: "", fabric_preference: "", color_preference: "", size: "", quantity: "1", budget_range: "", deadline: "", notes: "" })
+      setForm({ name: "", email: "", phone: "", garment_type: "", fabric_preference: "", color_preference: "", size: "", quantity: "1", budget_range: "", deadline: "", notes: "" })
       setErrors({})
       validation.clearErrors()
       window.open(data.whatsappUrl, "_blank", "noopener,noreferrer")
@@ -112,12 +113,26 @@ export default function CustomOrdersPage() {
                 value={form.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
                 onBlur={() => validation.handleBlur("phone")}
-                placeholder="Phone"
+                placeholder="Phone (03XXXXXXXXX)"
                 aria-invalid={!!getErrorMessage("phone")}
                 aria-describedby={getErrorMessage("phone") ? "custom-phone-error" : undefined}
                 className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none w-full transition-colors ${getFieldBorder("phone")}`}
               />
               {getErrorMessage("phone") && <p id="custom-phone-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("phone")}</p>}
+            </div>
+            <div>
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                onBlur={() => validation.handleBlur("email")}
+                placeholder="Email"
+                aria-invalid={!!getErrorMessage("email")}
+                aria-describedby={getErrorMessage("email") ? "custom-email-error" : undefined}
+                className={`rounded-lg border bg-background px-4 py-3 text-sm outline-none w-full transition-colors ${getFieldBorder("email")}`}
+              />
+              {getErrorMessage("email") && <p id="custom-email-error" className="mt-1 flex items-center gap-1 text-xs text-red-500" role="alert">{getErrorMessage("email")}</p>}
             </div>
             <div>
               <select
