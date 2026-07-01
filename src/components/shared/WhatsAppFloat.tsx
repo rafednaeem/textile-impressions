@@ -4,11 +4,14 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { MessageCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { whatsappNumber } from "@/lib/constants"
+import { createClient } from "@/lib/supabase/client"
+import { extractSettings } from "@/lib/settings"
 
 export default function WhatsAppFloat() {
+  const supabase = createClient()
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [whatsapp, setWhatsapp] = useState("")
 
   useEffect(() => {
     setMounted(true)
@@ -18,9 +21,20 @@ export default function WhatsAppFloat() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "store_whatsapp")
+      .single()
+      .then(({ data }) => {
+        if (data?.value) setWhatsapp(data.value)
+      })
+  }, [supabase])
+
   if (!mounted) return null
 
-  const href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi! I'm interested in your products.")}`
+  const href = `https://wa.me/${whatsapp}?text=${encodeURIComponent("Hi! I'm interested in your products.")}`
 
   return createPortal(
     <div className="pointer-events-none sticky bottom-0 z-[70] h-0">

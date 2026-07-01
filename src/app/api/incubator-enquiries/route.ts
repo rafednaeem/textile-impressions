@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { whatsappNumber } from "@/lib/constants"
+import { extractSettings } from "@/lib/settings"
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -23,8 +23,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to submit enquiry" }, { status: 500 })
   }
 
+  const { data: settingsData } = await supabase.from("site_settings").select("key, value")
+  const s = extractSettings(settingsData)
+  const wa = s.store_whatsapp || "923001234567"
+
   const message = `Incubator Enquiry: ${name} | ${phone} | Craft: ${craft_type}`
   return NextResponse.json({
-    whatsappUrl: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+    whatsappUrl: `https://wa.me/${wa}?text=${encodeURIComponent(message)}`,
   })
 }

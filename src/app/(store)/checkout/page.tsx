@@ -57,13 +57,6 @@ const PAYMENT_METHODS = [
   },
 ] as const
 
-const BANK_DETAILS = {
-  bank: "Meezan Bank",
-  accountName: "Textile Impressions",
-  accountNumber: "1234567890",
-  iban: "PK36MEZN0001234567890",
-}
-
 const STEPS = ["Shipping", "Payment", "Review", "Confirm"]
 
 export default function CheckoutPage() {
@@ -95,7 +88,7 @@ export default function CheckoutPage() {
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [transactionRef, setTransactionRef] = useState("")
   const [notes, setNotes] = useState("")
-  const [shippingCharges, setShippingCharges] = useState<Record<string, string>>({})
+  const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -120,20 +113,26 @@ export default function CheckoutPage() {
     supabase
       .from("site_settings")
       .select("key, value")
-      .like("key", "shipping_%")
       .then(({ data }) => {
         if (data) {
           const map: Record<string, string> = {}
           data.forEach((s) => { map[s.key] = s.value })
-          setShippingCharges(map)
+          setSiteSettings(map)
         }
       })
   }, [supabase])
 
   const provinceShippingKey = shipping.province ? PROVINCE_TO_KEY[shipping.province] : null
-  const provinceShipping = provinceShippingKey ? shippingCharges[provinceShippingKey] : null
+  const provinceShipping = provinceShippingKey ? siteSettings[provinceShippingKey] : null
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : (provinceShipping ? Number(provinceShipping) : 200)
   const total = subtotal + shippingCost
+
+  const bankDetails = {
+    bank: siteSettings.bank_name || "Meezan Bank",
+    accountName: siteSettings.bank_account_title || "Textile Impressions",
+    accountNumber: siteSettings.bank_account || "1234567890",
+    iban: siteSettings.bank_iban || "PK36MEZN0001234567890",
+  }
 
   const useAddress = useCallback((addr: any) => {
     setShipping({
@@ -454,10 +453,10 @@ export default function CheckoutPage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 rounded-xl border border-border p-6">
                 <div className="space-y-2 text-sm">
                   <p className="font-medium text-brand-forest">Bank Account Details</p>
-                  <p>Bank: {BANK_DETAILS.bank}</p>
-                  <p>Account Name: {BANK_DETAILS.accountName}</p>
-                  <p>Account #: {BANK_DETAILS.accountNumber}</p>
-                  <p>IBAN: {BANK_DETAILS.iban}</p>
+                  <p>Bank: {bankDetails.bank}</p>
+                  <p>Account Name: {bankDetails.accountName}</p>
+                  <p>Account #: {bankDetails.accountNumber}</p>
+                  <p>IBAN: {bankDetails.iban}</p>
                 </div>
 
                 <div className="mt-4">
@@ -627,10 +626,10 @@ export default function CheckoutPage() {
                   <div className="rounded-xl border border-border bg-muted/30 p-4 text-left text-sm">
                     <p className="font-medium text-brand-forest">Bank Transfer Details</p>
                     <p className="mt-1 text-muted-foreground">
-                      Bank: {BANK_DETAILS.bank}<br />
-                      Account: {BANK_DETAILS.accountName}<br />
-                      Account #: {BANK_DETAILS.accountNumber}<br />
-                      IBAN: {BANK_DETAILS.iban}
+                      Bank: {bankDetails.bank}<br />
+                      Account: {bankDetails.accountName}<br />
+                      Account #: {bankDetails.accountNumber}<br />
+                      IBAN: {bankDetails.iban}
                     </p>
                   </div>
                 </>

@@ -6,6 +6,34 @@ import { createClient } from "@/lib/supabase/client"
 import { Loader2 } from "lucide-react"
 import type { SiteSetting } from "@/types/database"
 
+const EXISTING_KEYS = [
+  "products_crafted_count",
+  "store_whatsapp",
+  "support_hours",
+  "bank_name",
+  "bank_account",
+  "bank_iban",
+  "delivery_policy_text",
+  "store_phone",
+  "store_email",
+  "store_address",
+  "bank_account_title",
+]
+
+const SETTING_DEFAULTS: Record<string, string> = {
+  products_crafted_count: "500",
+  store_whatsapp: "923001234567",
+  support_hours: "Mon-Fri 9AM-6PM PKT",
+  bank_name: "Meezan Bank",
+  bank_account: "1234567890",
+  bank_iban: "PK36MEZN0001234567890",
+  delivery_policy_text: "Standard delivery 3-5 business days. COD available in major cities.",
+  bank_account_title: "Textile Impressions",
+  store_phone: "+92 300 1234567",
+  store_email: "hello@textileimpressions.com",
+  store_address: "Lahore, Pakistan",
+}
+
 const SHIPPING_PROVINCES = [
   { key: "shipping_punjab", label: "Punjab" },
   { key: "shipping_sindh", label: "Sindh" },
@@ -36,6 +64,9 @@ export default function AdminSettingsPage() {
       setSettings(data)
       const editsMap: Record<string, string> = {}
       data.forEach((s) => { editsMap[s.key] = s.value })
+      Object.entries(SETTING_DEFAULTS).forEach(([key, val]) => {
+        if (!editsMap[key]) editsMap[key] = val
+      })
       SHIPPING_PROVINCES.forEach(({ key }) => {
         if (!editsMap[key]) editsMap[key] = DEFAULT_SHIPPING
       })

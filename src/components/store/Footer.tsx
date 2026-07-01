@@ -1,8 +1,18 @@
 import { Phone, Mail, MapPin } from "lucide-react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
+import { extractSettings } from "@/lib/settings"
 
-export default function Footer() {
+export default async function Footer() {
+  const supabase = await createClient()
+  const { data } = await supabase.from("site_settings").select("key, value")
+  const s = extractSettings(data)
   const currentYear = new Date().getFullYear()
+
+  const phone = s.store_phone || "+92 300 1234567"
+  const email = s.store_email || "hello@textileimpressions.com"
+  const address = s.store_address || "Lahore, Pakistan"
+  const whatsapp = s.store_whatsapp || "923001234567"
 
   return (
     <footer className="border-t border-border bg-brand-forest text-white">
@@ -72,23 +82,23 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-2">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0" />
-                <a href="tel:+923001234567" className="transition-colors hover:text-white">
-                  +92 300 1234567
+                <a href={`tel:${phone}`} className="transition-colors hover:text-white">
+                  {phone}
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0" />
-                <a href="mailto:hello@textileimpressions.com" className="transition-colors hover:text-white">
-                  hello@textileimpressions.com
+                <a href={`mailto:${email}`} className="transition-colors hover:text-white">
+                  {email}
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Lahore, Pakistan</span>
+                <span>{address}</span>
               </li>
               <li>
                 <a
-                  href="https://wa.me/923001234567"
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-brand-terracotta px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-terracotta/90"

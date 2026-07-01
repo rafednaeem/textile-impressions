@@ -6,7 +6,6 @@ import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { whatsappNumber } from "@/lib/constants"
 import type { Artisan, Product, UgcPhoto } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
 import ImpactCounters from "@/components/store/ImpactCounters"
@@ -73,6 +72,7 @@ export default function HomeContent() {
   const [artisans, setArtisans] = useState<Artisan[]>(fallbackArtisans)
   const [ugcPhotos, setUgcPhotos] = useState<UgcPhoto[]>(fallbackUgc)
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null)
+  const [whatsappNumber, setWhatsappNumber] = useState("")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +86,14 @@ export default function HomeContent() {
       if (ugcRes.data?.length) setUgcPhotos(ugcRes.data)
     }
     fetchData()
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "store_whatsapp")
+      .single()
+      .then(({ data }) => {
+        if (data?.value) setWhatsappNumber(data.value)
+      })
   }, [supabase])
 
   const shareHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi! I'd like to share my Textile Impression look. [Customer sends photo directly]")}`

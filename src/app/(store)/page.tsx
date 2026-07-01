@@ -1,6 +1,8 @@
 import Script from "next/script"
 import type { Metadata } from "next"
-import { storeName, baseUrl, whatsappNumber } from "@/lib/constants"
+import { storeName, baseUrl } from "@/lib/constants"
+import { createClient } from "@/lib/supabase/server"
+import { extractSettings } from "@/lib/settings"
 import HomeContent from "./HomeContent"
 
 export const revalidate = 600
@@ -29,26 +31,31 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: storeName,
-  url: baseUrl,
-  logo: `${baseUrl}/logo.png`,
-  contactPoint: {
-    "@type": "ContactPoint",
-    telephone: `+${whatsappNumber}`,
-    contactType: "customer service",
-    availableLanguage: ["English", "Urdu"],
-  },
-  sameAs: [
-    `https://wa.me/${whatsappNumber}`,
-    "https://facebook.com/textileimpressions",
-    "https://instagram.com/textileimpressions",
-  ],
-}
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data } = await supabase.from("site_settings").select("key, value")
+  const s = extractSettings(data)
+  const whatsapp = s.store_whatsapp || "923001234567"
 
-export default function HomePage() {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: storeName,
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`,
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: `+${whatsapp}`,
+      contactType: "customer service",
+      availableLanguage: ["English", "Urdu"],
+    },
+    sameAs: [
+      `https://wa.me/${whatsapp}`,
+      "https://facebook.com/textileimpressions",
+      "https://instagram.com/textileimpressions",
+    ],
+  }
+
   return (
     <>
       <Script id="organization-schema" type="application/ld+json" strategy="beforeInteractive">
