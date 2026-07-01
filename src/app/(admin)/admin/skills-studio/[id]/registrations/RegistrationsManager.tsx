@@ -32,6 +32,9 @@ interface Registration {
     status: string
     proof_url: string | null
     transaction_ref: string | null
+    rejection_reason: string | null
+    verified_at: string | null
+    created_at: string
   }[]
 }
 
