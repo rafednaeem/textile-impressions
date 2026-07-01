@@ -8,6 +8,7 @@ import { ChevronDown, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Artisan, Product, UgcPhoto } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
+import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 import ImpactCounters from "@/components/store/ImpactCounters"
 
 const fadeUp = {
@@ -77,7 +78,7 @@ export default function HomeContent() {
   useEffect(() => {
     const fetchData = async () => {
       const [prodRes, artisanRes, ugcRes] = await Promise.all([
-        supabase.from("products").select("*").eq("is_active", true).eq("is_featured", true).limit(8),
+        supabase.from("products").select("*, product_images(*)").eq("is_active", true).eq("is_featured", true).limit(8),
         supabase.from("artisans").select("*").eq("is_featured", true).order("sort_order").limit(3),
         supabase.from("ugc_photos").select("*").eq("is_approved", true).order("created_at", { ascending: false }).limit(6),
       ])
@@ -156,7 +157,7 @@ export default function HomeContent() {
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} imageUrl={getProductImage(product)} hoverImageUrl={getProductHoverImage(product)} />
               ))}
             </motion.div>
           </div>

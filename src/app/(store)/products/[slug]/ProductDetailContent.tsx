@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { Product, ProductImage, ProductVariant, Category } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
 import ProductCard from "@/components/store/ProductCard"
+import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 
 const tabs = ["Description", "Size Guide", "Care Instructions"] as const
 
@@ -102,7 +103,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
       if (prod.category_id) {
         const { data: relData } = await supabase
           .from("products")
-          .select("*")
+          .select("*, product_images(*)")
           .eq("category_id", prod.category_id)
           .eq("is_active", true)
           .neq("id", prod.id)
@@ -502,7 +503,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} imageUrl={getProductImage(p)} hoverImageUrl={getProductHoverImage(p)} />
             ))}
           </div>
         </section>

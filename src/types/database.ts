@@ -60,6 +60,7 @@ export interface Product {
   care_instructions: string | null
   created_at: string
   updated_at: string
+  product_images?: ProductImage[] | null
 }
 
 export interface Artisan {

@@ -7,6 +7,7 @@ import { SlidersHorizontal, ChevronDown, ChevronRight, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
+import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 
 const PAGE_SIZE = 12
 
@@ -100,7 +101,7 @@ export default function ShopContent() {
   const buildQuery = useCallback(() => {
     let query = supabase
       .from("products")
-      .select("*", { count: "exact" })
+      .select("*, product_images(*)", { count: "exact" })
       .eq("is_active", true)
 
     const filteredIds = getFilteredCategoryIds()
@@ -326,7 +327,7 @@ export default function ShopContent() {
             <>
               <motion.div initial="initial" animate="animate" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} imageUrl={getProductImage(product)} hoverImageUrl={getProductHoverImage(product)} />
                 ))}
               </motion.div>
               {totalPages > 1 && (

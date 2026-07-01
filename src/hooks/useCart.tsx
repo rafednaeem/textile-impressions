@@ -10,6 +10,7 @@ import {
 } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { CartItem, Product, ProductVariant } from "@/types/database"
+import { getProductImage } from "@/lib/product-image"
 
 type CartItemDisplay = CartItem & {
   product: Pick<Product, "name" | "slug" | "price" | "sale_price" | "inventory_count">
@@ -86,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const { data: rawItems } = await supabase
       .from("cart_items")
-      .select("*, products!inner(name, slug, price, sale_price, inventory_count)")
+      .select("*, products!inner(name, slug, price, sale_price, inventory_count, product_images(*))")
       .eq("cart_id", cart.id)
 
     if (rawItems) {
@@ -99,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           quantity: ci.quantity,
           price_at_time: ci.price_at_time,
           product: ci.products ?? { name: "Unknown", slug: "", price: 0, sale_price: null, inventory_count: 0 },
-          image: null,
+          image: getProductImage(ci.products),
           variant: null,
         }))
       )

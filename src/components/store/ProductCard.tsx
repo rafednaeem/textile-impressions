@@ -12,6 +12,8 @@ import { useCart } from "@/hooks/useCart"
 
 interface ProductCardProps {
   product: Product
+  imageUrl?: string | null
+  hoverImageUrl?: string | null
 }
 
 const craftTagClasses: Record<string, string> = {
@@ -22,7 +24,7 @@ const craftTagClasses: Record<string, string> = {
   Plain: "bg-gray-200 text-gray-700",
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, imageUrl, hoverImageUrl }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
   const { addItem } = useCart()
@@ -35,8 +37,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const craftType = craft_type || "Plain"
   const craftClass = craftTagClasses[craftType] || "bg-gray-200 text-gray-700"
 
-  const imageUrl = `https://picsum.photos/seed/${slug}/600/800`
-  const hoverImageUrl = `https://picsum.photos/seed/${slug}h/600/800`
+  const fallbackImage = `https://picsum.photos/seed/${slug}/600/800`
+  const fallbackHover = `https://picsum.photos/seed/${slug}h/600/800`
+  const displayImage = imageUrl ?? fallbackImage
+  const displayHover = hoverImageUrl ?? fallbackHover
 
   useEffect(() => {
     const checkWishlist = async () => {
@@ -66,7 +70,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         sale_price,
         inventory_count,
       },
-      image: imageUrl,
+      image: displayImage,
     })
     toast(`${name} added to cart`, {
       description: "View your cart to checkout",
@@ -122,14 +126,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${slug}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
           <Image
-            src={imageUrl}
+            src={displayImage}
             alt={name}
             fill
             className="object-cover transition-opacity duration-500 group-hover:opacity-0"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
           <Image
-            src={hoverImageUrl}
+            src={displayHover}
             alt={`${name} alternate view`}
             fill
             className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"

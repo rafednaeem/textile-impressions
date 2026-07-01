@@ -8,6 +8,7 @@ import { Palette, Droplets, Brush, Leaf, ArrowRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
+import { getProductImage, getProductHoverImage } from "@/lib/product-image"
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -60,7 +61,7 @@ export default function ColorsContent() {
       const catIds = cats.map((c) => c.id)
       const { data } = await supabase
         .from("products")
-        .select("*")
+        .select("*, product_images(*)")
         .in("category_id", catIds)
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
@@ -177,7 +178,7 @@ export default function ColorsContent() {
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} imageUrl={getProductImage(product)} hoverImageUrl={getProductHoverImage(product)} />
               ))}
             </motion.div>
           </div>
