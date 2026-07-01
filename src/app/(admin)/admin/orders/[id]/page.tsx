@@ -9,11 +9,21 @@ import { ChevronLeft, CheckCircle, XCircle, ChevronDown, Loader2, ExternalLink, 
 import { createClient } from "@/lib/supabase/client"
 import { verifyPayment, rejectPayment, updateOrderStatus } from "@/lib/admin/actions"
 
-function extractStoragePath(publicUrl: string): string | null {
-  const prefix = "/storage/v1/object/public/payment-proofs/"
-  const idx = publicUrl.indexOf(prefix)
-  if (idx === -1) return null
-  return publicUrl.slice(idx + prefix.length)
+function extractStoragePath(url: string): string | null {
+  const prefixes = [
+    "/storage/v1/object/public/payment-proofs/",
+    "/storage/v1/object/sign/payment-proofs/",
+  ]
+  for (const prefix of prefixes) {
+    const idx = url.indexOf(prefix)
+    if (idx !== -1) {
+      let path = url.slice(idx + prefix.length)
+      const qIdx = path.indexOf("?")
+      if (qIdx !== -1) path = path.slice(0, qIdx)
+      return path
+    }
+  }
+  return null
 }
 
 const STATUSES = [
@@ -59,7 +69,8 @@ export default function AdminOrderDetailPage({
       if (data?.signedUrl) {
         setProofSignedUrl(data.signedUrl)
       } else {
-        setProofError(true)
+        // fall back to the stored URL (may be a service-role signed URL with 90-day expiry)
+        setProofSignedUrl(proofUrl)
       }
       setProofLoading(false)
     }

@@ -157,21 +157,19 @@ export default function CheckoutPage() {
   const uploadProof = async (): Promise<string | null> => {
     if (!proofFile) return null
     setUploading(true)
-    const ext = proofFile.name.split(".").pop()
-    const folder = user ? user.id : `guest-${Date.now()}`
-    const fileName = `checkout/${folder}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage
-      .from("payment-proofs")
-      .upload(fileName, proofFile)
+    const formData = new FormData()
+    formData.append("file", proofFile)
+
+    const res = await fetch("/api/upload/payment-proof", {
+      method: "POST",
+      body: formData,
+    })
 
     setUploading(false)
-    if (error) return null
+    if (!res.ok) return null
 
-    const { data: urlData } = supabase.storage
-      .from("payment-proofs")
-      .getPublicUrl(fileName)
-
-    return urlData.publicUrl
+    const data = await res.json()
+    return data.url ?? null
   }
 
   const placeOrder = async () => {

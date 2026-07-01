@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File | null
@@ -19,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -33,10 +25,12 @@ export async function POST(request: Request) {
     }
 
     const ext = file.name.split(".").pop()
-    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const folder = `checkout/${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const fileName = `${folder}/${Date.now()}.${ext}`
 
+    const serviceRole = getServiceRoleClient()
     const buffer = Buffer.from(await file.arrayBuffer())
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await serviceRole.storage
       .from("payment-proofs")
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -47,11 +41,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 })
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: signedData } = await serviceRole.storage
       .from("payment-proofs")
-      .getPublicUrl(fileName)
+      .createSignedUrl(fileName, 60 * 60 * 24 * 90)
 
-    return NextResponse.json({ url: urlData.publicUrl })
+    if (!signedData?.signedUrl) {
+      return NextResponse.json({ error: "Failed to generate URL" }, { status: 500 })
+    }
+
+    return NextResponse.json({ url: signedData.signedUrl })
   } catch {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 })
   }
