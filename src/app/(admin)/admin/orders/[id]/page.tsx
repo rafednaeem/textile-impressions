@@ -5,9 +5,16 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState, use } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ChevronLeft, CheckCircle, XCircle, ChevronDown } from "lucide-react"
+import { ChevronLeft, CheckCircle, XCircle, ChevronDown, Loader2, ExternalLink, Download, AlertTriangle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { verifyPayment, rejectPayment, updateOrderStatus } from "@/lib/admin/actions"
+
+function extractStoragePath(publicUrl: string): string | null {
+  const prefix = "/storage/v1/object/public/payment-proofs/"
+  const idx = publicUrl.indexOf(prefix)
+  if (idx === -1) return null
+  return publicUrl.slice(idx + prefix.length)
+}
 
 const STATUSES = [
   "pending", "payment_pending", "payment_submitted", "payment_verified",
@@ -27,6 +34,37 @@ export default function AdminOrderDetailPage({
   const [showRejectInput, setShowRejectInput] = useState(false)
   const [statusUpdating, setStatusUpdating] = useState(false)
   const [enlargeImage, setEnlargeImage] = useState<string | null>(null)
+  const [proofSignedUrl, setProofSignedUrl] = useState<string | null>(null)
+  const [proofLoading, setProofLoading] = useState(false)
+  const [proofError, setProofError] = useState(false)
+
+  useEffect(() => {
+    const proofUrl = order?.payments?.[0]?.proof_url
+    if (!proofUrl) {
+      setProofSignedUrl(null)
+      return
+    }
+    const generate = async () => {
+      setProofLoading(true)
+      setProofError(false)
+      const path = extractStoragePath(proofUrl)
+      if (!path) {
+        setProofSignedUrl(proofUrl)
+        setProofLoading(false)
+        return
+      }
+      const { data } = await supabase.storage
+        .from("payment-proofs")
+        .createSignedUrl(path, 60 * 60)
+      if (data?.signedUrl) {
+        setProofSignedUrl(data.signedUrl)
+      } else {
+        setProofError(true)
+      }
+      setProofLoading(false)
+    }
+    generate()
+  }, [order?.payments?.[0]?.proof_url, supabase])
 
   const fetchOrder = async () => {
     const { data } = await supabase
@@ -195,9 +233,30 @@ export default function AdminOrderDetailPage({
             {payment.proof_url && (
               <div>
                 <p className="mb-2 text-sm text-muted-foreground">Payment Proof:</p>
-                <button onClick={() => setEnlargeImage(payment.proof_url)} className="group relative overflow-hidden rounded-lg border border-border">
-                  <Image src={payment.proof_url} alt="Payment proof" width={200} height={280} className="object-cover transition-transform group-hover:scale-105" />
-                </button>
+                {proofLoading ? (
+                  <div className="flex h-[200px] w-[200px] items-center justify-center rounded-lg border border-border bg-muted">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : proofError ? (
+                  <div className="flex h-[200px] w-[200px] flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    <span className="text-xs text-muted-foreground">Failed to load image</span>
+                  </div>
+                ) : proofSignedUrl ? (
+                  <div className="flex items-start gap-3">
+                    <button onClick={() => setEnlargeImage(proofSignedUrl)} className="group relative shrink-0 overflow-hidden rounded-lg border border-border">
+                      <Image src={proofSignedUrl} alt="Payment proof" width={200} height={280} className="object-cover transition-transform group-hover:scale-105" />
+                    </button>
+                    <div className="flex flex-col gap-2">
+                      <a href={proofSignedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors">
+                        <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
+                      </a>
+                      <a href={proofSignedUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors">
+                        <Download className="h-3.5 w-3.5" /> Download
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -267,8 +326,18 @@ export default function AdminOrderDetailPage({
       )}
 
       {enlargeImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setEnlargeImage(null)}>
-          <Image src={enlargeImage} alt="Payment proof" width={600} height={800} className="max-h-[90vh] rounded-lg object-contain" />
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 p-4" onClick={() => setEnlargeImage(null)}>
+          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <Image src={enlargeImage} alt="Payment proof" width={600} height={800} className="max-h-[85vh] rounded-lg object-contain" />
+            <div className="mt-3 flex justify-center gap-3">
+              <a href={enlargeImage} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30 transition-colors">
+                <ExternalLink className="h-4 w-4" /> Open in new tab
+              </a>
+              <a href={enlargeImage} download className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30 transition-colors">
+                <Download className="h-4 w-4" /> Download
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>
