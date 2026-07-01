@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 
 interface Props {
@@ -21,9 +21,11 @@ export async function PATCH(request: Request, { params }: Props) {
       return NextResponse.json({ error: "proofUrl is required" }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Use service role to bypass RLS — the workshop_payments UPDATE policy only allows admins,
+    // but customers and guests need to set proof_url after uploading.
+    const serviceRole = getServiceRoleClient()
 
-    const { data: payment, error: payErr } = await supabase
+    const { data: payment, error: payErr } = await serviceRole
       .from("workshop_payments")
       .select("id, registration_id")
       .eq("id", id)
@@ -33,12 +35,13 @@ export async function PATCH(request: Request, { params }: Props) {
       return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
 
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await serviceRole
       .from("workshop_payments")
       .update({ proof_url: proofUrl })
       .eq("id", id)
 
     if (updateErr) {
+      console.error("Payment proof_url update error:", updateErr)
       return NextResponse.json({ error: "Failed to update payment" }, { status: 500 })
     }
 

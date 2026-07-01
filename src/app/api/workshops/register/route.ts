@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { workshopRegisterSchema } from "@/lib/validations"
 
@@ -34,7 +35,10 @@ export async function POST(request: Request) {
 
     const isPaid = workshop.fee > 0
 
-    const { data: existing } = await supabase
+    // Use service role for guest-accessible queries to bypass RLS
+    const serviceRole = getServiceRoleClient()
+
+    const { data: existing } = await serviceRole
       .from("workshop_registrations")
       .select("id")
       .eq("workshop_id", workshopId)
@@ -55,7 +59,8 @@ export async function POST(request: Request) {
     const registrationStatus = seatsAvailable ? (isPaid ? "awaiting_payment" : "confirmed") : "waitlisted"
     const paymentStatus = isPaid && seatsAvailable ? "awaiting" : "none"
 
-    const { data: registration, error: regErr } = await supabase
+    // Use service role for INSERT + RETURNING since guest SELECT RLS doesn't allow RETURNING
+    const { data: registration, error: regErr } = await serviceRole
       .from("workshop_registrations")
       .insert({
         workshop_id: workshopId,
@@ -75,8 +80,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to register" }, { status: 500 })
     }
 
-    // Create admin notification
-    await supabase.from("admin_notifications").insert({
+    // Create admin notification (service role to bypass RLS)
+    await serviceRole.from("admin_notifications").insert({
       type: registrationStatus === "waitlisted" ? "workshop_waitlist" : "workshop_new_registration",
       title: registrationStatus === "waitlisted"
         ? `New waitlist: ${guestName} for ${workshop.title}`

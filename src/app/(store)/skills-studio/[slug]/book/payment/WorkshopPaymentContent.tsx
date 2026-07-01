@@ -95,11 +95,18 @@ export default function WorkshopPaymentContent({ workshop, registration, bankDet
       }
 
       // Update proof URL
-      await fetch(`/api/workshops/payment/${payData.paymentId}`, {
+      const proofRes = await fetch(`/api/workshops/payment/${payData.paymentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proofUrl }),
       })
+
+      if (!proofRes.ok) {
+        const proofData = await proofRes.json()
+        toast.error(proofData.error || "Failed to save payment proof URL")
+        setSubmitting(false)
+        return
+      }
 
       setSuccess(true)
       toast.success("Payment proof submitted!")

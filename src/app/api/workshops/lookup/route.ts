@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { workshopLookupSchema } from "@/lib/validations"
 
@@ -18,9 +19,11 @@ export async function POST(request: Request) {
     }
 
     const { email, workshopId } = parsed.data
-    const supabase = await createClient()
 
-    let query = supabase
+    // Use service role to bypass RLS for guest lookup by email
+    const serviceRole = getServiceRoleClient()
+
+    let query = serviceRole
       .from("workshop_registrations")
       .select(`
         id, status, payment_status, registered_at, guest_name, guest_phone,

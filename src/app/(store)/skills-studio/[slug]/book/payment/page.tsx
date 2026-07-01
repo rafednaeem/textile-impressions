@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import WorkshopPaymentContent from "./WorkshopPaymentContent"
 
 interface Props {
@@ -24,7 +25,10 @@ export default async function WorkshopPaymentPage({ params, searchParams }: Prop
 
   if (!workshop) notFound()
 
-  const { data: registration } = await supabase
+  // Use service role to allow guest registrants to view their own registration
+  const serviceRole = getServiceRoleClient()
+
+  const { data: registration } = await serviceRole
     .from("workshop_registrations")
     .select("id, status, payment_status, guest_email")
     .eq("id", registrationId)
