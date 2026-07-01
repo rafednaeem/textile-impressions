@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
 import { workshopAdminUpdateSchema } from "@/lib/validations"
+import { sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -119,6 +120,22 @@ export async function PATCH(request: Request, { params }: Props) {
           message: `Workshop: ${workshop?.title || "Unknown"}`,
           metadata: { registration_id: id, workshop_id: existing.workshop_id },
         })
+      }
+
+      // Send email for status changes that have templates
+      const emailEvents: Record<string, string> = {
+        confirmed: "seat_confirmed",
+        cancelled: "cancelled",
+        attended: "completed",
+      }
+
+      const emailEvent = emailEvents[status]
+      if (emailEvent) {
+        sendWorkshopRegistrationEmail(id, emailEvent, {
+          reason: status === "cancelled" ? cancellationReason : undefined,
+        }).catch((err) =>
+          console.error("[admin/workshop-registrations] Failed to send email:", err)
+        )
       }
     }
 

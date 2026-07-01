@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { workshopPaymentSchema } from "@/lib/validations"
+import { sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
 
 export async function POST(request: Request) {
   try {
@@ -100,6 +101,11 @@ export async function POST(request: Request) {
       message: `Registration from ${registration.guest_email}. Rs. ${workshop.fee} awaiting review.`,
       metadata: { registration_id: registrationId, payment_id: payment.id, workshop_id: registration.workshop_id },
     })
+
+    // Send email confirmation
+    sendWorkshopRegistrationEmail(registrationId, "payment_submitted").catch((err) =>
+      console.error("[workshops/payment] Failed to send email:", err)
+    )
 
     return NextResponse.json({
       success: true,

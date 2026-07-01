@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
 import { z } from "zod"
+import { sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
 
 const paymentActionSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -92,6 +93,10 @@ export async function POST(request: Request, { params }: Props) {
         metadata: { registration_id: id, payment_id: payment.id, workshop_id: registration.workshop_id },
       })
 
+      sendWorkshopRegistrationEmail(id, "payment_approved").catch((err) =>
+        console.error("[workshop-payment] Failed to send approval email:", err)
+      )
+
       return NextResponse.json({ success: true, message: "Payment approved. Registration confirmed." })
     } else {
       // Reject
@@ -118,6 +123,10 @@ export async function POST(request: Request, { params }: Props) {
         message: `Rs. ${payment.amount} rejected for ${workshop?.title || "workshop"}. Reason: ${reason || "Not specified"}`,
         metadata: { registration_id: id, payment_id: payment.id, workshop_id: registration.workshop_id },
       })
+
+      sendWorkshopRegistrationEmail(id, "payment_rejected", { reason: reason || "Payment could not be verified" }).catch((err) =>
+        console.error("[workshop-payment] Failed to send rejection email:", err)
+      )
 
       return NextResponse.json({ success: true, message: "Payment rejected." })
     }

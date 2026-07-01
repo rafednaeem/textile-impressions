@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import { sendOrderStatusEmail } from "@/lib/email/integrations"
 
 export async function POST(
   _request: Request,
@@ -23,6 +24,10 @@ export async function POST(
     note: "Payment verified by admin",
     created_by: user.id,
   })
+
+  sendOrderStatusEmail(id, "payment_verified").catch((err) =>
+    console.error("[verify-payment] Failed to send email:", err)
+  )
 
   return NextResponse.json({ success: true })
 }

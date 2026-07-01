@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { workshopRegisterSchema } from "@/lib/validations"
+import { sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
 
 export async function POST(request: Request) {
   try {
@@ -91,6 +92,17 @@ export async function POST(request: Request) {
         : `Free registration confirmed. Email: ${guestEmail}`,
       metadata: { registration_id: registration.id, workshop_id: workshopId },
     })
+
+    // Send confirmation email
+    if (!isPaid) {
+      sendWorkshopRegistrationEmail(registration.id, "registered").catch((err) =>
+        console.error("[workshops/register] Failed to send email:", err)
+      )
+    } else {
+      sendWorkshopRegistrationEmail(registration.id, "payment_required").catch((err) =>
+        console.error("[workshops/register] Failed to send email:", err)
+      )
+    }
 
     return NextResponse.json({
       success: true,

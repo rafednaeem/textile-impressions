@@ -1,6 +1,7 @@
 "use server"
 
 import { requireAdminThrow } from "@/lib/supabase/admin"
+import { sendOrderStatusEmail, sendOrderPaymentRejectedEmail, sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
 
 export async function verifyPayment(orderId: string) {
   const { supabase, user } = await requireAdminThrow()
@@ -19,6 +20,10 @@ export async function verifyPayment(orderId: string) {
     note: "Payment verified by admin",
     created_by: user.id,
   })
+
+  sendOrderStatusEmail(orderId, "payment_verified").catch((err) =>
+    console.error("[actions] Failed to send payment verified email:", err)
+  )
 }
 
 export async function rejectPayment(orderId: string, reason: string) {
@@ -37,6 +42,10 @@ export async function rejectPayment(orderId: string, reason: string) {
     note: `Payment rejected: ${reason}`,
     created_by: user.id,
   })
+
+  sendOrderPaymentRejectedEmail(orderId, reason).catch((err) =>
+    console.error("[actions] Failed to send payment rejected email:", err)
+  )
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
@@ -55,6 +64,10 @@ export async function updateOrderStatus(orderId: string, status: string) {
     note: `Status changed to ${status.replace("_", " ")}`,
     created_by: user.id,
   })
+
+  sendOrderStatusEmail(orderId, status).catch((err) =>
+    console.error("[actions] Failed to send order status email:", err)
+  )
 }
 
 export async function toggleProductActive(productId: string, isActive: boolean) {
@@ -186,6 +199,20 @@ export async function updateRegistrationStatus(
       metadata: { registration_id: registrationId, workshop_id: registration.workshop_id, created_by: user.id },
     })
   }
+
+  const emailEvents: Record<string, string> = {
+    confirmed: "seat_confirmed",
+    cancelled: "cancelled",
+    attended: "completed",
+  }
+  const emailEvent = emailEvents[status]
+  if (emailEvent) {
+    sendWorkshopRegistrationEmail(registrationId, emailEvent, {
+      reason: options?.cancellationReason,
+    }).catch((err) =>
+      console.error("[actions] Failed to send workshop email:", err)
+    )
+  }
 }
 
 export async function approveWorkshopPayment(registrationId: string) {
@@ -236,6 +263,10 @@ export async function approveWorkshopPayment(registrationId: string) {
       metadata: { registration_id: registrationId, payment_id: payment.id, workshop_id: registration.workshop_id },
     })
   }
+
+  sendWorkshopRegistrationEmail(registrationId, "payment_approved").catch((err) =>
+    console.error("[actions] Failed to send workshop payment approved email:", err)
+  )
 }
 
 export async function rejectWorkshopPayment(registrationId: string, reason: string) {
@@ -282,6 +313,10 @@ export async function rejectWorkshopPayment(registrationId: string, reason: stri
       metadata: { registration_id: registrationId, payment_id: payment.id, workshop_id: registration.workshop_id },
     })
   }
+
+  sendWorkshopRegistrationEmail(registrationId, "payment_rejected", { reason }).catch((err) =>
+    console.error("[actions] Failed to send workshop payment rejected email:", err)
+  )
 }
 
 export async function cancelRegistration(registrationId: string, reason?: string) {
@@ -318,6 +353,10 @@ export async function cancelRegistration(registrationId: string, reason?: string
       metadata: { registration_id: registrationId, workshop_id: registration.workshop_id, created_by: user.id },
     })
   }
+
+  sendWorkshopRegistrationEmail(registrationId, "cancelled", { reason }).catch((err) =>
+    console.error("[actions] Failed to send cancellation email:", err)
+  )
 }
 
 export async function exportWorkshopRegistrations(workshopId: string) {

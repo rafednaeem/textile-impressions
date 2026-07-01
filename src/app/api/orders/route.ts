@@ -4,6 +4,7 @@ import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
 import { isCodEligible } from "@/lib/constants"
 import { orderApiSchema } from "@/lib/validations"
+import { sendOrderStatusEmail } from "@/lib/email/integrations"
 
 export async function POST(request: Request) {
   try {
@@ -157,6 +158,10 @@ export async function POST(request: Request) {
         items.map((i: any) => i.product_id)
       )
     }
+
+    sendOrderStatusEmail(order.id, orderStatus).catch((err) =>
+      console.error("[orders] Failed to send order email:", err)
+    )
 
     return NextResponse.json({
       orderId: order.id,

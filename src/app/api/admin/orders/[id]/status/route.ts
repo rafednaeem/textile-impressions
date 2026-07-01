@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import { sendOrderStatusEmail } from "@/lib/email/integrations"
 
 export async function PATCH(
   request: Request,
@@ -21,6 +22,10 @@ export async function PATCH(
     status,
     note: `Status changed to ${status.replace("_", " ")}`,
   })
+
+  sendOrderStatusEmail(id, status).catch((err) =>
+    console.error("[admin/orders] Failed to send status email:", err)
+  )
 
   return NextResponse.json({ success: true })
 }

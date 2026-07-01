@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { extractSettings } from "@/lib/settings"
 import { customOrderSchema } from "@/lib/validations"
+import { sendCustomOrderConfirmationEmail } from "@/lib/email/integrations"
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -32,8 +34,11 @@ export async function POST(request: Request) {
     if (!error && data?.path) referenceImages.push(data.path)
   }
 
-  const { error } = await supabase.from("custom_orders").insert({
+  const serviceRole = getServiceRoleClient()
+
+  const { data: inserted, error } = await serviceRole.from("custom_orders").insert({
     name,
+    email,
     phone,
     garment_type,
     fabric_preference: String(formData.get("fabric_preference") || "") || null,
@@ -45,10 +50,16 @@ export async function POST(request: Request) {
     notes: String(formData.get("notes") || "") || null,
     reference_images: referenceImages,
     status: "new",
-  })
+  }).select("id").single()
 
   if (error) {
     return NextResponse.json({ error: "Failed to submit custom order" }, { status: 500 })
+  }
+
+  if (inserted?.id && email) {
+    sendCustomOrderConfirmationEmail(inserted.id).catch((err) =>
+      console.error("[custom-orders] Failed to send confirmation email:", err)
+    )
   }
 
   const { data: settingsData } = await supabase.from("site_settings").select("key, value")
