@@ -34,7 +34,32 @@ ALTER TABLE public.workshop_registrations
   ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS waitlisted_at TIMESTAMPTZ;
 
+-- ============================================================
+-- UPDATE existing registrations to new status format
+-- MUST run before changing the CHECK constraint
+-- ============================================================
+-- Migrate old 'registered' status to 'confirmed' for free workshops
+UPDATE public.workshop_registrations
+SET status = 'confirmed'
+WHERE status = 'registered';
+
+-- For registrations on paid workshops that were 'registered', set to awaiting_payment
+UPDATE public.workshop_registrations wr
+SET status = 'awaiting_payment', payment_status = 'awaiting'
+FROM public.workshops w
+WHERE wr.workshop_id = w.id
+  AND w.fee > 0
+  AND wr.status = 'confirmed';
+
+-- Set payment_status for confirmed free workshops
+UPDATE public.workshop_registrations
+SET payment_status = 'verified'
+WHERE status = 'confirmed'
+  AND payment_status = 'none';
+
+-- ============================================================
 -- Drop old status CHECK and recreate with expanded statuses
+-- ============================================================
 ALTER TABLE public.workshop_registrations
   DROP CONSTRAINT IF EXISTS workshop_registrations_status_check;
 
@@ -173,33 +198,6 @@ CREATE POLICY "admin_notifications_update_admin" ON public.admin_notifications
 
 CREATE POLICY "admin_notifications_delete_admin" ON public.admin_notifications
   FOR DELETE USING (public.is_admin());
-
--- ============================================================
--- UPDATE existing registrations to new status format
--- ============================================================
--- Migrate old 'registered' status to 'confirmed' for free workshops
-UPDATE public.workshop_registrations
-SET status = 'confirmed'
-WHERE status = 'registered';
-
--- For registrations on paid workshops that were 'registered', set to awaiting_payment
-UPDATE public.workshop_registrations wr
-SET status = 'awaiting_payment', payment_status = 'awaiting'
-FROM public.workshops w
-WHERE wr.workshop_id = w.id
-  AND w.fee > 0
-  AND wr.status = 'confirmed';
-
--- Set payment_status appropriately
-UPDATE public.workshop_registrations
-SET payment_status = 'none'
-WHERE status IN ('confirmed', 'cancelled', 'waitlisted')
-  AND payment_status = 'none';
-
-UPDATE public.workshop_registrations
-SET payment_status = 'verified'
-WHERE status = 'confirmed'
-  AND payment_status = 'none';
 
 -- ============================================================
 -- Storage: allow guests to upload payment proofs
