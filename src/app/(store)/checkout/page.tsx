@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/hooks/useCart"
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/constants"
+import { FREE_SHIPPING_THRESHOLD } from "@/constants"
 import { isCodEligible } from "@/lib/constants"
 
 const PROVINCES = [
@@ -29,7 +29,18 @@ const PROVINCES = [
   "Balochistan",
   "Gilgit-Baltistan",
   "AJK",
+  "ICT",
 ] as const
+
+const PROVINCE_TO_KEY: Record<string, string> = {
+  Punjab: "shipping_punjab",
+  Sindh: "shipping_sindh",
+  KPK: "shipping_kpk",
+  Balochistan: "shipping_balochistan",
+  "Gilgit-Baltistan": "shipping_gilgit_baltistan",
+  AJK: "shipping_ajk",
+  ICT: "shipping_islamabad",
+}
 
 const PAYMENT_METHODS = [
   {
@@ -84,6 +95,7 @@ export default function CheckoutPage() {
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [transactionRef, setTransactionRef] = useState("")
   const [notes, setNotes] = useState("")
+  const [shippingCharges, setShippingCharges] = useState<Record<string, string>>({})
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -104,7 +116,23 @@ export default function CheckoutPage() {
     }
   }, [user, supabase])
 
-  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("key, value")
+      .like("key", "shipping_%")
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {}
+          data.forEach((s) => { map[s.key] = s.value })
+          setShippingCharges(map)
+        }
+      })
+  }, [supabase])
+
+  const provinceShippingKey = shipping.province ? PROVINCE_TO_KEY[shipping.province] : null
+  const provinceShipping = provinceShippingKey ? shippingCharges[provinceShippingKey] : null
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : (provinceShipping ? Number(provinceShipping) : 200)
   const total = subtotal + shippingCost
 
   const useAddress = useCallback((addr: any) => {
