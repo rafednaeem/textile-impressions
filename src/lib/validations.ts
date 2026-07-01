@@ -200,15 +200,15 @@ export const pkPostalCode = z
   .string()
   .trim()
   .refine((v) => v === "" || /^\d{5}$/.test(v), {
-    message: "Postal code must be exactly 5 digits for Pakistan",
+    message: "Pakistani postal code must be exactly 5 digits (e.g., 54000)",
   })
 
 export const intlPostalCode = z
   .string()
   .trim()
   .max(20, "Postal code is too long")
-  .refine((v) => v === "" || /^[a-zA-Z0-9\s\-]{3,}$/.test(v), {
-    message: "Please enter a valid postal code",
+  .refine((v) => v === "" || /^[a-zA-Z0-9\s\-]{3,10}$/.test(v), {
+    message: "Please enter a valid postal code (3-10 alphanumeric characters)",
   })
 
 export function postalCodeForCountry(country: string) {
@@ -265,7 +265,7 @@ export const shippingAddressSchema = z.object({
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
   province: z.string().trim().min(1, "Province is required"),
-  postalCode: z.string().trim().optional().or(z.literal("")),
+  postalCode: pkPostalCode,
 })
 
 export const checkoutShippingSchema = z.object({
@@ -275,7 +275,7 @@ export const checkoutShippingSchema = z.object({
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
   province: z.string().trim().min(1, "Province is required"),
-  postalCode: z.string().trim().optional().or(z.literal("")),
+  postalCode: pkPostalCode,
   guestEmail: emailRefine().optional().or(z.literal("")),
 })
 
@@ -293,7 +293,7 @@ export const addressSchema = z.object({
   addressLine2: z.string().trim().optional().or(z.literal("")),
   city: cityRefine(),
   province: z.string().trim().min(1, "Province is required"),
-  postalCode: z.string().trim().optional().or(z.literal("")),
+  postalCode: pkPostalCode,
   isDefault: z.boolean().default(false),
 })
 

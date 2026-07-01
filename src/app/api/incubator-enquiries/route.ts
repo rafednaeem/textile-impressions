@@ -16,7 +16,6 @@ export async function POST(request: Request) {
 
   const { error } = await supabase.from("incubator_enquiries").insert({
     name,
-    email,
     phone,
     craft_type,
     description: description || null,

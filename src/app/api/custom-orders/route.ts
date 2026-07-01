@@ -34,7 +34,6 @@ export async function POST(request: Request) {
 
   const { error } = await supabase.from("custom_orders").insert({
     name,
-    email,
     phone,
     garment_type,
     fabric_preference: String(formData.get("fabric_preference") || "") || null,

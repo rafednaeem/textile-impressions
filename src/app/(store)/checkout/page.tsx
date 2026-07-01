@@ -223,13 +223,13 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         items: orderItems,
         shippingAddress: {
-          full_name: shipping.fullName,
+          fullName: shipping.fullName,
           phone: shipping.phone,
-          address_line1: shipping.addressLine1,
-          address_line2: shipping.addressLine2,
+          addressLine1: shipping.addressLine1,
+          addressLine2: shipping.addressLine2,
           city: shipping.city,
           province: shipping.province,
-          postal_code: shipping.postalCode,
+          postalCode: shipping.postalCode,
         },
         paymentMethod,
         proofUrl,
