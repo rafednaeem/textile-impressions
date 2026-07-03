@@ -17,7 +17,7 @@ const navLinks = [
   { label: "Custom Orders", href: "/custom-orders" },
   { label: "Skills Studio", href: "/skills-studio" },
   { label: "Incubator", href: "/incubator" },
-  { label: "About", href: "/craft-guide" },
+  { label: "About", href: "/about" },
 ]
 
 export default function Header() {

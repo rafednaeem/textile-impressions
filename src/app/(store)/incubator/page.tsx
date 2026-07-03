@@ -11,7 +11,7 @@ import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 const services = [
   { title: "Studio Access", description: "Shared textile studio space for sampling, finishing, photography, and small batch production.", icon: Hammer },
-  { title: "Mentorship & Training", description: "Guidance on quality control, pricing, merchandising, product development, and business readiness.", icon: Users },
+  { title: "Mentorship, Training & Counselling", description: "Career counselling and practical guidance for graduates and emerging makers: quality control, pricing, merchandising, product development, and starting a small-scale textile business.", icon: Users },
   { title: "Market Linkage", description: "Retail pathways through Textile Impressions, digital selling support, and buyer-facing storytelling.", icon: LineChart },
 ]
 

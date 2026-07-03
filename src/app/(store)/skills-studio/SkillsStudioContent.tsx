@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Calendar, Clock, MapPin, Monitor, Users, Filter, ChevronDown } from "lucide-react"
+import { Calendar, Clock, MapPin, Monitor, Users, Filter, ChevronDown, BookOpen, FlaskConical, Building2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS, WORKSHOP_LEVEL_LABELS } from "@/lib/constants"
@@ -71,7 +71,8 @@ export default function SkillsStudioContent() {
               Learn. Create. Earn.
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-brand-ivory/80">
-              Professional textile craft training for everyone. From natural dyeing to block printing - build skills that create livelihoods.
+              Theory and practical workshops on sustainable production, natural dyes, block printing, and
+              value addition — designed for students, small businesses, and textile schools across Pakistan.
             </p>
           </motion.div>
         </div>
@@ -181,12 +182,53 @@ export default function SkillsStudioContent() {
         </>
       )}
 
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Workspace Facility</p>
+          <h2 className="mt-3 font-heading text-4xl font-semibold text-brand-indigo">Learn in a fully equipped space</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            Our classroom, lecture space, and working lab give students the resources to experiment with textiles
+            and apply their knowledge to different materials.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {[
+            {
+              icon: BookOpen,
+              title: "Classroom & Lectures",
+              description: "A fully equipped classroom for theory sessions, demonstrations, and group learning.",
+            },
+            {
+              icon: FlaskConical,
+              title: "Working Lab",
+              description: "Hands-on space to experiment with dyes, prints, fabrics, and finishing techniques.",
+            },
+            {
+              icon: Building2,
+              title: "Collaborative Spaces",
+              description: "Partnerships with institutes and producers so designers can access resources beyond our walls.",
+            },
+          ].map((item) => (
+            <motion.div
+              key={item.title}
+              {...fadeUp}
+              className="rounded-lg border border-border bg-white p-6"
+            >
+              <item.icon className="h-7 w-7 text-brand-crimson" />
+              <h3 className="mt-5 font-heading text-xl font-semibold text-brand-indigo">{item.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       <section className="bg-brand-indigo py-16 text-brand-ivory sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div {...fadeUp}>
             <h2 className="font-heading text-3xl font-semibold sm:text-4xl">Ready to start your craft journey?</h2>
             <p className="mt-4 text-lg text-brand-ivory/80">
-              Our Skills Studio workshops are designed for beginners and professionals alike. Learn from master artisans and build skills that create real opportunities.
+              Our workshops blend theory with practice so you can build skills that create real opportunities —
+              whether you are a beginner, a student, or a small business looking to add value through sustainability.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a

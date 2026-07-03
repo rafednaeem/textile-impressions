@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
-import { SlidersHorizontal, ChevronDown, ChevronRight, X } from "lucide-react"
+import { SlidersHorizontal, ChevronDown, ChevronRight, X, Scissors } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
@@ -201,6 +201,30 @@ export default function ShopContent() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
+        </div>
+      </div>
+
+      <div className="mb-8 rounded-lg border border-border bg-white p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-indigo/10">
+              <Scissors className="h-5 w-5 text-brand-crimson" />
+            </div>
+            <div>
+              <h2 className="font-heading text-lg font-semibold text-brand-indigo">Ready for Dyeing (RFD) Fabric</h2>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Small-quantity RFD fabric for quality printing, available for students, designers, and entrepreneurs.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "923XXXXXXXXX"}?text=${encodeURIComponent("Hi! I am interested in RFD fabric. Can you share availability and quantities?")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-brand-saffron px-5 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90"
+          >
+            Enquire on WhatsApp
+          </a>
         </div>
       </div>
 
