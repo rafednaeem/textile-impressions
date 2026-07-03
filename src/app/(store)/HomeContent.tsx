@@ -92,8 +92,15 @@ export default function HomeContent() {
 
   return (
     <div className="bg-brand-ivory text-brand-umber">
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/hero-placeholder.jpg')] bg-cover bg-center" />
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-indigo">
+        <Image
+          src="/herotextileimpressions_cleanup.jpeg"
+          alt="Textile Impressions — handcrafted Pakistani textiles"
+          fill
+          preload
+          sizes="100vw"
+          className="object-cover object-center"
+        />
         <div className="absolute inset-0 bg-brand-indigo/55" />
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-ivory">
