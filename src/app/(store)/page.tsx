@@ -4,6 +4,7 @@ import { storeName, baseUrl } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
 import { canonicalUrl, organizationSchema, websiteSchema, breadcrumbSchema } from "@/lib/seo"
+import { withTimeout } from "@/lib/promise-timeout"
 import HomeContent from "./HomeContent"
 
 export const revalidate = 600
@@ -34,10 +35,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("site_settings").select("key, value")
-  const s = extractSettings(data)
-  const whatsapp = s.store_whatsapp || "923001234567"
+  let whatsapp = "923001234567"
+  try {
+    const supabase = await createClient()
+    const { data } = await withTimeout(
+      supabase.from("site_settings").select("key, value"),
+      5000,
+      { data: null }
+    )
+    const s = extractSettings(data)
+    if (s.store_whatsapp) whatsapp = s.store_whatsapp
+  } catch (error) {
+    console.error("[HomePage] Failed to load site settings:", error)
+  }
 
   const orgSchema = {
     ...organizationSchema,

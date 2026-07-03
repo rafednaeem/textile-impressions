@@ -2,11 +2,22 @@ import { Phone, Mail, MapPin } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
+import { withTimeout } from "@/lib/promise-timeout"
 
 export default async function Footer() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("site_settings").select("key, value")
-  const s = extractSettings(data)
+  let settings: Record<string, string> = {}
+  try {
+    const supabase = await createClient()
+    const { data } = await withTimeout(
+      supabase.from("site_settings").select("key, value"),
+      5000,
+      { data: null }
+    )
+    settings = extractSettings(data)
+  } catch (error) {
+    console.error("[Footer] Failed to load site settings:", error)
+  }
+  const s = settings
   const currentYear = new Date().getFullYear()
 
   const phone = s.store_phone || "+92 300 1234567"
