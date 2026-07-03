@@ -94,14 +94,14 @@ export default function HomeContent() {
     <div className="bg-brand-ivory text-brand-umber">
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-indigo">
         <Image
-          src="/herotextileimpressions_cleanup.jpeg"
+          src="/new_hero.jpeg"
           alt="Textile Impressions — handcrafted Pakistani textiles"
           fill
           preload
           sizes="100vw"
-          className="object-cover object-center"
+          className="pointer-events-none object-cover object-center"
         />
-        <div className="absolute inset-0 bg-brand-indigo/55" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-indigo/50 via-brand-indigo/70 to-brand-indigo/50" />
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-ivory">
             From Craft to Career
