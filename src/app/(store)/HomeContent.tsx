@@ -202,12 +202,16 @@ export default function HomeContent() {
           <motion.div {...fadeUp}>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-terracotta">Incubator</p>
             <h2 className="mt-3 max-w-2xl font-heading text-4xl font-semibold sm:text-5xl">
-              Empowering cottage artisans since 2018
+              Where craft becomes enterprise
             </h2>
+            <p className="mt-4 max-w-xl text-brand-forest/80">
+              For artisans, graduates, and designers ready to turn textile skill into a sustainable business.
+              We provide studio access, practical mentoring, and connections to buyers.
+            </p>
           </motion.div>
           <motion.div {...fadeUp} className="space-y-5">
             <ul className="space-y-3 text-lg">
-              {["Workshop Access", "Brand Development", "Market Linkage"].map((item) => (
+              {["Studio Access", "Mentorship & Counselling", "Market Linkage"].map((item) => (
                 <li key={item} className="border-b border-brand-forest/15 pb-3">{item}</li>
               ))}
             </ul>
