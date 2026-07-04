@@ -93,16 +93,16 @@ function HeroWordmark() {
         Textile Impression — Education, Sampling & Production
       </span>
       <div aria-hidden className="flex flex-col items-center">
-        <span className="font-sans text-xs font-medium uppercase tracking-[0.4em] md:text-sm">
+        <span className="font-sans text-[10px] font-medium uppercase tracking-[0.45em] sm:text-xs md:text-sm">
           Textile
         </span>
-        <div className="flex items-center gap-1 font-sans text-3xl font-light uppercase tracking-[0.12em] md:text-5xl">
+        <div className="flex items-center gap-1 font-sans text-2xl font-light uppercase tracking-[0.18em] sm:text-3xl md:text-4xl lg:text-5xl">
           <span>IMPRESS</span>
-          <YarnBallIcon className="-mx-0.5 h-7 w-7 md:h-11 md:w-11" />
+          <YarnBallIcon className="-mx-0.5 h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 lg:h-11 lg:w-11" />
           <span>N</span>
         </div>
       </div>
-      <span className="mt-2 font-sans text-[10px] font-medium uppercase tracking-[0.25em] text-brand-indigo/80 md:text-xs">
+      <span className="mt-2 font-sans text-[9px] font-medium uppercase tracking-[0.25em] text-brand-indigo/80 sm:text-[10px] md:text-xs">
         Education, Sampling & Production
       </span>
     </motion.div>
@@ -143,29 +143,46 @@ export default function HomeContent() {
 
   return (
     <div className="bg-brand-ivory text-brand-umber">
-      <section className="relative flex min-h-screen flex-col overflow-hidden bg-white">
-        <Image
-          src="/new_hero.jpeg"
-          alt="Textile Impressions — handcrafted Pakistani textiles"
-          fill
-          preload
-          sizes="100vw"
-          className="pointer-events-none object-contain object-center"
-        />
+      <section className="relative flex h-[100svh] min-h-[680px] flex-col overflow-hidden bg-white sm:min-h-[720px] md:h-[85vh] md:min-h-[760px] md:max-h-[900px] lg:h-[88vh] lg:min-h-[820px] lg:max-h-[980px] xl:max-h-[1040px]">
+        {/* Top-right decorative artwork */}
+        <div className="pointer-events-none absolute top-0 right-0 z-0 h-[170vh] w-full overflow-hidden md:w-[55%] md:max-w-2xl">
+          <Image
+            src="/new_hero.jpeg"
+            alt=""
+            fill
+            preload
+            sizes="(max-width: 768px) 100vw, 55vw"
+            className="object-contain object-top"
+          />
+        </div>
+
+        {/* Bottom-left decorative artwork */}
+        <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-[170vh] w-full overflow-hidden md:w-[55%] md:max-w-2xl">
+          <Image
+            src="/new_hero.jpeg"
+            alt=""
+            fill
+            preload
+            sizes="(max-width: 768px) 100vw, 55vw"
+            className="object-contain object-bottom"
+          />
+        </div>
+
+        {/* Text block */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-24 pb-6 text-center sm:px-6 md:items-start md:pt-28 md:text-left lg:px-8"
+          className="relative z-10 flex flex-col items-center px-4 pt-[26%] text-center sm:px-6 sm:pt-[28%] md:absolute md:top-[20%] md:left-[8%] md:items-start md:pt-0 md:text-left lg:left-[10%] lg:top-[22%]"
         >
-          <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-indigo">
+          <h1 className="font-heading text-[clamp(2.8rem,10vw,4.8rem)] font-semibold leading-[0.95] text-brand-indigo sm:text-[clamp(3rem,8vw,5rem)]">
             From Craft
-            <br className="hidden md:block" /> to Career
+            <br className="hidden sm:block" /> to Career
           </h1>
-          <p className="mt-4 max-w-md font-heading text-lg italic text-brand-indigo/90">
+          <p className="mt-4 max-w-sm font-heading text-base italic text-brand-indigo/90 sm:text-lg md:max-w-md">
             Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row md:justify-start">
+          <div className="mt-6 flex w-full max-w-xs flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:justify-start">
             <Link href="/shop" className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
               Shop the collection
             </Link>
@@ -174,10 +191,18 @@ export default function HomeContent() {
             </Link>
           </div>
         </motion.div>
-        <div className="relative z-10 flex flex-1 items-center justify-center py-10">
+
+        {/* Centered wordmark */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="relative z-10 mt-8 flex flex-col items-center px-4 pb-[26%] sm:px-6 sm:pb-[28%] md:absolute md:bottom-[14%] md:left-1/2 md:mt-0 md:-translate-x-1/2 md:pb-0 lg:bottom-[12%]"
+        >
           <HeroWordmark />
-        </div>
-        <ChevronDown className="absolute bottom-7 left-1/2 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-indigo" />
+        </motion.div>
+
+        <ChevronDown className="absolute bottom-5 left-1/2 z-10 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-indigo md:bottom-6" />
       </section>
 
       <section aria-hidden className="h-10 overflow-hidden bg-brand-ivory">
