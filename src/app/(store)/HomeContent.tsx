@@ -58,6 +58,57 @@ const fallbackArtisans: Artisan[] = [
 
 const fallbackUgc: { id: string; customer_name: string; image_url: string }[] = []
 
+function YarnBallIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      className={className}
+      aria-hidden="true"
+      fill="none"
+    >
+      <circle cx="24" cy="24" r="14" stroke="currentColor" strokeWidth="2.5" />
+      <path
+        d="M12 24c0-7 5.5-12 12-12s12 5 12 12-5 12-12 12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path d="M24 10v28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M10 24h28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M15 15l18 18M15 33l18-18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M35 35c3 3 5 7 5 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function HeroWordmark() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, delay: 0.2 }}
+      className="flex flex-col items-center text-brand-indigo"
+    >
+      <span className="sr-only">
+        Textile Impression — Education, Sampling & Production
+      </span>
+      <div aria-hidden className="flex flex-col items-center">
+        <span className="font-sans text-xs font-medium uppercase tracking-[0.4em] md:text-sm">
+          Textile
+        </span>
+        <div className="flex items-center gap-1 font-sans text-3xl font-light uppercase tracking-[0.12em] md:text-5xl">
+          <span>IMPRESS</span>
+          <YarnBallIcon className="-mx-0.5 h-7 w-7 md:h-11 md:w-11" />
+          <span>N</span>
+        </div>
+      </div>
+      <span className="mt-2 font-sans text-[10px] font-medium uppercase tracking-[0.25em] text-brand-indigo/80 md:text-xs">
+        Education, Sampling & Production
+      </span>
+    </motion.div>
+  )
+}
+
 export default function HomeContent() {
   const supabase = createClient()
   const [featured, setFeatured] = useState<Product[]>([])
@@ -92,33 +143,41 @@ export default function HomeContent() {
 
   return (
     <div className="bg-brand-ivory text-brand-umber">
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-indigo">
+      <section className="relative flex min-h-screen flex-col overflow-hidden bg-white">
         <Image
           src="/new_hero.jpeg"
           alt="Textile Impressions — handcrafted Pakistani textiles"
           fill
           preload
           sizes="100vw"
-          className="pointer-events-none object-cover object-center"
+          className="pointer-events-none object-contain object-center"
         />
-        <div className="pointer-events-none absolute inset-0 bg-brand-indigo/8" />
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col items-center px-4 text-center md:min-h-0 md:-mt-32 md:justify-center">
-          <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-ivory drop-shadow-lg">
-            From Craft to Career
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-24 pb-6 text-center sm:px-6 md:items-start md:pt-28 md:text-left lg:px-8"
+        >
+          <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-indigo">
+            From Craft
+            <br className="hidden md:block" /> to Career
           </h1>
-          <p className="mt-4 font-heading text-lg italic text-brand-ivory/90 drop-shadow-md">
+          <p className="mt-4 max-w-md font-heading text-lg italic text-brand-indigo/90">
             Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
           </p>
-          <div className="mt-auto flex flex-col items-center justify-center gap-3 pt-12 md:mt-12 md:pt-0 sm:flex-row drop-shadow-lg">
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row md:justify-start">
             <Link href="/shop" className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
               Shop the collection
             </Link>
-            <Link href="/skills-studio" className="inline-flex h-12 items-center justify-center rounded-full border border-brand-ivory px-7 text-sm font-bold text-brand-ivory transition hover:bg-brand-ivory hover:text-brand-indigo">
+            <Link href="/skills-studio" className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo bg-white px-7 text-sm font-bold text-brand-indigo transition hover:bg-brand-indigo hover:text-brand-ivory">
               Learn a craft
             </Link>
           </div>
         </motion.div>
-        <ChevronDown className="absolute bottom-7 left-1/2 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-ivory drop-shadow-lg" />
+        <div className="relative z-10 flex flex-1 items-center justify-center py-10">
+          <HeroWordmark />
+        </div>
+        <ChevronDown className="absolute bottom-7 left-1/2 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-indigo" />
       </section>
 
       <section aria-hidden className="h-10 overflow-hidden bg-brand-ivory">
