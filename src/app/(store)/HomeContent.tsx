@@ -142,67 +142,77 @@ export default function HomeContent() {
   const shareHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi! I'd like to share my Textile Impression look. [Customer sends photo directly]")}`
 
   return (
-    <div className="bg-brand-ivory text-brand-umber">
-      <section className="relative flex h-[100svh] min-h-[680px] flex-col overflow-hidden bg-white sm:min-h-[720px] md:h-[85vh] md:min-h-[760px] md:max-h-[900px] lg:h-[88vh] lg:min-h-[820px] lg:max-h-[980px] xl:max-h-[1040px]">
-        {/* Top-right decorative artwork */}
-        <div className="pointer-events-none absolute top-0 right-0 z-0 h-[170vh] w-full overflow-hidden md:w-[55%] md:max-w-2xl">
+    <div className="bg-white text-brand-indigo">
+      <section className="relative flex h-[100svh] min-h-[640px] flex-col overflow-hidden bg-white sm:min-h-[700px] md:min-h-[760px]">
+        {/* Top-right decorative ink swirl */}
+        <div className="pointer-events-none absolute top-0 right-0 z-0 h-[70%] w-[60%] overflow-hidden md:h-[65%] md:w-[50%] lg:w-[45%]">
           <Image
             src="/new_hero.jpeg"
             alt=""
             fill
             preload
-            sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-contain object-top"
+            sizes="(max-width: 768px) 60vw, 50vw"
+            className="object-contain"
+            style={{ objectPosition: "top right" }}
           />
         </div>
 
-        {/* Bottom-left decorative artwork */}
-        <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-[170vh] w-full overflow-hidden md:w-[55%] md:max-w-2xl">
+        {/* Bottom-left decorative ink swirl */}
+        <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-[70%] w-[60%] overflow-hidden md:h-[65%] md:w-[50%] lg:w-[45%]">
           <Image
             src="/new_hero.jpeg"
             alt=""
             fill
             preload
-            sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-contain object-bottom"
+            sizes="(max-width: 768px) 60vw, 50vw"
+            className="scale-x-[-1] object-contain"
+            style={{ objectPosition: "bottom left" }}
           />
         </div>
 
-        {/* Text block */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="relative z-10 flex flex-col items-center px-4 pt-[26%] text-center sm:px-6 sm:pt-[28%] md:absolute md:top-[20%] md:left-[8%] md:items-start md:pt-0 md:text-left lg:left-[10%] lg:top-[22%]"
-        >
-          <h1 className="font-heading text-[clamp(2.8rem,10vw,4.8rem)] font-semibold leading-[0.95] text-brand-indigo sm:text-[clamp(3rem,8vw,5rem)]">
-            From Craft
-            <br className="hidden sm:block" /> to Career
-          </h1>
-          <p className="mt-4 max-w-sm font-heading text-base italic text-brand-indigo/90 sm:text-lg md:max-w-md">
-            Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
-          </p>
-          <div className="mt-6 flex w-full max-w-xs flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:justify-start">
-            <Link href="/shop" className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
-              Shop the collection
-            </Link>
-            <Link href="/skills-studio" className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo bg-white px-7 text-sm font-bold text-brand-indigo transition hover:bg-brand-indigo hover:text-brand-ivory">
-              Learn a craft
-            </Link>
-          </div>
-        </motion.div>
+        {/* Hero content */}
+        <div className="relative z-10 flex flex-1 flex-col justify-center px-6 sm:px-10 md:px-16 lg:px-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="max-w-lg md:max-w-xl"
+          >
+            <h1 className="font-heading text-[clamp(2.6rem,7vw,4.5rem)] font-semibold leading-[1.05] text-brand-indigo">
+              From Craft
+              <br /> to Career
+            </h1>
+            <p className="mt-4 max-w-md font-heading text-base italic leading-relaxed text-brand-indigo/85 sm:text-lg">
+              Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="/shop"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-8 text-sm font-semibold text-white transition hover:bg-brand-saffron/90 sm:text-base"
+              >
+                Shop the collection
+              </Link>
+              <Link
+                href="/skills-studio"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo bg-white px-8 text-sm font-semibold text-brand-indigo transition hover:bg-brand-indigo hover:text-white sm:text-base"
+              >
+                Learn a craft
+              </Link>
+            </div>
+          </motion.div>
+        </div>
 
-        {/* Centered wordmark */}
+        {/* Centered wordmark at bottom */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="relative z-10 mt-8 flex flex-col items-center px-4 pb-[26%] sm:px-6 sm:pb-[28%] md:absolute md:bottom-[14%] md:left-1/2 md:mt-0 md:-translate-x-1/2 md:pb-0 lg:bottom-[12%]"
+          className="relative z-10 flex flex-col items-center px-4 pb-16 sm:pb-20"
         >
           <HeroWordmark />
         </motion.div>
 
-        <ChevronDown className="absolute bottom-5 left-1/2 z-10 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-indigo md:bottom-6" />
+        <ChevronDown className="absolute bottom-5 left-1/2 z-10 h-6 w-6 -translate-x-1/2 animate-bounce text-brand-indigo/60 sm:bottom-6 sm:h-7 sm:w-7" />
       </section>
 
       <section aria-hidden className="h-10 overflow-hidden bg-brand-ivory">
