@@ -99,17 +99,17 @@ export default function HomeContent() {
           fill
           preload
           sizes="100vw"
-          className="pointer-events-none object-cover object-center"
+          className="pointer-events-none object-cover object-center md:object-contain"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-indigo/50 via-brand-indigo/70 to-brand-indigo/50" />
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 mx-auto max-w-4xl px-4 text-center">
-          <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-ivory">
+        <div className="pointer-events-none absolute inset-0 bg-brand-indigo/8" />
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col items-center px-4 text-center md:min-h-0 md:justify-center">
+          <h1 className="font-heading text-[clamp(3.4rem,10vw,4.5rem)] font-semibold leading-none text-brand-ivory drop-shadow-lg">
             From Craft to Career
           </h1>
-          <p className="mt-4 font-heading text-lg italic text-brand-ivory/90">
+          <p className="mt-4 font-heading text-lg italic text-brand-ivory/90 drop-shadow-md">
             Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-auto flex flex-col items-center justify-center gap-3 pt-12 md:mt-8 md:pt-0 sm:flex-row drop-shadow-lg">
             <Link href="/shop" className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
               Shop the collection
             </Link>
@@ -118,7 +118,7 @@ export default function HomeContent() {
             </Link>
           </div>
         </motion.div>
-        <ChevronDown className="absolute bottom-7 left-1/2 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-ivory" />
+        <ChevronDown className="absolute bottom-7 left-1/2 h-7 w-7 -translate-x-1/2 animate-bounce text-brand-ivory drop-shadow-lg" />
       </section>
 
       <section aria-hidden className="h-10 overflow-hidden bg-brand-ivory">
