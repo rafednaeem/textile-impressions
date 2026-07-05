@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Geist_Mono, Inter, Lato } from "next/font/google";
+import { Cormorant_Garamond, Geist_Mono, Inter, Lato, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SessionRestoreProvider } from "@/components/shared/SessionRestoreProvider";
 import AppShell from "@/components/shared/AppShell";
@@ -14,6 +14,13 @@ const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-cormorant-garamond",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+})
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
 });
 
@@ -125,7 +132,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${cormorantGaramond.variable} ${lato.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${cormorantGaramond.variable} ${playfairDisplay.variable} ${lato.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SessionRestoreProvider>

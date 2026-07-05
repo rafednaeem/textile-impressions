@@ -121,7 +121,7 @@ export default function Header() {
             : "border-b border-brand-umber/10 bg-brand-ivory/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-brand-ivory/80"
         }`}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen(true)}
@@ -132,25 +132,31 @@ export default function Header() {
           </button>
 
           {/* Logo / Wordmark */}
-          <Link href="/" className="flex items-center text-brand-indigo">
+          <Link
+            href="/"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center text-brand-indigo md:static md:translate-x-0"
+          >
             <span className="sr-only">Textile Impression</span>
             <div className="flex flex-col items-center leading-none">
-              <span className="font-sans text-[9px] font-medium uppercase tracking-[0.35em] sm:text-[10px]">
+              <span className="font-heading text-[10px] font-medium uppercase tracking-[0.4em] sm:text-[11px]">
                 Textile
               </span>
-              <div className="flex items-center font-sans text-lg font-light uppercase tracking-[0.15em] sm:text-xl md:text-2xl">
+              <div className="flex items-center font-heading text-xl font-normal uppercase tracking-[0.22em] sm:text-2xl md:text-[28px]">
                 <span>Impress</span>
-                <svg viewBox="0 0 24 24" className="mx-0.5 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg viewBox="0 0 24 24" className="mx-[1px] h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" strokeWidth="1.2">
                   <circle cx="12" cy="12" r="8" />
                   <path d="M6 12c0-4 3-7 6-7s6 3 6 7-3 7-6 7" strokeLinecap="round" />
                   <path d="M12 4v16" strokeLinecap="round" />
                   <path d="M4 12h16" strokeLinecap="round" />
                   <path d="M7 7l10 10M7 17L17 7" strokeLinecap="round" />
                 </svg>
-                <span>n</span>
+                <span>N</span>
               </div>
             </div>
           </Link>
+
+          {/* Spacer for mobile to keep wordmark centered */}
+          <div className="h-5 w-5 md:hidden" aria-hidden />
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-6 lg:flex">

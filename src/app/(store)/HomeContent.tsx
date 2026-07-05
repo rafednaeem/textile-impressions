@@ -93,16 +93,16 @@ function HeroWordmark() {
         Textile Impression — Education, Sampling & Production
       </span>
       <div aria-hidden className="flex flex-col items-center">
-        <span className="font-sans text-[10px] font-medium uppercase tracking-[0.45em] sm:text-xs md:text-sm">
+        <span className="font-heading text-[10px] font-medium uppercase tracking-[0.5em] sm:text-xs md:text-sm">
           Textile
         </span>
-        <div className="flex items-center gap-1 font-sans text-2xl font-light uppercase tracking-[0.18em] sm:text-3xl md:text-4xl lg:text-5xl">
+        <div className="flex items-center font-heading text-2xl font-normal uppercase tracking-[0.22em] sm:text-3xl md:text-4xl lg:text-5xl">
           <span>IMPRESS</span>
           <YarnBallIcon className="-mx-0.5 h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 lg:h-11 lg:w-11" />
           <span>N</span>
         </div>
       </div>
-      <span className="mt-2 font-sans text-[9px] font-medium uppercase tracking-[0.25em] text-brand-indigo/80 sm:text-[10px] md:text-xs">
+      <span className="mt-2 font-heading text-[9px] font-medium uppercase tracking-[0.3em] text-brand-indigo/80 sm:text-[10px] md:text-xs">
         Education, Sampling & Production
       </span>
     </motion.div>
@@ -145,45 +145,47 @@ export default function HomeContent() {
     <div className="bg-white text-brand-indigo">
       <section className="relative flex h-[100svh] min-h-[640px] flex-col overflow-hidden bg-white sm:min-h-[700px] md:min-h-[760px]">
         {/* Top-right decorative ink swirl */}
-        <div className="pointer-events-none absolute top-0 right-0 z-0 h-[70%] w-[60%] overflow-hidden md:h-[65%] md:w-[50%] lg:w-[45%]">
+        <div className="pointer-events-none absolute -top-4 -right-8 z-0 h-[80%] w-[80%] overflow-hidden md:h-[75%] md:w-[65%] lg:w-[60%]">
           <Image
             src="/new_hero.jpeg"
             alt=""
             fill
             preload
-            sizes="(max-width: 768px) 60vw, 50vw"
-            className="object-contain"
+            sizes="(max-width: 768px) 80vw, 65vw"
+            className="object-cover"
             style={{ objectPosition: "top right" }}
           />
         </div>
 
         {/* Bottom-left decorative ink swirl */}
-        <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-[70%] w-[60%] overflow-hidden md:h-[65%] md:w-[50%] lg:w-[45%]">
+        <div className="pointer-events-none absolute -bottom-4 -left-8 z-0 h-[70%] w-[75%] overflow-hidden md:h-[65%] md:w-[55%] lg:w-[50%]">
           <Image
             src="/new_hero.jpeg"
             alt=""
             fill
             preload
-            sizes="(max-width: 768px) 60vw, 50vw"
-            className="scale-x-[-1] object-contain"
+            sizes="(max-width: 768px) 75vw, 55vw"
+            className="scale-x-[-1] object-cover"
             style={{ objectPosition: "bottom left" }}
           />
         </div>
 
         {/* Hero content */}
-        <div className="relative z-10 flex flex-1 flex-col justify-center px-6 sm:px-10 md:px-16 lg:px-20">
+        <div className="relative z-10 flex flex-1 flex-col justify-start pt-[22vh] px-6 sm:px-10 md:px-16 lg:px-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="max-w-lg md:max-w-xl"
           >
-            <h1 className="font-heading text-[clamp(2.6rem,7vw,4.5rem)] font-semibold leading-[1.05] text-brand-indigo">
+            <h1 className="font-display text-[clamp(3rem,8vw,5.25rem)] font-medium leading-[1.02] tracking-tight text-brand-indigo">
               From Craft
               <br /> to Career
             </h1>
-            <p className="mt-4 max-w-md font-heading text-base italic leading-relaxed text-brand-indigo/85 sm:text-lg">
-              Handcrafted Pakistani textiles, artisan-led skills training, sustainable livelihoods
+            <p className="mt-5 max-w-md font-heading text-lg italic leading-relaxed text-brand-indigo/85 sm:text-xl">
+              Handcrafted Pakistani textiles,
+              <br /> artisan-led skills training,
+              <br /> sustainable livelihoods
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
@@ -194,7 +196,7 @@ export default function HomeContent() {
               </Link>
               <Link
                 href="/skills-studio"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo bg-white px-8 text-sm font-semibold text-brand-indigo transition hover:bg-brand-indigo hover:text-white sm:text-base"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo bg-white px-8 text-sm font-semibold text-brand-indigo transition hover:bg-brand-indigo/5 sm:text-base"
               >
                 Learn a craft
               </Link>
