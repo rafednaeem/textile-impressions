@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
-import { ShoppingBag, Menu, X, User, LogOut, Package, Heart, MapPin, Settings, Shield, Search } from "lucide-react"
+import { ShoppingBag, Menu, X, User, LogOut, Package, Heart, MapPin, Settings, Shield } from "lucide-react"
 import { useCart } from "@/hooks/useCart"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname, useRouter } from "next/navigation"
@@ -174,13 +174,6 @@ export default function Header() {
 
           {/* Right icons */}
           <div className="flex items-center gap-0.5 sm:gap-2">
-            <button
-              className="p-1.5 text-brand-indigo/70 transition-colors hover:text-brand-indigo sm:p-2"
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
-            </button>
-
             <div className="relative" ref={userMenuRef}>
               {isLoggedIn ? (
                 <button
