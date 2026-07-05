@@ -138,12 +138,12 @@ export default function Header() {
           >
             <span className="sr-only">Textile Impression</span>
             <div className="flex flex-col items-center leading-none">
-              <span className="font-heading text-[10px] font-medium uppercase tracking-[0.4em] sm:text-[11px]">
+              <span className="font-heading text-[8px] font-medium uppercase tracking-[0.3em] sm:text-[10px] md:text-[11px]">
                 Textile
               </span>
-              <div className="flex items-center font-heading text-xl font-normal uppercase tracking-[0.22em] sm:text-2xl md:text-[28px]">
+              <div className="flex items-center font-heading text-sm font-normal uppercase tracking-[0.15em] sm:text-lg md:text-[28px]">
                 <span>Impress</span>
-                <svg viewBox="0 0 24 24" className="mx-[1px] h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <svg viewBox="0 0 24 24" className="mx-[1px] h-3.5 w-3.5 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" strokeWidth="1.2">
                   <circle cx="12" cy="12" r="8" />
                   <path d="M6 12c0-4 3-7 6-7s6 3 6 7-3 7-6 7" strokeLinecap="round" />
                   <path d="M12 4v16" strokeLinecap="round" />
@@ -154,9 +154,6 @@ export default function Header() {
               </div>
             </div>
           </Link>
-
-          {/* Spacer for mobile to keep wordmark centered */}
-          <div className="h-5 w-5 md:hidden" aria-hidden />
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-6 lg:flex">
@@ -176,19 +173,19 @@ export default function Header() {
           </nav>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-2">
             <button
-              className="p-2 text-brand-indigo/70 transition-colors hover:text-brand-indigo"
+              className="p-1.5 text-brand-indigo/70 transition-colors hover:text-brand-indigo sm:p-2"
               aria-label="Search"
             >
-              <Search className="h-[18px] w-[18px]" />
+              <Search className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
             </button>
 
             <div className="relative" ref={userMenuRef}>
               {isLoggedIn ? (
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-forest text-[10px] font-bold text-white transition-colors hover:bg-brand-forest/90"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-forest text-[10px] font-bold text-white transition-colors hover:bg-brand-forest/90 sm:h-8 sm:w-8"
                   aria-label="Account menu"
                 >
                   {userInitial}
@@ -196,10 +193,10 @@ export default function Header() {
               ) : (
                 <Link
                   href="/auth/login"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-brand-indigo/70 transition-colors hover:bg-muted hover:text-brand-indigo"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-brand-indigo/70 transition-colors hover:bg-muted hover:text-brand-indigo sm:h-8 sm:w-8"
                   aria-label="Sign in"
                 >
-                  <User className="h-[18px] w-[18px]" />
+                  <User className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
                 </Link>
               )}
 
@@ -259,19 +256,19 @@ export default function Header() {
 
             <Link
               href="/account/wishlist"
-              className="p-2 text-brand-indigo/70 transition-colors hover:text-brand-indigo"
+              className="p-1.5 text-brand-indigo/70 transition-colors hover:text-brand-indigo sm:p-2"
               aria-label="Wishlist"
             >
-              <Heart className="h-[18px] w-[18px]" />
+              <Heart className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
             </Link>
 
             <button
               onClick={() => setCartOpen(true)}
-              className="relative p-2 text-brand-indigo/70 transition-colors hover:text-brand-indigo"
+              className="relative p-1.5 text-brand-indigo/70 transition-colors hover:text-brand-indigo sm:p-2"
               aria-label="Open cart"
               data-testid="cart-trigger"
             >
-              <ShoppingBag className="h-[18px] w-[18px]" />
+              <ShoppingBag className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
               {itemCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-saffron text-[10px] font-bold text-brand-umber">
                   {itemCount > 9 ? "9+" : itemCount}
