@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getServiceRoleClient } from "@/lib/supabase/service-role"
 import { rateLimit } from "@/lib/rate-limit"
-import { isCodEligible } from "@/lib/constants"
 import { orderApiSchema } from "@/lib/validations"
 import { sendOrderStatusEmail } from "@/lib/email/integrations"
 
@@ -27,14 +26,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
     }
 
-    const { items, shippingAddress, paymentMethod, notes, guestEmail, proofUrl, transactionReference } = parsed.data
+    const { items, shippingAddress, notes, guestEmail, proofUrl, transactionReference } = parsed.data
 
     if (!user && !guestEmail) {
       return NextResponse.json({ error: "Email is required for guest checkout" }, { status: 400 })
-    }
-
-    if (paymentMethod === "cod" && !isCodEligible(shippingAddress.city)) {
-      return NextResponse.json({ error: "Cash on Delivery is only available in Karachi" }, { status: 400 })
     }
 
     const subtotal = items.reduce(
@@ -44,7 +39,7 @@ export async function POST(request: Request) {
     const shippingCost = subtotal >= 2000 ? 0 : 200
     const total = subtotal + shippingCost
 
-    const orderStatus = paymentMethod === "cod" ? "cod_pending" : "payment_submitted"
+    const orderStatus = "payment_submitted"
 
     const enrichedShipping = {
       ...shippingAddress,
@@ -134,23 +129,14 @@ export async function POST(request: Request) {
       console.error("Order timeline insert error:", JSON.stringify(timelineError))
     }
 
-    if (paymentMethod === "bank_transfer") {
-      const { error: payErr } = await serviceRole.from("payments").insert({
-        order_id: order.id,
-        method: "bank_transfer",
-        status: "submitted",
-        proof_url: proofUrl || null,
-        transaction_reference: transactionReference || null,
-      })
-      if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
-    } else if (paymentMethod === "cod") {
-      const { error: payErr } = await serviceRole.from("payments").insert({
-        order_id: order.id,
-        method: "cod",
-        status: "pending",
-      })
-      if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
-    }
+    const { error: payErr } = await serviceRole.from("payments").insert({
+      order_id: order.id,
+      method: "bank_transfer",
+      status: "submitted",
+      proof_url: proofUrl || null,
+      transaction_reference: transactionReference || null,
+    })
+    if (payErr) console.error("Payment insert error:", JSON.stringify(payErr))
 
     if (user) {
       await supabase.from("cart_items").delete().in(

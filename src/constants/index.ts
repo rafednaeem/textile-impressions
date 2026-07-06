@@ -9,13 +9,11 @@ export const ORDER_STATUSES = [
   "shipped",
   "delivered",
   "cancelled",
-  "cod_pending",
   "dispatched",
 ] as const
 
 export const PAYMENT_METHODS = [
   "bank_transfer",
-  "cod",
 ] as const
 
 export const SHIPPING_COST = 200

@@ -110,49 +110,13 @@ test.describe("Checkout — Payment Step @smoke", () => {
     await page.fill('input[placeholder*="Fatima"]', "Test User")
     await page.fill('input[placeholder*="03"]', "03001234567")
     await page.fill('input[placeholder*="House"]', "123 Test Street")
-    await page.fill('input[placeholder*="Karachi"]', "Karachi")
-    await page.selectOption("select", "Sindh")
-    await page.getByRole("button", { name: /continue to payment/i }).click()
-
-    await page.getByText(/bank transfer/i).click()
-    await expect(page.getByText(/meezan bank/i)).toBeVisible()
-    await expect(page.getByText(/account #/i)).toBeVisible()
-  })
-
-  test("COD is disabled for non-Karachi city", async ({ page }) => {
-    await page.goto("/checkout")
-    await page.waitForTimeout(1000)
-
-    const shippingHeading = page.getByRole("heading", { name: /shipping information/i })
-    if (!(await shippingHeading.isVisible().catch(() => false))) test.skip()
-
-    await page.fill('input[placeholder*="Fatima"]', "Test User")
-    await page.fill('input[placeholder*="03"]', "03001234567")
-    await page.fill('input[placeholder*="House"]', "123 Test Street")
     await page.fill('input[placeholder*="Karachi"]', "Lahore")
     await page.selectOption("select", "Punjab")
     await page.getByRole("button", { name: /continue to payment/i }).click()
 
-    const codBtn = page.locator("button").filter({ hasText: /cash on delivery/i })
-    await expect(codBtn).toHaveAttribute("disabled", { timeout: 5000 })
-  })
-
-  test("COD is enabled for Karachi", async ({ page }) => {
-    await page.goto("/checkout")
-    await page.waitForTimeout(1000)
-
-    const shippingHeading = page.getByRole("heading", { name: /shipping information/i })
-    if (!(await shippingHeading.isVisible().catch(() => false))) test.skip()
-
-    await page.fill('input[placeholder*="Fatima"]', "Test User")
-    await page.fill('input[placeholder*="03"]', "03001234567")
-    await page.fill('input[placeholder*="House"]', "123 Test Street")
-    await page.fill('input[placeholder*="Karachi"]', "karachi")
-    await page.selectOption("select", "Sindh")
-    await page.getByRole("button", { name: /continue to payment/i }).click()
-
-    const codBtn = page.locator("button").filter({ hasText: /cash on delivery/i })
-    await expect(codBtn).not.toHaveAttribute("disabled")
+    await expect(page.getByRole("heading", { name: /bank transfer payment/i })).toBeVisible()
+    await expect(page.getByText(/meezan bank/i)).toBeVisible()
+    await expect(page.getByText(/account #/i)).toBeVisible()
   })
 
   test("back button from payment returns to shipping", async ({ page }) => {
@@ -205,10 +169,14 @@ test.describe("Checkout — Full Order Flow @mutation", () => {
     await page.selectOption("select", "Sindh")
     await page.getByRole("button", { name: /continue to payment/i }).click()
 
-    // Step 2: Payment — choose COD for Karachi
+    // Step 2: Payment — bank transfer with proof upload
     await page.waitForTimeout(500)
-    const codBtn = page.locator("button").filter({ hasText: /cash on delivery/i })
-    await codBtn.click()
+    await expect(page.getByRole("heading", { name: /bank transfer payment/i })).toBeVisible()
+    await page.locator('input[type="file"]').setInputFiles({
+      name: "proof.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("test-image-content"),
+    })
     await page.getByRole("button", { name: /continue to review/i }).click()
 
     // Step 3: Review

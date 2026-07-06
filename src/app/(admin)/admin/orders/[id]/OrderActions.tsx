@@ -9,10 +9,9 @@ import { verifyPayment, rejectPayment, updateOrderStatus } from "@/lib/admin/act
 interface Props {
   orderId: string
   currentStatus: string
-  paymentMethod: string | null
 }
 
-export default function OrderActions({ orderId, currentStatus, paymentMethod }: Props) {
+export default function OrderActions({ orderId, currentStatus }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -30,7 +29,7 @@ export default function OrderActions({ orderId, currentStatus, paymentMethod }: 
 
   return (
     <div className="flex flex-wrap gap-2">
-      {paymentMethod === "bank_transfer" && currentStatus === "payment_submitted" && (
+      {currentStatus === "payment_submitted" && (
         <>
           <button
             onClick={() => handleAction("verify", () => verifyPayment(orderId))}
@@ -54,7 +53,7 @@ export default function OrderActions({ orderId, currentStatus, paymentMethod }: 
         </>
       )}
 
-      {(currentStatus === "cod_pending" || currentStatus === "payment_verified") && (
+      {currentStatus === "payment_verified" && (
         <button
           onClick={() => handleAction("dispatch", () => updateOrderStatus(orderId, "dispatched"))}
           disabled={!!loading}

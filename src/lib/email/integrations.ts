@@ -12,7 +12,6 @@ import {
   orderBeingPreparedTemplate,
   orderDispatchedTemplate,
   orderDeliveredTemplate,
-  orderCodReceivedTemplate,
   orderCancelledTemplate,
   orderRefundProcessedTemplate,
   workshopRegistrationReceivedTemplate,
@@ -124,7 +123,6 @@ function getTemplateForOrderStatus(status: string) {
     shipped: orderDispatchedTemplate,
     delivered: orderDeliveredTemplate,
     cancelled: orderCancelledTemplate,
-    cod_pending: orderCodReceivedTemplate,
     dispatched: orderDispatchedTemplate,
   }
   return templates[status] || null

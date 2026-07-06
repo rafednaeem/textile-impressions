@@ -26,7 +26,7 @@
 | `tests/e2e/mobile.spec.ts` | Mobile viewport and hamburger-menu checks |
 | `tests/e2e/customer.addresses.spec.ts` | Address CRUD (mocked mutations) |
 | `tests/e2e/customer.wishlist.spec.ts` | Wishlist add/remove/empty state |
-| `tests/e2e/checkout.spec.ts` | Full checkout flow, COD city logic, discount code |
+| `tests/e2e/checkout.spec.ts` | Full checkout flow, bank transfer payment proof upload, discount code |
 | `tests/e2e/QA_REPORT.md` | This report |
 | `.env.test.example` | Template for test credentials (after rotating real ones) |
 

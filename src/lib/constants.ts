@@ -29,13 +29,6 @@ export const WORKSHOP_REGISTRATION_STATUS_LABELS: Record<string, string> = {
   completed: 'Completed',
 }
 
-export const COD_CITIES = ['karachi'] as const
-export type CodCity = typeof COD_CITIES[number]
-
-export function isCodEligible(city: string): boolean {
-  return COD_CITIES.includes(city.toLowerCase() as CodCity)
-}
-
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
   payment_pending: 'Payment Pending',
@@ -45,13 +38,11 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   shipped: 'Shipped',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
-  cod_pending: 'COD - Awaiting Dispatch',
   dispatched: 'Dispatched',
 }
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
-  cod: 'Cash on Delivery',
 }
 
 export const WORKSHOP_FORMAT_LABELS: Record<string, string> = {

@@ -13,7 +13,7 @@ const STATUSES = [
   "processing", "shipped", "delivered", "cancelled",
 ]
 
-const PAYMENT_METHODS = ["bank_transfer", "easypaisa", "jazzcash", "whatsapp"]
+const PAYMENT_METHODS = ["bank_transfer"]
 
 function AdminOrdersContent() {
   const supabase = createClient()

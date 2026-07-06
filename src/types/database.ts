@@ -9,10 +9,9 @@ export type OrderStatus =
   | "shipped"
   | "delivered"
   | "cancelled"
-  | "cod_pending"
   | "dispatched"
 
-export type PaymentMethod = "bank_transfer" | "cod"
+export type PaymentMethod = "bank_transfer"
 
 export type PaymentStatus = "pending" | "submitted" | "verified" | "rejected"
 

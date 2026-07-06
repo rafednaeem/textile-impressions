@@ -23,7 +23,6 @@ const STATUS_LABELS: Record<string, string> = {
   shipped: "Dispatched",
   delivered: "Delivered",
   cancelled: "Cancelled",
-  cod_pending: "Cash on Delivery Pending",
   dispatched: "Dispatched",
 }
 
@@ -36,7 +35,6 @@ const STATUS_COLORS: Record<string, string> = {
   shipped: "#3b82f6",
   delivered: "#10b981",
   cancelled: "#ef4444",
-  cod_pending: "#f59e0b",
   dispatched: "#3b82f6",
 }
 
@@ -347,29 +345,6 @@ export function orderDeliveredTemplate(
   }
 }
 
-export function orderCodReceivedTemplate(
-  order: FullOrderData,
-  business: BusinessSettings,
-): { subject: string; html: string } {
-  const content = `
-    ${greeting(order.customerName)}
-    <p style="margin:0 0 4px;color:#333;font-size:16px;font-weight:600;">Cash on Delivery Order Confirmed</p>
-    <p style="margin:0 0 16px;color:#555;font-size:15px;line-height:1.6;">
-      Your Cash on Delivery order <strong>#${order.orderNumber}</strong> has been confirmed. Please have the payment ready when your order arrives.
-    </p>
-    ${orderRef(order.orderNumber)}
-    ${sectionBox(orderSummaryHtml(order))}
-    <p style="margin:16px 0 0;color:#888;font-size:13px;line-height:1.5;">
-      We will notify you once your order is dispatched. Thank you for shopping with us!
-    </p>
-  `
-
-  return {
-    subject: `COD Order Confirmed - #${order.orderNumber}`,
-    html: baseLayout(content, business, `COD order #${order.orderNumber} confirmed.`),
-  }
-}
-
 export function orderCancelledTemplate(
   order: FullOrderData,
   business: BusinessSettings,
@@ -438,7 +413,6 @@ export function getOrderTemplate(
     shipped: orderDispatchedTemplate,
     delivered: orderDeliveredTemplate,
     cancelled: orderCancelledTemplate,
-    cod_pending: orderCodReceivedTemplate,
     dispatched: orderDispatchedTemplate,
   }
   return templates[status] || null

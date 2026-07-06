@@ -12,16 +12,13 @@ import {
   Upload,
   Loader2,
   Building2,
-  Banknote,
   MapPin,
-  AlertTriangle,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/hooks/useCart"
 import { FREE_SHIPPING_THRESHOLD } from "@/constants"
-import { isCodEligible } from "@/lib/constants"
-import { checkoutShippingSchema, checkoutPaymentSchema } from "@/lib/validations"
+import { checkoutShippingSchema } from "@/lib/validations"
 import { useFieldValidation } from "@/hooks/useFieldValidation"
 
 const PROVINCES = [
@@ -43,21 +40,6 @@ const PROVINCE_TO_KEY: Record<string, string> = {
   AJK: "shipping_ajk",
   ICT: "shipping_islamabad",
 }
-
-const PAYMENT_METHODS = [
-  {
-    id: "bank_transfer" as const,
-    label: "Bank Transfer",
-    icon: Building2,
-    description: "Transfer to our Meezan Bank account and upload proof",
-  },
-  {
-    id: "cod" as const,
-    label: "Cash on Delivery (Karachi only)",
-    icon: Banknote,
-    description: "Pay when you receive your order. Available in Karachi only.",
-  },
-] as const
 
 const STEPS = ["Shipping", "Payment", "Review", "Confirm"]
 
@@ -85,14 +67,13 @@ export default function CheckoutPage() {
     postalCode: "",
   })
   const [saveAddress, setSaveAddress] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
+  const [paymentMethod] = useState<string>("bank_transfer")
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [transactionRef, setTransactionRef] = useState("")
   const [notes, setNotes] = useState("")
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({})
-  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({})
 
   const shippingValidation = useFieldValidation(checkoutShippingSchema, {
     ...shipping,
@@ -188,7 +169,7 @@ export default function CheckoutPage() {
     }
     setCreating(true)
     let proofUrl: string | null = null
-    if (proofFile && paymentMethod === "bank_transfer") {
+    if (proofFile) {
       proofUrl = await uploadProof()
     }
 
@@ -251,9 +232,7 @@ export default function CheckoutPage() {
     setStep(3)
 
     toast.success(`Order #${result.orderNumber} placed successfully!`, {
-      description: paymentMethod === "cod"
-        ? "Your order will be confirmed shortly."
-        : "We'll verify your payment within 2-4 hours.",
+      description: "We'll verify your payment within 2-4 hours.",
     })
 
     clearCart()
@@ -281,24 +260,6 @@ export default function CheckoutPage() {
     return true
   }
 
-  const validatePayment = () => {
-    const result = checkoutPaymentSchema.safeParse({
-      paymentMethod,
-      transactionReference: transactionRef || undefined,
-    })
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {}
-      for (const issue of result.error.issues) {
-        const path = issue.path[0] as string
-        if (!fieldErrors[path]) fieldErrors[path] = issue.message
-      }
-      setPaymentErrors(fieldErrors)
-      return false
-    }
-    setPaymentErrors({})
-    return true
-  }
-
   const handleShippingContinue = () => {
     shippingValidation.markAllTouched()
     if (validateShipping()) setStep(1)
@@ -307,15 +268,11 @@ export default function CheckoutPage() {
   const canContinue = () => {
     if (step === 0) return true
     if (step === 1) {
-      if (!paymentMethod) return false
-      if (paymentMethod === "cod" && !isCodEligible(shipping.city)) return false
-      if (paymentMethod === "bank_transfer" && !proofFile) return false
+      if (!proofFile) return false
       return true
     }
     return true
   }
-
-  const codAllowed = isCodEligible(shipping.city)
 
   if (items.length === 0 && !orderResult) {
     return (
@@ -625,95 +582,50 @@ export default function CheckoutPage() {
 
         {step === 1 && (
           <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mx-auto max-w-2xl">
-            <h2 className="font-heading text-2xl font-bold text-brand-forest">Payment Method</h2>
+            <h2 className="font-heading text-2xl font-bold text-brand-forest">Bank Transfer Payment</h2>
 
-            <div className="mt-6 grid gap-3">
-              {PAYMENT_METHODS.map((pm) => {
-                const disabled = pm.id === "cod" && !codAllowed
-                return (
-                  <button
-                    key={pm.id}
-                    onClick={() => {
-                      if (disabled) return
-                      setPaymentMethod(pm.id)
-                      if (pm.id === "cod") {
-                        setProofFile(null)
-                        setProofPreview(null)
-                        setTransactionRef("")
-                      }
-                    }}
-                    disabled={disabled}
-                    className={`flex items-start gap-4 rounded-xl border-2 p-4 text-left transition-all ${
-                      disabled
-                        ? "border-border opacity-50 cursor-not-allowed"
-                        : paymentMethod === pm.id
-                          ? "border-brand-forest bg-brand-forest/5"
-                          : "border-border hover:border-brand-forest/50"
-                    }`}
-                  >
-                    <div className={`rounded-full p-2 ${paymentMethod === pm.id ? "bg-brand-forest text-white" : "bg-muted text-muted-foreground"}`}>
-                      <pm.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{pm.label}</p>
-                      <p className="text-sm text-muted-foreground">{pm.description}</p>
-                      {disabled && (
-                        <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          COD is only available in Karachi. Your shipping city is: {shipping.city || "not set"}
-                        </p>
-                      )}
-                    </div>
-                    {paymentMethod === pm.id && <Check className="h-5 w-5 text-brand-forest" />}
-                  </button>
-                )
-              })}
-            </div>
-
-            {paymentMethod === "bank_transfer" && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 rounded-xl border border-border p-6">
-                <div className="space-y-2 text-sm">
-                  <p className="font-medium text-brand-forest">Bank Account Details</p>
-                  <p>Bank: {bankDetails.bank}</p>
-                  <p>Account Name: {bankDetails.accountName}</p>
-                  <p>Account #: {bankDetails.accountNumber}</p>
-                  <p>IBAN: {bankDetails.iban}</p>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 rounded-xl border border-border p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-brand-forest p-2 text-white">
+                  <Building2 className="h-5 w-5" />
                 </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium">Transaction Reference (optional)</label>
-                  <input value={transactionRef} onChange={(e) => setTransactionRef(e.target.value)} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="e.g. TID123456" />
+                <div className="flex-1">
+                  <p className="font-medium">Bank Transfer</p>
+                  <p className="text-sm text-muted-foreground">Transfer to our bank account and upload your payment proof.</p>
                 </div>
+              </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-medium">Upload Payment Proof *</label>
-                  <div className="mt-1 flex items-center gap-4">
-                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm transition-colors hover:bg-muted">
-                      <Upload className="h-4 w-4" />
-                      {proofFile ? "Change File" : "Choose File"}
-                      <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileChange} className="hidden" />
-                    </label>
-                    {proofFile && <span className="text-sm text-muted-foreground">{proofFile.name}</span>}
+              <div className="mt-6 space-y-2 text-sm">
+                <p className="font-medium text-brand-forest">Bank Account Details</p>
+                <p>Bank: {bankDetails.bank}</p>
+                <p>Account Name: {bankDetails.accountName}</p>
+                <p>Account #: {bankDetails.accountNumber}</p>
+                <p>IBAN: {bankDetails.iban}</p>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium">Transaction Reference (optional)</label>
+                <input value={transactionRef} onChange={(e) => setTransactionRef(e.target.value)} className="mt-1 block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm focus:border-brand-forest focus:outline-none" placeholder="e.g. TID123456" />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium">Upload Payment Proof *</label>
+                <div className="mt-1 flex items-center gap-4">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm transition-colors hover:bg-muted">
+                    <Upload className="h-4 w-4" />
+                    {proofFile ? "Change File" : "Choose File"}
+                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileChange} className="hidden" />
+                  </label>
+                  {proofFile && <span className="text-sm text-muted-foreground">{proofFile.name}</span>}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or PDF. Max 5MB.</p>
+                {proofPreview && (
+                  <div className="relative mt-2 h-32 w-32 overflow-hidden rounded-lg border border-border">
+                    <Image src={proofPreview} alt="Payment proof preview" fill className="object-cover" sizes="128px" />
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or PDF. Max 5MB.</p>
-                  {proofPreview && (
-                    <div className="relative mt-2 h-32 w-32 overflow-hidden rounded-lg border border-border">
-                      <Image src={proofPreview} alt="Payment proof preview" fill className="object-cover" sizes="128px" />
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {paymentMethod === "cod" && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 rounded-xl border border-border p-6 text-sm">
-                <p className="font-medium text-brand-forest">Cash on Delivery</p>
-                <p className="mt-2 text-muted-foreground">
-                  Pay with cash when your order is delivered to your address in Karachi.
-                  No advance payment or proof upload needed.
-                </p>
-              </motion.div>
-            )}
+                )}
+              </div>
+            </motion.div>
 
             <div className="mt-6 flex gap-3">
               <button onClick={() => setStep(0)} className="flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium transition-colors hover:bg-muted">
@@ -756,7 +668,9 @@ export default function CheckoutPage() {
                   <h3 className="text-sm font-semibold text-brand-forest">Payment Method</h3>
                   <button onClick={() => setStep(1)} className="text-xs text-muted-foreground underline">Edit</button>
                 </div>
-                <p className="mt-2 text-sm capitalize">{paymentMethod === "cod" ? "Cash on Delivery" : "Bank Transfer"}</p>
+                <p className="mt-2 text-sm">Bank Transfer</p>
+                {transactionRef && <p className="text-xs text-muted-foreground">Reference: {transactionRef}</p>}
+                {proofFile && <p className="text-xs text-muted-foreground">Proof: {proofFile.name}</p>}
               </div>
 
               <div className="rounded-xl border border-border p-4">
@@ -833,28 +747,19 @@ export default function CheckoutPage() {
             </p>
 
             <div className="mt-6 space-y-4">
-              {paymentMethod === "cod" ? (
-                <p className="text-sm text-muted-foreground">
-                  Your order has been placed. You will pay cash on delivery when your order arrives in Karachi.
-                  We will confirm your order shortly.
+              <p className="text-sm text-muted-foreground">
+                We have received your order and payment proof. We will verify your payment within 2-4 hours.
+                You will receive a confirmation once verified.
+              </p>
+              <div className="rounded-xl border border-border bg-muted/30 p-4 text-left text-sm">
+                <p className="font-medium text-brand-forest">Bank Transfer Details</p>
+                <p className="mt-1 text-muted-foreground">
+                  Bank: {bankDetails.bank}<br />
+                  Account: {bankDetails.accountName}<br />
+                  Account #: {bankDetails.accountNumber}<br />
+                  IBAN: {bankDetails.iban}
                 </p>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    We have received your order and payment proof. We will verify your payment within 2-4 hours.
-                    You will receive a confirmation once verified.
-                  </p>
-                  <div className="rounded-xl border border-border bg-muted/30 p-4 text-left text-sm">
-                    <p className="font-medium text-brand-forest">Bank Transfer Details</p>
-                    <p className="mt-1 text-muted-foreground">
-                      Bank: {bankDetails.bank}<br />
-                      Account: {bankDetails.accountName}<br />
-                      Account #: {bankDetails.accountNumber}<br />
-                      IBAN: {bankDetails.iban}
-                    </p>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">

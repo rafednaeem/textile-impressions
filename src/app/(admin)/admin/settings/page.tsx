@@ -27,7 +27,7 @@ const SETTING_DEFAULTS: Record<string, string> = {
   bank_name: "Meezan Bank",
   bank_account: "1234567890",
   bank_iban: "PK36MEZN0001234567890",
-  delivery_policy_text: "Standard delivery 3-5 business days. COD available in major cities.",
+  delivery_policy_text: "Standard delivery 3-5 business days. We accept Bank Transfer payments only.",
   bank_account_title: "Textile Impressions",
   store_phone: "+92 300 1234567",
   store_email: "hello@textileimpressions.com",

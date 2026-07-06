@@ -11,7 +11,6 @@ export {
   orderBeingPreparedTemplate,
   orderDispatchedTemplate,
   orderDeliveredTemplate,
-  orderCodReceivedTemplate,
   orderCancelledTemplate,
   orderRefundProcessedTemplate,
   getOrderTemplate,

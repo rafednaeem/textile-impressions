@@ -279,13 +279,6 @@ export const checkoutShippingSchema = z.object({
   guestEmail: emailRefine().optional().or(z.literal("")),
 })
 
-export const checkoutPaymentSchema = z.object({
-  paymentMethod: z
-    .string()
-    .refine((v) => ["bank_transfer", "cod"].includes(v), { message: "Please select a payment method" }),
-  transactionReference: z.string().trim().min(3, "Transaction reference is required").optional().or(z.literal("")),
-})
-
 export const addressSchema = z.object({
   fullName: nameRefine("Full name"),
   phone: pkPhone,
@@ -326,10 +319,8 @@ export const orderApiSchema = z.object({
     )
     .min(1, "Order must contain at least one item"),
   shippingAddress: shippingAddressSchema,
-  paymentMethod: z
-    .string()
-    .refine((v) => ["bank_transfer", "cod"].includes(v), { message: "Invalid payment method" }),
-  proofUrl: z.string().nullable().optional(),
+  paymentMethod: z.enum(["bank_transfer"], { message: "Invalid payment method" }),
+  proofUrl: z.string().min(1, "Payment proof is required"),
   transactionReference: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   guestEmail: emailRefine().nullable().optional(),
@@ -392,7 +383,6 @@ export type SignupInput = z.infer<typeof signupSchema>
 export type AddressInput = z.infer<typeof addressSchema>
 export type PaymentProofInput = z.infer<typeof paymentProofSchema>
 export type CheckoutShippingInput = z.infer<typeof checkoutShippingSchema>
-export type CheckoutPaymentInput = z.infer<typeof checkoutPaymentSchema>
 export type OrderApiInput = z.infer<typeof orderApiSchema>
 export type WorkshopRegisterInput = z.infer<typeof workshopRegisterSchema>
 export type WorkshopPaymentInput = z.infer<typeof workshopPaymentSchema>

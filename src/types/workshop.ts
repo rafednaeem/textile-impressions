@@ -163,9 +163,4 @@ export const WORKSHOP_PAYMENT_STATUS_COLORS: Record<WorkshopPaymentStatus, strin
   rejected: 'bg-red-100 text-red-700',
 }
 
-export const COD_CITIES = ['karachi'] as const
-export type CodCity = typeof COD_CITIES[number]
 
-export function isCodEligible(city: string): boolean {
-  return COD_CITIES.includes(city.toLowerCase() as CodCity)
-}
