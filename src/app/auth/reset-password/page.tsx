@@ -43,8 +43,9 @@ function ResetContent() {
 
   const sendResetEmail = async (data: { email: string }) => {
     setError("")
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
     const { error: err } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/auth/reset-password?token=true`,
+      redirectTo: `${siteUrl}/auth/reset-password?token=true`,
     })
     if (err) {
       setError(err.message)
