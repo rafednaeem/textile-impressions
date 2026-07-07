@@ -18,7 +18,7 @@ export default function WishlistPage() {
 
       const { data } = await supabase
         .from("wishlists")
-        .select("*, product:products(*)")
+        .select("*, product:products(*, product_images(*))")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
@@ -64,12 +64,15 @@ export default function WishlistPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => {
           const p = item.product
+          const productImages = (p.product_images ?? []).filter((img: any) => img.url)
+          const primaryImage = productImages.find((img: any) => img.is_primary)?.url
+          const imageUrl = primaryImage || productImages[0]?.url || `https://picsum.photos/seed/${p.slug}/600/800`
           return (
             <div key={item.id} className="group relative">
               <Link href={`/products/${p.slug}`} className="block">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
                   <Image
-                    src={`https://picsum.photos/seed/${p.slug}/600/800`}
+                    src={imageUrl}
                     alt={p.name}
                     fill
                     className="object-cover"
