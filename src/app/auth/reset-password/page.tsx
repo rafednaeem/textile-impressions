@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSearchParams } from "next/navigation"
@@ -24,10 +24,54 @@ const newPasswordSchema = z
 function ResetContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
+  const urlError = searchParams.get("error_description") || searchParams.get("error")
   const [sent, setSent] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState("")
+  const [sessionReady, setSessionReady] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(!!token)
   const supabase = createClient()
+
+  useEffect(() => {
+    if (!token) return
+
+    const initSession = async () => {
+      const { data, error: sessionError } = await supabase.auth.getSession()
+      if (data.session) {
+        setSessionReady(true)
+        setCheckingSession(false)
+        return
+      }
+
+      if (sessionError) {
+        setError(sessionError.message)
+        setCheckingSession(false)
+        return
+      }
+
+      setError("Auth session missing. Please request a new reset link.")
+      setCheckingSession(false)
+    }
+
+    initSession()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        setSessionReady(true)
+        setCheckingSession(false)
+      }
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [token, supabase])
+
+  useEffect(() => {
+    if (urlError) {
+      setError(decodeURIComponent(urlError))
+    }
+  }, [urlError])
 
   const emailForm = useForm({
     resolver: zodResolver(resetPasswordSchema),
@@ -106,7 +150,42 @@ function ResetContent() {
     )
   }
 
-  if (token) {
+  if (token && checkingSession) {
+    return (
+      <div className="text-center">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-brand-forest" />
+        <h2 className="mt-4 font-heading text-xl font-bold text-brand-forest">Verifying Reset Link</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Please wait while we verify your reset link.</p>
+      </div>
+    )
+  }
+
+  if (token && error && !sessionReady) {
+    return (
+      <div className="space-y-4 text-center">
+        <h2 className="font-heading text-xl font-bold text-brand-forest">Reset Link Invalid</h2>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          The reset link may have expired. Please request a new one.
+        </p>
+        <button
+          onClick={() => {
+            setError("")
+            setSessionReady(false)
+            setCheckingSession(false)
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }}
+          className="inline-block rounded-full bg-brand-forest px-6 py-2 text-sm font-medium text-white"
+        >
+          Request New Link
+        </button>
+      </div>
+    )
+  }
+
+  if (token && sessionReady) {
     return (
       <form onSubmit={passwordForm.handleSubmit(updatePassword)} className="space-y-4">
         <h2 className="font-heading text-xl font-bold text-brand-forest">Set New Password</h2>
