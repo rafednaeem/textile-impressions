@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import Logo from "@/components/shared/Logo"
 
 export default function AuthLoadingScreen() {
   return (
@@ -19,7 +20,7 @@ export default function AuthLoadingScreen() {
         >
           <div className="relative">
             <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-brand-indigo/10 bg-brand-indigo">
-              <span className="font-heading text-3xl font-bold text-white">TI</span>
+              <Logo className="h-14 w-14" />
             </div>
             <motion.div
               animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] }}

@@ -9,6 +9,7 @@ import { Loader2, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { resetPasswordSchema } from "@/lib/validations"
+import Logo from "@/components/shared/Logo"
 import { z } from "zod"
 
 const newPasswordSchema = z
@@ -311,8 +312,8 @@ export default function ResetPasswordPage() {
       className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12"
     >
       <div className="mb-8 text-center">
-        <Link href="/" className="font-heading text-2xl font-bold text-brand-forest">
-          Textile Impressions
+        <Link href="/" className="inline-block">
+          <Logo className="mx-auto h-12 w-36" />
         </Link>
       </div>
       <Suspense fallback={<div className="text-center py-8"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>}>

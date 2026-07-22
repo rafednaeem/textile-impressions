@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import NotificationBell from "@/components/admin/NotificationBell"
+import Logo from "@/components/shared/Logo"
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -53,9 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-muted/30 font-[family:var(--font-inter)]">
       <aside className="hidden w-64 shrink-0 border-r border-border bg-card lg:flex lg:flex-col">
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-forest text-sm font-bold text-white">
-            TI
-          </div>
+          <Logo className="h-8 w-24" />
           <span className="font-heading text-lg font-bold text-brand-forest">Admin</span>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
@@ -149,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <aside className="relative flex w-64 flex-col bg-card">
             <div className="flex h-16 items-center justify-between border-b border-border px-6">
-              <span className="font-heading text-lg font-bold text-brand-forest">Admin</span>
+              <Logo className="h-8 w-24" />
               <button onClick={() => setMobileOpen(false)}>
                 <X className="h-5 w-5" />
               </button>

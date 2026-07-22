@@ -10,6 +10,7 @@ import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { loginSchema, type LoginInput } from "@/lib/validations"
+import Logo from "@/components/shared/Logo"
 
 function LoginForm() {
   const router = useRouter()
@@ -121,8 +122,8 @@ function LoginForm() {
       className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12"
     >
       <div className="mb-8 text-center">
-        <Link href="/" className="font-heading text-2xl font-bold text-brand-forest">
-          Textile Impressions
+        <Link href="/" className="inline-block">
+          <Logo className="mx-auto h-12 w-36" />
         </Link>
         <h1 className="mt-4 font-heading text-3xl font-bold text-brand-forest">Welcome Back</h1>
         <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>

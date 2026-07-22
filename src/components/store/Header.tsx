@@ -9,6 +9,7 @@ import { usePathname, useRouter } from "next/navigation"
 import CartDrawer from "./CartDrawer"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import Logo from "@/components/shared/Logo"
 
 const navLinks = [
   { label: "Shop", href: "/shop" },
@@ -18,20 +19,6 @@ const navLinks = [
   { label: "Lookbook", href: "/lookbook" },
   { label: "About", href: "/about" },
 ]
-
-function HeaderWordmark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 200 40" className={className} aria-hidden="true" fill="none">
-      <text x="100" y="12" textAnchor="middle" fontSize="8" fontFamily="sans-serif" fontWeight="500" letterSpacing="4" fill="currentColor">TEXTILE</text>
-      <text x="88" y="34" textAnchor="middle" fontSize="16" fontFamily="sans-serif" fontWeight="300" letterSpacing="3" fill="currentColor">IMPRESS</text>
-      <circle cx="142" cy="28" r="6" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      <path d="M138 28c0-3 2-5 4-5s4 2 4 5-2 5-4 5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-      <path d="M142 22v12" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-      <path d="M136 28h12" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-      <text x="158" y="34" textAnchor="middle" fontSize="16" fontFamily="sans-serif" fontWeight="300" letterSpacing="3" fill="currentColor">N</text>
-    </svg>
-  )
-}
 
 export default function Header() {
   const { itemCount } = useCart()
@@ -134,25 +121,10 @@ export default function Header() {
           {/* Logo / Wordmark */}
           <Link
             href="/"
-            className="absolute left-1/2 -translate-x-1/2 flex items-center text-brand-indigo md:static md:translate-x-0"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center md:static md:translate-x-0"
           >
-            <span className="sr-only">Textile Impression</span>
-            <div className="flex flex-col items-center leading-none">
-              <span className="font-heading text-[8px] font-medium uppercase tracking-[0.3em] sm:text-[10px] md:text-[11px]">
-                Textile
-              </span>
-              <div className="flex items-center font-heading text-sm font-normal uppercase tracking-[0.15em] sm:text-lg md:text-[28px]">
-                <span>Impress</span>
-                <svg viewBox="0 0 24 24" className="mx-[1px] h-3.5 w-3.5 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <circle cx="12" cy="12" r="8" />
-                  <path d="M6 12c0-4 3-7 6-7s6 3 6 7-3 7-6 7" strokeLinecap="round" />
-                  <path d="M12 4v16" strokeLinecap="round" />
-                  <path d="M4 12h16" strokeLinecap="round" />
-                  <path d="M7 7l10 10M7 17L17 7" strokeLinecap="round" />
-                </svg>
-                <span>N</span>
-              </div>
-            </div>
+            <span className="sr-only">Anums Shop</span>
+            <Logo className="h-10 w-28 sm:h-12 sm:w-36 md:h-14 md:w-44" />
           </Link>
 
           {/* Desktop nav */}

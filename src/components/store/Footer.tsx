@@ -3,6 +3,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
 import { withTimeout } from "@/lib/promise-timeout"
+import Logo from "@/components/shared/Logo"
 
 export default async function Footer() {
   let settings: Record<string, string> = {}
@@ -30,7 +31,7 @@ export default async function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h3 className="font-heading text-lg font-semibold text-white">Textile Impressions</h3>
+            <Logo className="h-10 w-32" />
             <p className="mt-2 text-sm text-white/70">
               Handcrafted Pakistani fashion, made with love. Premium quality kurtas, dupattas,
               suits, and accessories.
