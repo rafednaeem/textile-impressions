@@ -4,57 +4,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import ShaderBackground from "./ShaderBackground"
-
-function YarnBallIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      className={className}
-      aria-hidden="true"
-      fill="none"
-    >
-      <circle cx="24" cy="24" r="14" stroke="currentColor" strokeWidth="2.5" />
-      <path
-        d="M12 24c0-7 5.5-12 12-12s12 5 12 12-5 12-12 12"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path d="M24 10v28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M10 24h28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M15 15l18 18M15 33l18-18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M35 35c3 3 5 7 5 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function HeroWordmark() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: 0.2 }}
-      className="flex flex-col items-center text-brand-indigo"
-    >
-      <span className="sr-only">
-        Textile Impression — Education, Sampling &amp; Production
-      </span>
-      <div aria-hidden className="flex flex-col items-center">
-        <span className="font-heading text-[10px] font-medium uppercase tracking-[0.5em] sm:text-xs md:text-sm">
-          Textile
-        </span>
-        <div className="flex items-center font-heading text-2xl font-normal uppercase tracking-[0.22em] sm:text-3xl md:text-4xl lg:text-5xl">
-          <span>IMPRESS</span>
-          <YarnBallIcon className="-mx-0.5 h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 lg:h-11 lg:w-11" />
-          <span>N</span>
-        </div>
-      </div>
-      <span className="mt-2 font-heading text-[9px] font-medium uppercase tracking-[0.3em] text-brand-indigo/80 sm:text-[10px] md:text-xs">
-        Education, Sampling &amp; Production
-      </span>
-    </motion.div>
-  )
-}
+import Logo from "@/components/shared/Logo"
 
 export default function Hero() {
   function scrollToNextSection() {
@@ -108,14 +58,23 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Centered wordmark + tagline at bottom */}
+      {/* Centered logo + tagline at bottom */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
         className="relative z-10 flex flex-col items-center px-4 pb-10 pt-10 sm:pb-12 sm:pt-12"
       >
-        <HeroWordmark />
+        <span className="sr-only">
+          Textile Impressions — Education, Sampling &amp; Production
+        </span>
+        <Logo
+          className="h-14 w-52 sm:h-16 sm:w-60 md:h-20 md:w-72 lg:h-24 lg:w-96"
+          alt="Textile Impressions"
+        />
+        <span className="mt-2 font-heading text-[9px] font-medium uppercase tracking-[0.3em] text-brand-indigo/80 sm:text-[10px] md:text-xs">
+          Education, Sampling &amp; Production
+        </span>
       </motion.div>
 
       {/* Scroll indicator */}

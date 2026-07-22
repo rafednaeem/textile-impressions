@@ -123,7 +123,7 @@ export default function Header() {
             href="/"
             className="absolute left-1/2 -translate-x-1/2 flex items-center md:static md:translate-x-0"
           >
-            <span className="sr-only">Anums Shop</span>
+            <span className="sr-only">Textile Impressions</span>
             <Logo className="h-10 w-28 sm:h-12 sm:w-36 md:h-14 md:w-44" />
           </Link>
 

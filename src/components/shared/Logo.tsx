@@ -5,7 +5,7 @@ interface LogoProps {
   alt?: string
 }
 
-export default function Logo({ className = "", alt = "Anums Shop Logo" }: LogoProps) {
+export default function Logo({ className = "", alt = "Textile Impressions Logo" }: LogoProps) {
   return (
     <div className={`relative ${className}`}>
       <Image
