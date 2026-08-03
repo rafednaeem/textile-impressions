@@ -37,7 +37,7 @@ export default function Hero() {
               <br /> to Career
             </h1>
             <p className="mt-6 max-w-md font-heading text-lg italic leading-relaxed text-brand-indigo/80 sm:text-xl md:mt-8 md:text-2xl">
-              Handcrafted Pakistani textiles, artisan-led skills training,
+              Handcrafted Pakistani textiles, artisan led skills training,
               sustainable livelihoods.
             </p>
             <div className="mt-8 flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center md:mt-10">
