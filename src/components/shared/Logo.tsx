@@ -9,7 +9,7 @@ export default function Logo({ className = "", alt = "Textile Impressions Logo" 
   return (
     <div className={`relative ${className}`}>
       <Image
-        src="/logo.png"
+        src="/logo_transparent.png"
         alt={alt}
         fill
         className="object-contain"

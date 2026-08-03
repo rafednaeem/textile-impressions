@@ -26,7 +26,7 @@ export const organizationSchema = {
   "@type": "Organization",
   name: siteName,
   url: siteUrl,
-  logo: `${siteUrl}/logo.png`,
+  logo: `${siteUrl}/logo_transparent.png`,
   foundingDate: "2024",
   contactPoint: {
     "@type": "ContactPoint",
