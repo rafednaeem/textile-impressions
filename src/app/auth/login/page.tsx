@@ -79,9 +79,12 @@ function LoginForm() {
             }
             if (cartId) {
               for (const item of items) {
-                const { data: existingItem } = await supabase
+                const existingItemQuery = supabase
                   .from("cart_items").select("id, quantity")
-                  .eq("cart_id", cartId).eq("product_id", item.product_id).maybeSingle()
+                  .eq("cart_id", cartId).eq("product_id", item.product_id)
+                const { data: existingItem } = item.variant_id
+                  ? await existingItemQuery.eq("variant_id", item.variant_id).maybeSingle()
+                  : await existingItemQuery.is("variant_id", null).maybeSingle()
                 if (existingItem) {
                   await supabase.from("cart_items")
                     .update({ quantity: existingItem.quantity + item.quantity })

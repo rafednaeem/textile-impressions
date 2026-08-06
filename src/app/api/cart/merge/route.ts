@@ -38,12 +38,14 @@ export async function POST(request: Request) {
     }
 
     for (const item of items) {
-      const { data: existing } = await supabase
+      const existingQuery = supabase
         .from("cart_items")
         .select("id, quantity")
         .eq("cart_id", cartId)
         .eq("product_id", item.product_id)
-        .maybeSingle()
+      const { data: existing } = item.variant_id
+        ? await existingQuery.eq("variant_id", item.variant_id).maybeSingle()
+        : await existingQuery.is("variant_id", null).maybeSingle()
 
       if (existing) {
         await supabase

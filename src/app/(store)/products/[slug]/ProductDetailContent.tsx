@@ -151,14 +151,27 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
   const availableSizes = [...new Set(variants.map((v) => v.size).filter(Boolean))]
   const availableColors = [...new Set(variants.map((v) => v.color).filter(Boolean))]
 
-  const currentVariant = variants.find(
-    (v) => v.size === selectedSize && v.color === selectedColor
-  )
-  const variantInventory = currentVariant?.inventory_count ?? inventoryCount
-  const isOutOfStock = inventoryCount === 0 || variantInventory === 0
+  const requiresSize = availableSizes.length > 0
+  const requiresColor = availableColors.length > 0
+  const hasSelectedSize = selectedSize !== null
+  const hasSelectedColor = selectedColor !== null
+  const needsSelection =
+    (requiresSize && !hasSelectedSize) || (requiresColor && !hasSelectedColor)
+
+  const currentVariant = !needsSelection
+    ? variants.find((v) => {
+        const sizeMatch = requiresSize ? v.size === selectedSize : true
+        const colorMatch = requiresColor ? v.color === selectedColor : true
+        return sizeMatch && colorMatch
+      })
+    : null
+
+  // Inventory is managed at the product level in the admin, so stock checks
+  // should use the product inventory count rather than per-variant counts.
+  const isOutOfStock = inventoryCount === 0
 
   const handleAddToCart = () => {
-    if (!product || isOutOfStock) return
+    if (!product || isOutOfStock || needsSelection) return
     addItem({
       product: {
         id: product.id,
@@ -170,7 +183,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
       },
       image: displayImages[0]?.url ?? null,
       variant: currentVariant
-        ? { size: currentVariant.size, color: currentVariant.color }
+        ? { id: currentVariant.id, size: currentVariant.size, color: currentVariant.color }
         : null,
       quantity,
     })
@@ -419,7 +432,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               onClick={handleAddToCart}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || needsSelection}
               data-testid="add-to-cart-button"
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-all hover:bg-brand-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -436,7 +449,11 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
                 ) : (
                   <motion.span key="add" className="flex items-center gap-2">
                     <ShoppingBag className="h-4 w-4" />
-                    {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                    {isOutOfStock
+                      ? "Out of Stock"
+                      : needsSelection
+                        ? "Select Options"
+                        : "Add to Cart"}
                   </motion.span>
                 )}
               </AnimatePresence>

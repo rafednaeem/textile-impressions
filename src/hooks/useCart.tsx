@@ -14,7 +14,7 @@ import type { CartItem, Product, ProductVariant } from "@/types/database"
 type CartItemDisplay = CartItem & {
   product: Pick<Product, "name" | "slug" | "price" | "sale_price" | "inventory_count">
   image: string | null
-  variant?: Pick<ProductVariant, "size" | "color"> | null
+  variant?: Pick<ProductVariant, "id" | "size" | "color"> | null
 }
 
 type AddItemProduct = CartItemDisplay["product"] & { id?: string }
@@ -86,7 +86,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const { data: rawItems } = await supabase
       .from("cart_items")
-      .select("*, products!inner(name, slug, price, sale_price, inventory_count, product_images(*))")
+      .select("*, products!inner(name, slug, price, sale_price, inventory_count, product_images(*)), product_variants(id, size, color)")
       .eq("cart_id", cart.id)
 
     if (rawItems) {
@@ -104,7 +104,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const primary = imgs.find((i: any) => i.is_primary)
             return primary?.url ?? imgs[0]?.url ?? null
           })(),
-          variant: null,
+          variant: ci.product_variants
+            ? { id: ci.product_variants.id, size: ci.product_variants.size, color: ci.product_variants.color }
+            : null,
         }))
       )
     }
@@ -169,12 +171,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (!cartId) return
 
         const productId = (product as AddItemProduct).id ?? product.slug
-        const { data: existing } = await supabase
+        const variantId = variant?.id ?? null
+        const existingQuery = supabase
           .from("cart_items")
           .select("id, quantity")
           .eq("cart_id", cartId)
           .eq("product_id", productId)
-          .maybeSingle()
+        const { data: existing } = variantId
+          ? await existingQuery.eq("variant_id", variantId).maybeSingle()
+          : await existingQuery.is("variant_id", null).maybeSingle()
 
         if (existing) {
           await supabase
@@ -185,7 +190,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await supabase.from("cart_items").insert({
             cart_id: cartId,
             product_id: productId,
-            variant_id: null,
+            variant_id: variantId,
             quantity,
             price_at_time: price,
           })
@@ -197,8 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const idx = prev.findIndex(
             (i) =>
               i.product.slug === product.slug &&
-              i.variant?.size === variant?.size &&
-              i.variant?.color === variant?.color
+              (i.variant?.id ?? null) === (variant?.id ?? null)
           )
           if (idx >= 0) {
             const next = [...prev]
@@ -210,7 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             id: crypto.randomUUID(),
             cart_id: "",
             product_id: (product as AddItemProduct).id ?? product.slug,
-            variant_id: null,
+            variant_id: variant?.id ?? null,
             quantity,
             price_at_time: price,
             product,
@@ -307,12 +311,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!cartId) return
 
     for (const gi of guestItems) {
-      const { data: existing } = await supabase
+      const existingQuery = supabase
         .from("cart_items")
         .select("id, quantity")
         .eq("cart_id", cartId)
         .eq("product_id", gi.product_id)
-        .maybeSingle()
+      const { data: existing } = gi.variant_id
+        ? await existingQuery.eq("variant_id", gi.variant_id).maybeSingle()
+        : await existingQuery.is("variant_id", null).maybeSingle()
 
       if (existing) {
         await supabase
