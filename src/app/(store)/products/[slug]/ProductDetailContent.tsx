@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Heart, Minus, Plus, ShoppingBag, Check } from "lucide-react"
+import { Heart, Minus, Plus, ShoppingBag, Check, Play } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import type { Product, ProductImage, ProductVariant, Category } from "@/types/database"
+import type { Product, ProductMedia, ProductVariant, Category } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
 import ProductCard from "@/components/store/ProductCard"
+import { getPrimaryImage } from "@/lib/media"
 
 const tabs = ["Description", "Size Guide", "Care Instructions"] as const
 
@@ -44,12 +45,12 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
   const { addItem } = useCart()
 
   const [product, setProduct] = useState<(Product & { category?: Category }) | null>(null)
-  const [images, setImages] = useState<ProductImage[]>([])
+  const [media, setMedia] = useState<ProductMedia[]>([])
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [related, setRelated] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedMedia, setSelectedMedia] = useState(0)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -84,7 +85,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
 
       setProduct(prod)
 
-      const [imgRes, varRes] = await Promise.all([
+      const [mediaRes, varRes] = await Promise.all([
         supabase
           .from("product_images")
           .select("*")
@@ -96,7 +97,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           .eq("product_id", prod.id),
       ])
 
-      if (imgRes.data) setImages(imgRes.data as unknown as ProductImage[])
+      if (mediaRes.data) setMedia(mediaRes.data as unknown as ProductMedia[])
       if (varRes.data) setVariants(varRes.data as unknown as ProductVariant[])
 
       if (prod.category_id) {
@@ -128,19 +129,25 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
     fetchProduct()
   }, [slug, supabase])
 
-  const displayImages =
-    images.length > 0
-      ? images
+  const displayMedia =
+    media.length > 0
+      ? media
       : ([
           {
             id: "placeholder",
             product_id: "",
             url: `https://picsum.photos/seed/${slug}/600/800`,
+            storage_path: null,
             alt_text: null,
             sort_order: 0,
             is_primary: true,
+            media_type: "image" as const,
+            created_at: new Date().toISOString(),
           },
-        ] as ProductImage[])
+        ] as ProductMedia[])
+
+  const selectedItem = displayMedia[selectedMedia]
+  const isSelectedVideo = selectedItem?.media_type === "video"
 
   if (!loading && !product) notFound()
 
@@ -181,7 +188,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
         sale_price: product.sale_price,
         inventory_count: product.inventory_count,
       },
-      image: displayImages[0]?.url ?? null,
+      image: getPrimaryImage(media)?.url ?? `https://picsum.photos/seed/${slug}/600/800`,
       variant: currentVariant
         ? { id: currentVariant.id, size: currentVariant.size, color: currentVariant.color }
         : null,
@@ -276,14 +283,27 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
       <div className="lg:flex lg:gap-12">
         <div className="lg:w-1/2">
           <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
-            <Image
-              src={displayImages[selectedImage]?.url ?? `https://picsum.photos/seed/${slug}/600/800`}
-              alt={displayImages[selectedImage]?.alt_text || product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-            />
+            {isSelectedVideo ? (
+              <video
+                key={selectedItem.url}
+                src={selectedItem.url}
+                controls
+                preload="metadata"
+                playsInline
+                muted
+                className="h-full w-full object-cover"
+                aria-label={selectedItem.alt_text || `${product.name} video`}
+              />
+            ) : (
+              <Image
+                src={selectedItem?.url ?? `https://picsum.photos/seed/${slug}/600/800`}
+                alt={selectedItem?.alt_text || product.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+            )}
             {hasDiscount && (
               <span className="absolute left-3 top-3 rounded-full bg-brand-terracotta px-3 py-1 text-xs font-medium text-white">
                 {Math.round(((product.price - product.sale_price!) / product.price) * 100)}% OFF
@@ -291,23 +311,38 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
             )}
           </div>
 
-          {displayImages.length > 1 && (
+          {displayMedia.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-              {displayImages.map((img, i) => (
+              {displayMedia.map((item, i) => (
                 <button
-                  key={img.id}
-                  onClick={() => setSelectedImage(i)}
+                  key={item.id}
+                  onClick={() => setSelectedMedia(i)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                    i === selectedImage ? "border-brand-forest" : "border-transparent"
+                    i === selectedMedia ? "border-brand-forest" : "border-transparent"
                   }`}
+                  aria-label={item.media_type === "video" ? `Play video ${i + 1}` : `View image ${i + 1}`}
                 >
-                  <Image
-                    src={img.url}
-                    alt={img.alt_text || `View ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                  />
+                  {item.media_type === "video" ? (
+                    <>
+                      <video
+                        src={item.url}
+                        preload="metadata"
+                        muted
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <Play className="h-5 w-5 text-white drop-shadow-md" />
+                      </span>
+                    </>
+                  ) : (
+                    <Image
+                      src={item.url}
+                      alt={item.alt_text || `View ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  )}
                 </button>
               ))}
             </div>

@@ -209,14 +209,22 @@ export interface AdminNotification {
   created_at: string
 }
 
-export interface ProductImage {
+export type MediaType = "image" | "video"
+
+export interface ProductMedia {
   id: string
   product_id: string
   url: string
+  storage_path: string | null
   alt_text: string | null
   sort_order: number
   is_primary: boolean
+  media_type: MediaType
+  created_at: string
 }
+
+/** @deprecated Use ProductMedia for new code. ProductImage is kept for backward compatibility. */
+export type ProductImage = ProductMedia
 
 export interface ProductVariant {
   id: string
@@ -348,9 +356,9 @@ export interface Database {
         Relationships: []
       }
       product_images: {
-        Row: ProductImage
-        Insert: Omit<ProductImage, "id">
-        Update: Partial<Omit<ProductImage, "id">>
+        Row: ProductMedia
+        Insert: Omit<ProductMedia, "id" | "created_at">
+        Update: Partial<Omit<ProductMedia, "id" | "created_at">>
         Relationships: []
       }
       product_variants: {

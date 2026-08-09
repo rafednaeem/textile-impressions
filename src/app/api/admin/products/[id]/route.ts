@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import {
+  PRODUCT_MEDIA_BUCKET,
+  deleteStorageObject,
+  getStoragePathFromUrl,
+  type MediaInput,
+} from "@/lib/media"
 
 export async function GET(
   _request: Request,
@@ -51,18 +57,41 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
   }
 
-  if (body.images) {
+  const hasMedia = body.media !== undefined || body.images !== undefined
+  if (hasMedia) {
+    const mediaItems: MediaInput[] = Array.isArray(body.media) && body.media.length
+      ? body.media
+      : Array.isArray(body.images) && body.images.length
+        ? body.images.map((img: MediaInput) => ({ ...img, media_type: "image" as const }))
+        : []
+
+    const { data: existingMedia } = await supabase
+      .from("product_images")
+      .select("url, storage_path")
+      .eq("product_id", id)
+
+    const newUrls = new Set(mediaItems.map((m) => m.url))
+    const removed = (existingMedia || []).filter((m: { url: string; storage_path: string | null }) => !newUrls.has(m.url))
+
     await supabase.from("product_images").delete().eq("product_id", id)
-    if (body.images.length) {
+
+    if (mediaItems.length) {
       await supabase.from("product_images").insert(
-        body.images.map((img: any, i: number) => ({
+        mediaItems.map((item: MediaInput, i: number) => ({
           product_id: id,
-          url: img.url,
-          alt_text: img.alt_text,
+          url: item.url,
+          storage_path: item.storage_path ?? null,
+          alt_text: item.alt_text || body.name || "",
           sort_order: i,
           is_primary: i === 0,
+          media_type: item.media_type || "image",
         }))
       )
+    }
+
+    for (const removedItem of removed) {
+      const path = removedItem.storage_path || getStoragePathFromUrl(removedItem.url, PRODUCT_MEDIA_BUCKET)
+      if (path) await deleteStorageObject(supabase, PRODUCT_MEDIA_BUCKET, path)
     }
   }
 
@@ -102,8 +131,18 @@ export async function DELETE(
   const { supabase, error } = await requireAdmin()
   if (error) return error
 
+  const { data: mediaToDelete } = await supabase
+    .from("product_images")
+    .select("url, storage_path")
+    .eq("product_id", id)
+
   const { error: deleteError } = await supabase.from("products").delete().eq("id", id)
   if (deleteError) return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
+
+  for (const item of mediaToDelete || []) {
+    const path = item.storage_path || getStoragePathFromUrl(item.url, PRODUCT_MEDIA_BUCKET)
+    if (path) await deleteStorageObject(supabase, PRODUCT_MEDIA_BUCKET, path)
+  }
 
   return NextResponse.json({ success: true })
 }

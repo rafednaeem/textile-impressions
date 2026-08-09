@@ -8,6 +8,7 @@ import Image from "next/image"
 import { Plus, Search, MoreHorizontal, Copy, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { toggleProductActive, duplicateProduct, deleteProduct } from "@/lib/admin/actions"
+import { getProductImages } from "@/lib/media"
 
 export default function AdminProductsPage() {
   const supabase = createClient()
@@ -112,7 +113,8 @@ export default function AdminProductsPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {products.map((product) => {
-                const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
+                const productImages = getProductImages(product.product_images)
+                const primaryImage = productImages.find((img) => img.is_primary) || productImages[0]
                 return (
                   <tr key={product.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">

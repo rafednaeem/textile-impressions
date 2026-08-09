@@ -2,6 +2,11 @@
 
 import { requireAdminThrow } from "@/lib/supabase/admin"
 import { sendOrderStatusEmail, sendOrderPaymentRejectedEmail, sendWorkshopRegistrationEmail } from "@/lib/email/integrations"
+import {
+  PRODUCT_MEDIA_BUCKET,
+  deleteStorageObject,
+  getStoragePathFromUrl,
+} from "@/lib/media"
 
 export async function verifyPayment(orderId: string) {
   const { supabase, user } = await requireAdminThrow()
@@ -84,11 +89,13 @@ export async function duplicateProduct(productId: string) {
 
   const { data: original } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_images(*), product_variants(*)")
     .eq("id", productId)
     .single()
 
   if (!original) throw new Error("Product not found")
+
+  const originalRecord = original as Record<string, unknown>
 
   const { data: product } = await supabase
     .from("products")
@@ -112,13 +119,53 @@ export async function duplicateProduct(productId: string) {
     .single()
 
   if (!product) throw new Error("Failed to create duplicate")
+
+  const originalMedia = (originalRecord.product_images ?? []) as Record<string, unknown>[]
+  if (originalMedia.length) {
+    await supabase.from("product_images").insert(
+      originalMedia.map((item, i) => ({
+        product_id: product.id,
+        url: String(item.url),
+        storage_path: item.storage_path ? String(item.storage_path) : null,
+        alt_text: item.alt_text ? String(item.alt_text) : null,
+        sort_order: i,
+        is_primary: i === 0,
+        media_type: (item.media_type as string) || "image",
+      }))
+    )
+  }
+
+  const originalVariants = (originalRecord.product_variants ?? []) as Record<string, unknown>[]
+  if (originalVariants.length) {
+    await supabase.from("product_variants").insert(
+      originalVariants.map((v) => ({
+        product_id: product.id,
+        size: v.size ? String(v.size) : null,
+        color: v.color ? String(v.color) : null,
+        inventory_count: 0,
+        sku_suffix: v.sku_suffix ? String(v.sku_suffix) : null,
+      }))
+    )
+  }
+
   return product.id
 }
 
 export async function deleteProduct(productId: string) {
   const { supabase } = await requireAdminThrow()
+
+  const { data: mediaToDelete } = await supabase
+    .from("product_images")
+    .select("url, storage_path")
+    .eq("product_id", productId)
+
   const { error } = await supabase.from("products").delete().eq("id", productId)
   if (error) throw new Error("Failed to delete product")
+
+  for (const item of mediaToDelete || []) {
+    const path = item.storage_path || getStoragePathFromUrl(item.url, PRODUCT_MEDIA_BUCKET)
+    if (path) await deleteStorageObject(supabase, PRODUCT_MEDIA_BUCKET, path)
+  }
 }
 
 export async function updateInventory(productId: string, count: number) {

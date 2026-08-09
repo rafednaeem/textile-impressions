@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import type { MediaInput } from "@/lib/media"
 
 export async function GET(request: Request) {
   const { supabase, error } = await requireAdmin()
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   if (error) return error
 
   const body = await request.json()
-  const { name, slug, description, short_description, price, sale_price, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, images, sizes, colors } = body
+  const { name, slug, description, short_description, price, sale_price, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, media, images, sizes, colors } = body
 
   if (!name || !slug || price === undefined) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -60,14 +61,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Failed to create product: ${productError.message} (${productError.details || ''})` }, { status: 500 })
   }
 
-  if (images?.length) {
+  const mediaItems: MediaInput[] = Array.isArray(media) && media.length
+    ? media
+    : Array.isArray(images) && images.length
+      ? images.map((img: MediaInput) => ({ ...img, media_type: "image" as const }))
+      : []
+
+  if (mediaItems.length) {
     await supabase.from("product_images").insert(
-      images.map((img: any, i: number) => ({
+      mediaItems.map((item: MediaInput, i: number) => ({
         product_id: product.id,
-        url: img.url,
-        alt_text: img.alt_text || name,
+        url: item.url,
+        storage_path: item.storage_path ?? null,
+        alt_text: item.alt_text || name,
         sort_order: i,
         is_primary: i === 0,
+        media_type: item.media_type || "image",
       }))
     )
   }

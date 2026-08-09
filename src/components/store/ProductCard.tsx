@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, ShoppingBag } from "lucide-react"
+import { Heart, ShoppingBag, Play } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { Product } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
+import { getProductImages, hasProductVideo } from "@/lib/media"
 
 interface ProductCardProps {
   product: Product
@@ -40,8 +41,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const craftType = craft_type || "Plain"
   const craftClass = craftTagClasses[craftType] || "bg-gray-200 text-gray-700"
 
-  const allImages = (product_images?.filter((img) => img.url) ?? []) as { url: string; is_primary: boolean }[]
+  const allImages = getProductImages(product_images)
   const imageCount = allImages.length
+  const productHasVideo = hasProductVideo(product_images)
   const fallbackUrl = `https://picsum.photos/seed/${slug}/600/800`
   const primaryImage = imageCount > 0 ? (allImages.find((img) => img.is_primary)?.url ?? allImages[0].url) : null
   const defaultUrl = primaryImage ?? fallbackUrl
@@ -180,6 +182,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className={`absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${craftClass}`}>
             {craftType}
           </span>
+          {productHasVideo && (
+            <span className="absolute right-2 top-9 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+              <Play className="inline h-3 w-3" /> Video
+            </span>
+          )}
           {hasDiscount && (
             <span className="absolute left-2 top-9 rounded-full bg-brand-crimson px-2.5 py-0.5 text-xs font-medium text-white">
               {Math.round(((price - sale_price!) / price) * 100)}% OFF

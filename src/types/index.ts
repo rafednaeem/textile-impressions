@@ -5,6 +5,8 @@ export type {
   Category,
   Product,
   ProductImage,
+  ProductMedia,
+  MediaType,
   ProductVariant,
   Artisan,
   Collection,

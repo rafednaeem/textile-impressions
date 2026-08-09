@@ -5,11 +5,18 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Upload, X, GripVertical } from "lucide-react"
+import { ChevronLeft, X, GripVertical, Play, ImageIcon, Film } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import type { MediaType } from "@/lib/media"
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 const CRAFT_TYPES = ["Block Print", "Ajrak", "Hand Embroidered", "Chunri", "Plain"]
+
+interface MediaItem {
+  url: string
+  media_type: MediaType
+  storage_path?: string
+}
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
@@ -30,7 +37,7 @@ export default function ProductFormPage() {
     sizes: [] as string[], colors: [] as { name: string; hex: string }[],
   })
 
-  const [images, setImages] = useState<{ url: string; file?: File }[]>([])
+  const [media, setMedia] = useState<MediaItem[]>([])
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
@@ -47,34 +54,37 @@ export default function ProductFormPage() {
     }))
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, mediaType: MediaType) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
 
+    setUploading(true)
     for (const file of files) {
-      setUploading(true)
       const formData = new FormData()
       formData.append("file", file)
+      formData.append("media_type", mediaType)
 
       try {
-        const res = await fetch("/api/admin/upload/product-image", { method: "POST", body: formData })
+        const res = await fetch("/api/admin/upload/product-media", { method: "POST", body: formData })
         const data = await res.json()
-        if (data.url) {
-          setImages((prev) => [...prev, { url: data.url }])
+        if (res.ok && data.url) {
+          setMedia((prev) => [...prev, { url: data.url, media_type: data.media_type, storage_path: data.path }])
+        } else {
+          alert(data.error || "Upload failed")
         }
       } catch {
-        // silently fail
+        alert("Upload failed")
       }
-      setUploading(false)
     }
+    setUploading(false)
   }
 
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index))
+  const removeMedia = (index: number) => {
+    setMedia((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const moveImage = (index: number, direction: "up" | "down") => {
-    setImages((prev) => {
+  const moveMedia = (index: number, direction: "up" | "down") => {
+    setMedia((prev) => {
       const next = [...prev]
       const target = direction === "up" ? index - 1 : index + 1
       if (target < 0 || target >= next.length) return next
@@ -127,7 +137,12 @@ export default function ProductFormPage() {
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
         description: form.description,
         short_description: form.short_description,
-        images: images.map((img) => ({ url: img.url, alt_text: form.name })),
+        media: media.map((item) => ({
+          url: item.url,
+          storage_path: item.storage_path,
+          alt_text: form.name,
+          media_type: item.media_type,
+        })),
       }
 
       const res = await fetch("/api/admin/products", {
@@ -375,34 +390,74 @@ export default function ProductFormPage() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-heading text-lg font-bold text-brand-forest">Images</h2>
+          <h2 className="font-heading text-lg font-bold text-brand-forest">Product Media</h2>
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {images.map((img, i) => (
+            {media.map((item, i) => (
               <div key={i} className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
-                <img src={img.url} alt={`Product image ${i + 1}`} className="h-full w-full object-cover" />
+                {item.media_type === "video" ? (
+                  <video
+                    src={item.url}
+                    preload="metadata"
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img src={item.url} alt={`Product media ${i + 1}`} className="h-full w-full object-cover" />
+                )}
+
                 {i === 0 && (
                   <span className="absolute left-1 top-1 rounded bg-brand-forest px-1.5 py-0.5 text-[10px] text-white">Primary</span>
                 )}
+
+                <span className="absolute right-1 top-1 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
+                  {item.media_type === "video" ? (
+                    <span className="flex items-center gap-1"><Film className="h-3 w-3" /> Video</span>
+                  ) : (
+                    <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> Image</span>
+                  )}
+                </span>
+
+                {item.media_type === "video" && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <Play className="h-8 w-8 text-white/80 drop-shadow-md" />
+                  </div>
+                )}
+
                 <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
-                  <button type="button" onClick={() => moveImage(i, "up")} disabled={i === 0} className="rounded bg-white p-1 disabled:opacity-30">
+                  <button type="button" onClick={() => moveMedia(i, "up")} disabled={i === 0} className="rounded bg-white p-1 disabled:opacity-30">
                     <GripVertical className="h-3 w-3 rotate-90 text-brand-forest" />
                   </button>
-                  <button type="button" onClick={() => removeImage(i)} className="rounded bg-white p-1">
+                  <button type="button" onClick={() => removeMedia(i)} className="rounded bg-white p-1">
                     <X className="h-3 w-3 text-red-500" />
                   </button>
                 </div>
               </div>
             ))}
-            <label className="flex aspect-[3/4] cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:border-brand-forest">
+
+            <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:border-brand-forest">
               {uploading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-forest border-t-transparent" />
               ) : (
-                <div className="text-center">
-                  <Upload className="mx-auto h-5 w-5 text-muted-foreground" />
-                  <p className="mt-1 text-xs text-muted-foreground">Upload</p>
-                </div>
+                <>
+                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Upload Images</span>
+                </>
               )}
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploading} />
+              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleMediaUpload(e, "image")} disabled={uploading} />
+            </label>
+
+            <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:border-brand-forest">
+              {uploading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-forest border-t-transparent" />
+              ) : (
+                <>
+                  <Film className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Upload Videos</span>
+                </>
+              )}
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" multiple className="hidden" onChange={(e) => handleMediaUpload(e, "video")} disabled={uploading} />
             </label>
           </div>
         </div>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Heart, ShoppingBag } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { getProductImages } from "@/lib/media"
 
 export default function WishlistPage() {
   const supabase = createClient()
@@ -64,8 +65,8 @@ export default function WishlistPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => {
           const p = item.product
-          const productImages = (p.product_images ?? []).filter((img: any) => img.url)
-          const primaryImage = productImages.find((img: any) => img.is_primary)?.url
+          const productImages = getProductImages(p.product_images ?? [])
+          const primaryImage = productImages.find((img) => img.is_primary)?.url
           const imageUrl = primaryImage || productImages[0]?.url || `https://picsum.photos/seed/${p.slug}/600/800`
           return (
             <div key={item.id} className="group relative">
