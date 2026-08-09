@@ -39,7 +39,10 @@ export async function POST(request: Request) {
 
     if (signedError || !signedData?.signedUrl || !signedData?.token) {
       console.error("[product-media signed upload] Supabase error:", signedError)
-      return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 })
+      return NextResponse.json(
+        { error: signedError?.message || "Failed to create upload URL" },
+        { status: 500 }
+      )
     }
 
     const { data: urlData } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(fileName)
@@ -53,6 +56,9 @@ export async function POST(request: Request) {
     })
   } catch (err) {
     console.error("[product-media signed upload] Unexpected error:", err)
-    return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 })
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to create upload URL" },
+      { status: 500 }
+    )
   }
 }

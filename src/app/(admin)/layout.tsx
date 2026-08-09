@@ -7,6 +7,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, Boxes, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { Toaster } from "@/components/ui/sonner"
 import NotificationBell from "@/components/admin/NotificationBell"
 import Logo from "@/components/shared/Logo"
 
@@ -123,6 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <Toaster />
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t border-border bg-card lg:hidden">

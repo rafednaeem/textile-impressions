@@ -6,6 +6,7 @@ import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft, X, GripVertical, Play, ImageIcon, Film } from "lucide-react"
+import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { MediaType } from "@/lib/media"
 
@@ -91,12 +92,14 @@ export default function EditProductPage({
     fetch()
   }, [id, supabase])
 
+
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, mediaType: MediaType) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
 
     setUploading(true)
     for (const file of files) {
+      const label = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
       const formData = new FormData()
       formData.append("file", file)
       formData.append("media_type", mediaType)
@@ -105,7 +108,10 @@ export default function EditProductPage({
         const res = await fetch("/api/admin/upload/product-media/signed", { method: "POST", body: formData })
         const data = await res.json()
         if (!res.ok || !data.signedUrl) {
-          alert(data.error || "Failed to get upload URL")
+          console.error("[upload] signed URL error:", data)
+          toast.error(`Upload failed for ${label}`, {
+            description: data.error || `Server returned ${res.status}`,
+          })
           continue
         }
 
@@ -114,12 +120,21 @@ export default function EditProductPage({
           .uploadToSignedUrl(data.path, data.token, file)
 
         if (uploadError) {
-          alert(uploadError.message || "Upload failed")
+          console.error("[upload] Supabase upload error:", uploadError)
+          toast.error(`Upload failed for ${label}`, {
+            description: uploadError.message || "Supabase upload failed",
+          })
           continue
         }
 
         setMedia((prev) => [...prev, { url: data.url, media_type: data.media_type, storage_path: data.path }])
-      } catch { /* ignore */ }
+        toast.success(`${mediaType === "video" ? "Video" : "Image"} uploaded`, { description: file.name })
+      } catch (err) {
+        console.error("[upload] unexpected error:", err)
+        toast.error(`Upload failed for ${file.name}`, {
+          description: err instanceof Error ? err.message : "Unexpected error",
+        })
+      }
     }
     setUploading(false)
   }
@@ -192,10 +207,10 @@ export default function EditProductPage({
         router.push("/admin/products")
       } else {
         const data = await res.json()
-        alert(data.error || "Failed to update product")
+        toast.error("Failed to update product", { description: data.error || `Server returned ${res.status}` })
       }
-    } catch {
-      alert("Failed to update product")
+    } catch (err) {
+      toast.error("Failed to update product", { description: err instanceof Error ? err.message : "Unexpected error" })
     }
     setSaving(false)
   }
