@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
 import {
   PRODUCT_MEDIA_BUCKET,
-  validateMediaFile,
+  validateMediaMetadata,
   mediaFolder,
   type MediaType,
 } from "@/lib/media"
@@ -12,30 +12,35 @@ export async function POST(request: Request) {
   if (error) return error
 
   try {
-    const formData = await request.formData()
-    const file = formData.get("file") as File | null
-    const mediaType = (formData.get("media_type") as MediaType) || "image"
+    const body = await request.json()
+    const fileName = String(body.fileName || "")
+    const mimeType = String(body.mimeType || "")
+    const size = Number(body.size || 0)
+    const mediaType = (body.mediaType as MediaType) || "image"
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    if (!fileName || !mimeType || !size) {
+      return NextResponse.json(
+        { error: "Missing fileName, mimeType, or size" },
+        { status: 400 }
+      )
     }
 
     if (mediaType !== "image" && mediaType !== "video") {
-      return NextResponse.json({ error: "Invalid media_type" }, { status: 400 })
+      return NextResponse.json({ error: "Invalid mediaType" }, { status: 400 })
     }
 
-    const validation = validateMediaFile(file, mediaType)
+    const validation = validateMediaMetadata(fileName, mimeType, size, mediaType)
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const ext = file.name.split(".").pop()
+    const ext = fileName.split(".").pop()
     const folder = mediaFolder(mediaType)
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const storagePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
     const { data: signedData, error: signedError } = await supabase.storage
       .from(PRODUCT_MEDIA_BUCKET)
-      .createSignedUploadUrl(fileName)
+      .createSignedUploadUrl(storagePath)
 
     if (signedError || !signedData?.signedUrl || !signedData?.token) {
       console.error("[product-media signed upload] Supabase error:", signedError)
@@ -45,12 +50,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: urlData } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(storagePath)
 
     return NextResponse.json({
       signedUrl: signedData.signedUrl,
       token: signedData.token,
-      path: fileName,
+      path: storagePath,
       url: urlData.publicUrl,
       media_type: mediaType,
     })

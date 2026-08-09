@@ -100,17 +100,35 @@ export default function EditProductPage({
     setUploading(true)
     for (const file of files) {
       const label = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("media_type", mediaType)
 
       try {
-        const res = await fetch("/api/admin/upload/product-media/signed", { method: "POST", body: formData })
-        const data = await res.json()
-        if (!res.ok || !data.signedUrl) {
+        const metaRes = await fetch("/api/admin/upload/product-media/signed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            mediaType,
+          }),
+        })
+
+        const metaText = await metaRes.text()
+        let data: any
+        try {
+          data = JSON.parse(metaText)
+        } catch {
+          console.error("[upload] signed URL non-JSON response:", metaText)
+          toast.error(`Upload failed for ${label}`, {
+            description: metaText.slice(0, 200) || `Server returned ${metaRes.status}`,
+          })
+          continue
+        }
+
+        if (!metaRes.ok || !data.signedUrl) {
           console.error("[upload] signed URL error:", data)
           toast.error(`Upload failed for ${label}`, {
-            description: data.error || `Server returned ${res.status}`,
+            description: data.error || `Server returned ${metaRes.status}`,
           })
           continue
         }

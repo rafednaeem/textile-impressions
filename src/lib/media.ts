@@ -28,18 +28,27 @@ export function validateMediaFile(
   file: File,
   mediaType: MediaType
 ): { ok: true } | { ok: false; error: string } {
+  return validateMediaMetadata(file.name, file.type, file.size, mediaType)
+}
+
+export function validateMediaMetadata(
+  fileName: string,
+  mimeType: string,
+  size: number,
+  mediaType: MediaType
+): { ok: true } | { ok: false; error: string } {
   if (mediaType === "image") {
-    if (!IMAGE_MIME_TYPES.includes(file.type)) {
+    if (!IMAGE_MIME_TYPES.includes(mimeType)) {
       return { ok: false, error: "Invalid image type. Allowed: JPG, PNG, WebP, AVIF" }
     }
-    if (file.size > IMAGE_MAX_SIZE_BYTES) {
+    if (size > IMAGE_MAX_SIZE_BYTES) {
       return { ok: false, error: "Image too large. Max 5MB" }
     }
   } else {
-    if (!VIDEO_MIME_TYPES.includes(file.type)) {
+    if (!VIDEO_MIME_TYPES.includes(mimeType)) {
       return { ok: false, error: "Invalid video type. Allowed: MP4, WebM, MOV" }
     }
-    if (file.size > VIDEO_MAX_SIZE_BYTES) {
+    if (size > VIDEO_MAX_SIZE_BYTES) {
       return { ok: false, error: "Video too large. Max 50MB" }
     }
   }
