@@ -65,13 +65,23 @@ export default function ProductFormPage() {
       formData.append("media_type", mediaType)
 
       try {
-        const res = await fetch("/api/admin/upload/product-media", { method: "POST", body: formData })
+        const res = await fetch("/api/admin/upload/product-media/signed", { method: "POST", body: formData })
         const data = await res.json()
-        if (res.ok && data.url) {
-          setMedia((prev) => [...prev, { url: data.url, media_type: data.media_type, storage_path: data.path }])
-        } else {
-          alert(data.error || "Upload failed")
+        if (!res.ok || !data.signedUrl) {
+          alert(data.error || "Failed to get upload URL")
+          continue
         }
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .uploadToSignedUrl(data.path, data.token, file)
+
+        if (uploadError) {
+          alert(uploadError.message || "Upload failed")
+          continue
+        }
+
+        setMedia((prev) => [...prev, { url: data.url, media_type: data.media_type, storage_path: data.path }])
       } catch {
         alert("Upload failed")
       }
