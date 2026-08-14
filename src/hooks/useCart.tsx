@@ -13,7 +13,7 @@ import type { CartItem, Product, ProductVariant } from "@/types/database"
 import { getPrimaryImage } from "@/lib/media"
 
 type CartItemDisplay = CartItem & {
-  product: Pick<Product, "name" | "slug" | "price" | "sale_price" | "inventory_count">
+  product: Pick<Product, "name" | "slug" | "price" | "sale_price" | "inventory_count" | "pricing_enabled">
   image: string | null
   variant?: Pick<ProductVariant, "id" | "size" | "color"> | null
 }
@@ -64,7 +64,7 @@ function setLocalCart(items: CartItemDisplay[]) {
 }
 
 function getPrice(product: CartItemDisplay["product"]): number {
-  return product.sale_price ?? product.price
+  return product.sale_price ?? product.price ?? 0
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -87,24 +87,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const { data: rawItems } = await supabase
       .from("cart_items")
-      .select("*, products!inner(name, slug, price, sale_price, inventory_count, product_images(*)), product_variants(id, size, color)")
+      .select("*, products!inner(name, slug, price, sale_price, inventory_count, pricing_enabled, product_images(*)), product_variants(id, size, color)")
       .eq("cart_id", cart.id)
 
     if (rawItems) {
       setItems(
-        rawItems.map((ci: any) => ({
-          id: ci.id,
-          cart_id: ci.cart_id,
-          product_id: ci.product_id,
-          variant_id: ci.variant_id,
-          quantity: ci.quantity,
-          price_at_time: ci.price_at_time,
-          product: ci.products ?? { name: "Unknown", slug: "", price: 0, sale_price: null, inventory_count: 0 },
-          image: getPrimaryImage(ci.products?.product_images)?.url ?? null,
-          variant: ci.product_variants
-            ? { id: ci.product_variants.id, size: ci.product_variants.size, color: ci.product_variants.color }
-            : null,
-        }))
+        rawItems
+          .filter((ci: any) => ci.products?.pricing_enabled !== false)
+          .map((ci: any) => ({
+            id: ci.id,
+            cart_id: ci.cart_id,
+            product_id: ci.product_id,
+            variant_id: ci.variant_id,
+            quantity: ci.quantity,
+            price_at_time: ci.price_at_time,
+            product: ci.products ?? { name: "Unknown", slug: "", price: 0, sale_price: null, inventory_count: 0, pricing_enabled: true },
+            image: getPrimaryImage(ci.products?.product_images)?.url ?? null,
+            variant: ci.product_variants
+              ? { id: ci.product_variants.id, size: ci.product_variants.size, color: ci.product_variants.color }
+              : null,
+          }))
       )
     }
   }, [supabase])
@@ -157,6 +159,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       variant?: CartItemDisplay["variant"] | null
       quantity?: number
     }) => {
+      if (product.pricing_enabled === false) {
+        throw new Error("This product is available for inquiry only.")
+      }
+
       const price = getPrice(product)
 
       const {

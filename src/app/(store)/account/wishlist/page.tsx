@@ -82,9 +82,13 @@ export default function WishlistPage() {
                 </div>
                 <div className="mt-2 px-1">
                   <h3 className="text-sm font-medium">{p.name}</h3>
-                  <p className="text-sm font-semibold text-brand-forest">
-                    Rs. {(p.sale_price || p.price).toLocaleString()}
-                  </p>
+                  {p.pricing_enabled && p.price != null ? (
+                    <p className="text-sm font-semibold text-brand-forest">
+                      Rs. {(p.sale_price || p.price).toLocaleString()}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Inquiry only</p>
+                  )}
                 </div>
               </Link>
               <button

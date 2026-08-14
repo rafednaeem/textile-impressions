@@ -20,6 +20,10 @@ const EXISTING_KEYS = [
   "bank_account_title",
 ]
 
+const SETTING_LABELS: Record<string, string> = {
+  store_whatsapp: "WhatsApp Business Number",
+}
+
 const SETTING_DEFAULTS: Record<string, string> = {
   products_crafted_count: "500",
   store_whatsapp: "923001234567",
@@ -127,7 +131,7 @@ export default function AdminSettingsPage() {
           <div className="mt-3 space-y-4">
             {generalSettings.map(([key, value]) => (
               <div key={key} className="rounded-xl border border-border bg-card p-4">
-                <label className="block text-sm font-medium">{key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
+                <label className="block text-sm font-medium">{SETTING_LABELS[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
                 <textarea
                   value={value}
                   onChange={(e) => setEdits({ ...edits, [key]: e.target.value })}

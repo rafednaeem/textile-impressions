@@ -16,11 +16,11 @@ export async function generateMetadata({
   const supabase = await createClient()
   const { data } = await supabase
     .from("products")
-    .select("name, description, sale_price, price, category:categories(name, slug)")
+    .select("name, description, sale_price, price, pricing_enabled, whatsapp_inquiry_enabled, category:categories(name, slug)")
     .eq("slug", slug)
     .single()
 
-  const product = data as { name: string; description: string | null; sale_price: number | null; price: number; category: { name: string; slug: string } | null } | null
+  const product = data as { name: string; description: string | null; sale_price: number | null; price: number | null; pricing_enabled: boolean; whatsapp_inquiry_enabled: boolean; category: { name: string; slug: string } | null } | null
 
   if (!product) return { title: "Product Not Found" }
 
@@ -62,27 +62,32 @@ export default async function ProductPage({
     .eq("slug", slug)
     .single()
 
-  const product = raw as { name: string; description: string | null; price: number; sale_price: number | null; slug: string; category: { name: string; slug: string } | null } | null
+  const product = raw as { name: string; description: string | null; price: number | null; sale_price: number | null; pricing_enabled: boolean; slug: string; category: { name: string; slug: string } | null } | null
 
   if (!product) return <ProductDetailContent slug={slug} />
 
-  const productSchema = {
+  const activePrice = product.pricing_enabled ? (product.sale_price || product.price) : null
+
+  const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description || undefined,
     image: `${baseUrl}/api/og/product/${slug}`,
-    offers: {
-      "@type": "Offer",
-      price: product.sale_price || product.price,
-      priceCurrency: "PKR",
-      availability: "https://schema.org/InStock",
-      url: `${baseUrl}/products/${slug}`,
-    },
     brand: {
       "@type": "Brand",
       name: storeName,
     },
+  }
+
+  if (activePrice != null) {
+    productSchema.offers = {
+      "@type": "Offer",
+      price: activePrice,
+      priceCurrency: "PKR",
+      availability: "https://schema.org/InStock",
+      url: `${baseUrl}/products/${slug}`,
+    }
   }
 
   const breadcrumbItems = [

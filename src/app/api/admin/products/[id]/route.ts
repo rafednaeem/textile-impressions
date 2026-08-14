@@ -43,10 +43,26 @@ export async function PATCH(
     "name", "slug", "description", "short_description", "price", "sale_price",
     "inventory_count", "is_active", "is_featured", "category_id",
     "tags", "craft_type", "fabric", "care_instructions",
+    "pricing_enabled", "whatsapp_inquiry_enabled",
   ]
 
   for (const field of fields) {
     if (body[field] !== undefined) updateData[field] = body[field]
+  }
+
+  const isPricingEnabled = body.pricing_enabled === true
+
+  if (body.pricing_enabled === false && body.whatsapp_inquiry_enabled === false) {
+    return NextResponse.json({ error: "Please enable either Pricing or WhatsApp Inquiry for this product." }, { status: 400 })
+  }
+
+  if (isPricingEnabled && body.price !== undefined && (body.price === null || Number.isNaN(Number(body.price)) || Number(body.price) < 0)) {
+    return NextResponse.json({ error: "Price is required when Pricing is enabled" }, { status: 400 })
+  }
+
+  if (!isPricingEnabled) {
+    delete updateData.price
+    delete updateData.sale_price
   }
 
   const { error: updateError } = await supabase.from("products").update(updateData).eq("id", id)

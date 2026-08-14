@@ -46,12 +46,14 @@ export interface Product {
   slug: string
   description: string | null
   short_description: string | null
-  price: number
+  price: number | null
   sale_price: number | null
   sku: string | null
   inventory_count: number
   is_active: boolean
   is_featured: boolean
+  pricing_enabled: boolean
+  whatsapp_inquiry_enabled: boolean
   category_id: string | null
   tags: string[]
   craft_type: string | null

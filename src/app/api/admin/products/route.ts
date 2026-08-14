@@ -36,18 +36,33 @@ export async function POST(request: Request) {
   if (error) return error
 
   const body = await request.json()
-  const { name, slug, description, short_description, price, sale_price, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, media, images, sizes, colors } = body
+  const { name, slug, description, short_description, price, sale_price, inventory_count, category_id, tags, craft_type, fabric, care_instructions, is_featured, pricing_enabled, whatsapp_inquiry_enabled, media, images, sizes, colors } = body
 
-  if (!name || !slug || price === undefined) {
+  const isPricingEnabled = pricing_enabled === true
+  const isWhatsAppEnabled = whatsapp_inquiry_enabled === true
+
+  if (!name || !slug) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
+
+  if (!isPricingEnabled && !isWhatsAppEnabled) {
+    return NextResponse.json({ error: "Please enable either Pricing or WhatsApp Inquiry for this product." }, { status: 400 })
+  }
+
+  if (isPricingEnabled && (price === undefined || price === null || Number.isNaN(Number(price)) || Number(price) < 0)) {
+    return NextResponse.json({ error: "Price is required when Pricing is enabled" }, { status: 400 })
+  }
+
+  const finalPrice = isPricingEnabled ? Number(price) : null
+  const finalSalePrice = isPricingEnabled && sale_price ? Number(sale_price) : null
 
   const { data: product, error: productError } = await supabase
     .from("products")
     .insert({
-      name, slug, description, short_description, price, sale_price: sale_price || null,
+      name, slug, description, short_description, price: finalPrice, sale_price: finalSalePrice,
       inventory_count: inventory_count || 0, category_id: category_id || null,
       is_active: true, is_featured: is_featured || false,
+      pricing_enabled: isPricingEnabled, whatsapp_inquiry_enabled: isWhatsAppEnabled,
       tags: tags || [], craft_type: craft_type || "Plain", fabric: fabric || null, care_instructions: care_instructions || null,
     })
     .select("id")

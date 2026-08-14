@@ -109,6 +109,8 @@ export async function duplicateProduct(productId: string) {
       inventory_count: 0,
       is_active: false,
       is_featured: false,
+      pricing_enabled: original.pricing_enabled ?? true,
+      whatsapp_inquiry_enabled: original.whatsapp_inquiry_enabled ?? false,
       category_id: original.category_id,
       tags: original.tags,
       craft_type: original.craft_type || "Plain",

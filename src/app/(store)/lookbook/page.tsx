@@ -34,7 +34,7 @@ type LookbookCollection = {
     products: {
       name: string
       slug: string
-      price: number
+      price: number | null
       sale_price: number | null
       craft_type: string | null
     } | null

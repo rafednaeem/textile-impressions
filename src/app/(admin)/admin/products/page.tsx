@@ -129,10 +129,14 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{product.categories?.name || "—"}</td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {product.sale_price ? (
-                        <span className="text-red-600">Rs. {Number(product.sale_price).toLocaleString()}</span>
+                      {product.pricing_enabled ? (
+                        product.sale_price ? (
+                          <span className="text-red-600">Rs. {Number(product.sale_price).toLocaleString()}</span>
+                        ) : (
+                          <span>Rs. {Number(product.price).toLocaleString()}</span>
+                        )
                       ) : (
-                        <span>Rs. {Number(product.price).toLocaleString()}</span>
+                        <span className="text-muted-foreground">Inquiry</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">

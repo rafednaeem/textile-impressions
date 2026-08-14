@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, X, GripVertical, Play, ImageIcon, Film } from "lucide-react"
+import { ChevronLeft, X, GripVertical, Play, ImageIcon, Film, Check, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { MediaType } from "@/lib/media"
@@ -37,6 +37,7 @@ export default function EditProductPage({
     name: "", slug: "", description: "", short_description: "", price: "",
     sale_price: "", inventory_count: "0",
     category_id: "", is_featured: false, is_active: true,
+    pricing_enabled: true, whatsapp_inquiry_enabled: false,
     tags: "", craft_type: "Plain", fabric: "", care_instructions: "",
     sizes: [] as string[], colors: [] as { name: string; hex: string }[],
   })
@@ -58,12 +59,14 @@ export default function EditProductPage({
           slug: product.slug,
           description: product.description || "",
           short_description: product.short_description || "",
-          price: product.price.toString(),
+          price: product.price != null ? product.price.toString() : "",
           sale_price: product.sale_price?.toString() || "",
           inventory_count: product.inventory_count.toString(),
           category_id: product.category_id || "",
           is_featured: product.is_featured,
           is_active: product.is_active,
+          pricing_enabled: product.pricing_enabled ?? true,
+          whatsapp_inquiry_enabled: product.whatsapp_inquiry_enabled ?? false,
           tags: (product.tags || []).join(", "),
           craft_type: product.craft_type || "Plain",
           fabric: product.fabric || "",
@@ -198,13 +201,24 @@ export default function EditProductPage({
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!form.pricing_enabled && !form.whatsapp_inquiry_enabled) {
+      toast.error("Please enable either Pricing or WhatsApp Inquiry for this product.")
+      return
+    }
+
+    if (form.pricing_enabled && (form.price === "" || Number.isNaN(parseFloat(form.price)))) {
+      toast.error("Price is required when Pricing is enabled.")
+      return
+    }
+
     setSaving(true)
 
     try {
       const body = {
         ...form,
-        price: parseFloat(form.price),
-        sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
+        price: form.pricing_enabled ? parseFloat(form.price) : null,
+        sale_price: form.pricing_enabled && form.sale_price ? parseFloat(form.sale_price) : null,
         inventory_count: parseInt(form.inventory_count),
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
         media: media.map((item) => ({
@@ -293,22 +307,67 @@ export default function EditProductPage({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-heading text-lg font-bold text-brand-forest">Pricing & Inventory</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Price (PKR) *</label>
-              <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Sale Price</label>
-              <input type="number" min="0" step="0.01" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Inventory Count</label>
-              <input type="number" min="0" value={form.inventory_count} onChange={(e) => setForm({ ...form, inventory_count: e.target.value })} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
-            </div>
+        <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-brand-forest">Product Selling Options</h2>
+            <p className="text-sm text-muted-foreground">Choose how customers can interact with this product.</p>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-start gap-3 rounded-lg border border-border p-4 cursor-pointer transition-colors hover:bg-muted/30">
+              <input
+                type="checkbox"
+                checked={form.pricing_enabled}
+                onChange={(e) => setForm({ ...form, pricing_enabled: e.target.checked })}
+                className="mt-0.5 rounded border-border text-brand-forest"
+              />
+              <div>
+                <span className="block text-sm font-medium">Enable Pricing</span>
+                <span className="block text-xs text-muted-foreground">Customers can see the price and purchase this product.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded-lg border border-border p-4 cursor-pointer transition-colors hover:bg-muted/30">
+              <input
+                type="checkbox"
+                checked={form.whatsapp_inquiry_enabled}
+                onChange={(e) => setForm({ ...form, whatsapp_inquiry_enabled: e.target.checked })}
+                className="mt-0.5 rounded border-border text-brand-forest"
+              />
+              <div>
+                <span className="block text-sm font-medium">Enable WhatsApp Inquiry</span>
+                <span className="block text-xs text-muted-foreground">Customers can inquire about this product on WhatsApp.</span>
+              </div>
+            </label>
+          </div>
+
+          {!form.pricing_enabled && !form.whatsapp_inquiry_enabled && (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+              <AlertTriangle className="h-4 w-4" />
+              Please enable at least one selling option.
+            </div>
+          )}
+
+          {form.pricing_enabled ? (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Price (PKR) *</label>
+                <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required={form.pricing_enabled} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Sale Price</label>
+                <input type="number" min="0" step="0.01" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Inventory Count</label>
+                <input type="number" min="0" value={form.inventory_count} onChange={(e) => setForm({ ...form, inventory_count: e.target.value })} className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm focus:border-brand-forest focus:outline-none" />
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
+              Pricing is disabled for this product. Existing price data (if any) will remain stored but will not be used.
+            </div>
+          )}
+
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} className="rounded border-border text-brand-forest" />
@@ -318,6 +377,27 @@ export default function EditProductPage({
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded border-border text-brand-forest" />
               Active
             </label>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-brand-forest">Selling method</p>
+            <div className="mt-2 flex flex-wrap gap-3 text-sm">
+              {form.pricing_enabled && (
+                <span className="inline-flex items-center gap-1 text-green-700">
+                  <Check className="h-4 w-4" /> Pricing
+                </span>
+              )}
+              {form.whatsapp_inquiry_enabled && (
+                <span className="inline-flex items-center gap-1 text-green-700">
+                  <Check className="h-4 w-4" /> WhatsApp Inquiry
+                </span>
+              )}
+              {!form.pricing_enabled && !form.whatsapp_inquiry_enabled && (
+                <span className="inline-flex items-center gap-1 text-amber-700">
+                  <AlertTriangle className="h-4 w-4" /> Please enable at least one option.
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

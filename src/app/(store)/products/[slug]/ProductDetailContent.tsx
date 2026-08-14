@@ -4,14 +4,16 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Heart, Minus, Plus, ShoppingBag, Check, Play } from "lucide-react"
+import { Heart, Minus, Plus, ShoppingBag, Check, Play, MessageCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, ProductMedia, ProductVariant, Category } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
+import { useSiteSettings } from "@/hooks/useSiteSettings"
 import ProductCard from "@/components/store/ProductCard"
 import { getPrimaryImage } from "@/lib/media"
+import { buildWhatsAppInquiryUrl } from "@/lib/whatsapp"
 
 const tabs = ["Description", "Size Guide", "Care Instructions"] as const
 
@@ -43,6 +45,7 @@ const colorMap: Record<string, string> = {
 export default function ProductDetailContent({ slug }: { slug: string }) {
   const supabase = createClient()
   const { addItem } = useCart()
+  const { whatsappNumber } = useSiteSettings()
 
   const [product, setProduct] = useState<(Product & { category?: Category }) | null>(null)
   const [media, setMedia] = useState<ProductMedia[]>([])
@@ -151,9 +154,12 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
 
   if (!loading && !product) notFound()
 
-  const hasDiscount = product?.sale_price != null && product!.sale_price < product!.price
-  const displayPrice = product?.sale_price ?? product?.price ?? 0
+  const productPrice = product?.price ?? null
+  const hasPricing = product?.pricing_enabled === true && productPrice != null
+  const hasDiscount = hasPricing && product?.sale_price != null && product.sale_price < productPrice!
+  const displayPrice = hasPricing ? (product?.sale_price ?? productPrice) : null
   const inventoryCount = product?.inventory_count ?? 0
+  const whatsappUrl = product && product.whatsapp_inquiry_enabled ? buildWhatsAppInquiryUrl(whatsappNumber, product.name) : null
 
   const availableSizes = [...new Set(variants.map((v) => v.size).filter(Boolean))]
   const availableColors = [...new Set(variants.map((v) => v.color).filter(Boolean))]
@@ -178,7 +184,12 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
   const isOutOfStock = inventoryCount === 0
 
   const handleAddToCart = () => {
-    if (!product || isOutOfStock || needsSelection) return
+    if (!product || isOutOfStock || needsSelection || !hasPricing) {
+      if (product && !hasPricing) {
+        toast.error("This product is available for inquiry only.")
+      }
+      return
+    }
     addItem({
       product: {
         id: product.id,
@@ -187,6 +198,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
         price: product.price,
         sale_price: product.sale_price,
         inventory_count: product.inventory_count,
+        pricing_enabled: product.pricing_enabled,
       },
       image: getPrimaryImage(media)?.url ?? `https://picsum.photos/seed/${slug}/600/800`,
       variant: currentVariant
@@ -306,7 +318,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
             )}
             {hasDiscount && (
               <span className="absolute left-3 top-3 rounded-full bg-brand-terracotta px-3 py-1 text-xs font-medium text-white">
-                {Math.round(((product.price - product.sale_price!) / product.price) * 100)}% OFF
+                {Math.round(((productPrice! - product.sale_price!) / productPrice!) * 100)}% OFF
               </span>
             )}
           </div>
@@ -357,19 +369,21 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
             {product.name}
           </h1>
 
-          <div className="mt-4 flex items-baseline gap-3">
-            <span
-              className="text-2xl font-bold text-brand-forest"
-              data-testid="product-price"
-            >
-              Rs. {displayPrice.toLocaleString()}
-            </span>
-            {hasDiscount && (
-              <span className="text-lg text-muted-foreground line-through">
-                Rs. {product.price.toLocaleString()}
+          {hasPricing && displayPrice != null && (
+            <div className="mt-4 flex items-baseline gap-3">
+              <span
+                className="text-2xl font-bold text-brand-forest"
+                data-testid="product-price"
+              >
+                Rs. {displayPrice.toLocaleString()}
               </span>
-            )}
-          </div>
+              {hasDiscount && (
+                <span className="text-lg text-muted-foreground line-through">
+                  Rs. {productPrice!.toLocaleString()}
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="mt-4 space-y-2 text-sm text-muted-foreground">
             {product.sku && (
@@ -445,54 +459,69 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
             </div>
           )}
 
-          <div className="mt-6">
-            <h3 className="mb-2 text-sm font-medium">Quantity</h3>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="w-10 text-center text-lg font-medium">{quantity}</span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+          {hasPricing && (
+            <div className="mt-6">
+              <h3 className="mb-2 text-sm font-medium">Quantity</h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center text-lg font-medium">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock || needsSelection}
-              data-testid="add-to-cart-button"
-              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-all hover:bg-brand-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <AnimatePresence mode="wait">
-                {added ? (
-                  <motion.span
-                    key="added"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-2"
-                  >
-                    <Check className="h-4 w-4" /> Added to Cart
-                  </motion.span>
-                ) : (
-                  <motion.span key="add" className="flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4" />
-                    {isOutOfStock
-                      ? "Out of Stock"
-                      : needsSelection
-                        ? "Select Options"
-                        : "Add to Cart"}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </button>
+            {hasPricing && (
+              <button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || needsSelection}
+                data-testid="add-to-cart-button"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-forest px-8 py-3 text-sm font-medium text-white transition-all hover:bg-brand-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <AnimatePresence mode="wait">
+                  {added ? (
+                    <motion.span
+                      key="added"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <Check className="h-4 w-4" /> Added to Cart
+                    </motion.span>
+                  ) : (
+                    <motion.span key="add" className="flex items-center gap-2">
+                      <ShoppingBag className="h-4 w-4" />
+                      {isOutOfStock
+                        ? "Out of Stock"
+                        : needsSelection
+                          ? "Select Options"
+                          : "Add to Cart"}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            )}
+            {whatsappUrl && (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1ebe57]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Inquire on WhatsApp
+              </a>
+            )}
             <button
               onClick={handleWishlist}
               disabled={wishlistLoading}
@@ -554,7 +583,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} whatsappNumber={whatsappNumber} />
             ))}
           </div>
         </section>

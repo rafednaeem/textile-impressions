@@ -3,16 +3,18 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, ShoppingBag, Play } from "lucide-react"
+import { Heart, ShoppingBag, Play, MessageCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import type { Product } from "@/types/database"
 import { useCart } from "@/hooks/useCart"
 import { getProductImages, hasProductVideo } from "@/lib/media"
+import { buildWhatsAppInquiryUrl } from "@/lib/whatsapp"
 
 interface ProductCardProps {
   product: Product
+  whatsappNumber?: string
 }
 
 const craftTagClasses: Record<string, string> = {
@@ -25,7 +27,7 @@ const craftTagClasses: Record<string, string> = {
 
 const slideTransition = { duration: 0.35, ease: "easeInOut" as const }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, whatsappNumber }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
   const [hoverIdx, setHoverIdx] = useState(0)
@@ -33,13 +35,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart()
   const supabase = createClient()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const { id: productId, sale_price, price, name, slug, inventory_count, craft_type, product_images } = product
-  const hasDiscount = sale_price != null && sale_price < price
-  const displayPrice = sale_price ?? price
+  const { id: productId, sale_price, price, name, slug, inventory_count, craft_type, product_images, pricing_enabled, whatsapp_inquiry_enabled } = product
+  const hasPricing = pricing_enabled === true && price != null
+  const hasDiscount = hasPricing && sale_price != null && sale_price < price
+  const displayPrice = hasPricing ? (sale_price ?? price) : null
   const isLowStock = inventory_count > 0 && inventory_count < 5
   const isOutOfStock = inventory_count === 0
   const craftType = craft_type || "Plain"
   const craftClass = craftTagClasses[craftType] || "bg-gray-200 text-gray-700"
+  const whatsappUrl = whatsapp_inquiry_enabled ? buildWhatsAppInquiryUrl(whatsappNumber, name) : null
 
   const allImages = getProductImages(product_images)
   const imageCount = allImages.length
@@ -93,7 +97,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (isOutOfStock) return
+    if (isOutOfStock || !hasPricing) return
     addItem({
       product: {
         id: productId,
@@ -102,6 +106,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         price,
         sale_price,
         inventory_count,
+        pricing_enabled,
       },
       image: defaultUrl,
     })
@@ -189,7 +194,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
           {hasDiscount && (
             <span className="absolute left-2 top-9 rounded-full bg-brand-crimson px-2.5 py-0.5 text-xs font-medium text-white">
-              {Math.round(((price - sale_price!) / price) * 100)}% OFF
+              {Math.round(((price! - sale_price!) / price!) * 100)}% OFF
             </span>
           )}
           {isLowStock && (
@@ -207,30 +212,47 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
 
           <div className="absolute inset-x-0 bottom-0 translate-y-full p-3 transition-transform duration-300 group-hover:translate-y-0">
-            <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              data-testid="quick-add-button"
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-indigo py-2.5 text-sm font-medium text-brand-ivory shadow-lg transition-colors hover:bg-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              {isOutOfStock ? "Out of Stock" : "Quick Add"}
-            </button>
+            {hasPricing ? (
+              <button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock}
+                data-testid="quick-add-button"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-indigo py-2.5 text-sm font-medium text-brand-ivory shadow-lg transition-colors hover:bg-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                {isOutOfStock ? "Out of Stock" : "Quick Add"}
+              </button>
+            ) : whatsappUrl ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-[#1ebe57]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Inquire on WhatsApp
+              </button>
+            ) : null}
           </div>
         </div>
 
         <div className="mt-3 space-y-1 px-1">
           <h3 className="text-sm font-medium leading-tight">{name}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-brand-indigo">
-              Rs. {displayPrice.toLocaleString()}
-            </span>
-            {hasDiscount && (
-              <span className="text-xs text-muted-foreground line-through">
-                Rs. {price.toLocaleString()}
+          {hasPricing && displayPrice != null && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-brand-indigo">
+                Rs. {displayPrice.toLocaleString()}
               </span>
-            )}
-          </div>
+              {hasDiscount && (
+                <span className="text-xs text-muted-foreground line-through">
+                  Rs. {price!.toLocaleString()}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </Link>
     </motion.div>

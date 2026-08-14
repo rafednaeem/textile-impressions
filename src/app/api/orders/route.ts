@@ -32,6 +32,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is required for guest checkout" }, { status: 400 })
     }
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const productIds = Array.from(new Set(items.map((i) => i.product_id).filter((id) => uuidRegex.test(id))))
+    const productSlugs = Array.from(new Set(items.map((i) => i.product_id).filter((id) => !uuidRegex.test(id) && typeof id === "string")))
+
+    const { data: uuidProductFlags } = await serviceRole
+      .from("products")
+      .select("id, pricing_enabled")
+      .in("id", productIds.length ? productIds : ["00000000-0000-0000-0000-000000000000"])
+
+    const slugPricingDisabled = productSlugs.length
+      ? await serviceRole.from("products").select("slug, pricing_enabled").in("slug", productSlugs).then(({ data }) => (data || []).some((p) => p.pricing_enabled === false))
+      : false
+
+    const pricingDisabledIds = new Set((uuidProductFlags || []).filter((p) => p.pricing_enabled === false).map((p) => p.id))
+    if (pricingDisabledIds.size > 0 || slugPricingDisabled) {
+      return NextResponse.json({ error: "One or more items are not available for purchase." }, { status: 400 })
+    }
+
     const subtotal = items.reduce(
       (sum: number, item: any) => sum + item.unit_price * item.quantity,
       0
@@ -72,8 +90,6 @@ export async function POST(request: Request) {
     }
 
     const order = _order as unknown as { id: string; order_number: string; status: string }
-
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
     const resolvedItems = await Promise.all(
       items.map(async (item: any) => {

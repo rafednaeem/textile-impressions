@@ -7,6 +7,7 @@ import { SlidersHorizontal, ChevronDown, ChevronRight, X, Scissors } from "lucid
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
+import { useSiteSettings } from "@/hooks/useSiteSettings"
 
 const PAGE_SIZE = 12
 
@@ -27,6 +28,7 @@ export default function ShopContent() {
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+  const { whatsappNumber } = useSiteSettings()
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -350,7 +352,7 @@ export default function ShopContent() {
             <>
               <motion.div initial="initial" animate="animate" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} />
                 ))}
               </motion.div>
               {totalPages > 1 && (

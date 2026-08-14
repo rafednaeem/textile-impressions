@@ -7,6 +7,7 @@ import { Palette, Droplets, Brush, Leaf, ArrowRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
+import { useSiteSettings } from "@/hooks/useSiteSettings"
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -41,6 +42,7 @@ const colorCategories = [
 
 export default function ColorsContent() {
   const supabase = createClient()
+  const { whatsappNumber } = useSiteSettings()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -176,7 +178,7 @@ export default function ColorsContent() {
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} />
               ))}
             </motion.div>
           </div>

@@ -12,11 +12,23 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { items, sessionId } = body
+    const { items, sessionId } = body as {
+      items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; price_at_time: number }>
+      sessionId?: string
+    }
 
     if (!items?.length) {
       return NextResponse.json({ error: "No items to merge" }, { status: 400 })
     }
+
+    const productIds = Array.from(new Set(items.map((i) => i.product_id).filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))))
+    const { data: productFlags } = await supabase
+      .from("products")
+      .select("id, pricing_enabled")
+      .in("id", productIds.length ? productIds : ["00000000-0000-0000-0000-000000000000"])
+
+    const pricingDisabledIds = new Set((productFlags || []).filter((p) => p.pricing_enabled === false).map((p) => p.id))
+    const validItems = items.filter((item) => !pricingDisabledIds.has(item.product_id))
 
     const { data: existingCart } = await supabase
       .from("carts")
@@ -37,7 +49,7 @@ export async function POST(request: Request) {
       cartId = newCart.id
     }
 
-    for (const item of items) {
+    for (const item of validItems) {
       const existingQuery = supabase
         .from("cart_items")
         .select("id, quantity")
