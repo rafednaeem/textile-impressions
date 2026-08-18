@@ -3,6 +3,8 @@ import Script from "next/script"
 import { storeName, baseUrl } from "@/lib/constants"
 import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
 import SkillsStudioContent from "./SkillsStudioContent"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -18,7 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function SkillsStudioPage() {
+export default async function SkillsStudioPage() {
+  let content = defaultWebsiteContent["skills-studio"]
+  try {
+    content = await getPageWebsiteContent("skills-studio")
+  } catch (error) {
+    console.error("[SkillsStudioPage] Failed to load content:", error)
+  }
+
   const breadcrumb = breadcrumbSchema([
     { name: "Home", url: canonicalUrl("/") },
     { name: "Skills Studio", url: canonicalUrl("/skills-studio") },
@@ -29,7 +38,7 @@ export default function SkillsStudioPage() {
       <Script id="breadcrumb-skills-studio" type="application/ld+json" strategy="afterInteractive">
         {JSON.stringify(breadcrumb)}
       </Script>
-      <SkillsStudioContent />
+      <SkillsStudioContent content={content} />
     </>
   )
 }

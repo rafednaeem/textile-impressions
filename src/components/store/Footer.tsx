@@ -4,21 +4,29 @@ import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
 import { withTimeout } from "@/lib/promise-timeout"
 import Logo from "@/components/shared/Logo"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 
 export default async function Footer() {
   let settings: Record<string, string> = {}
+  let content = defaultWebsiteContent.footer
   try {
     const supabase = await createClient()
-    const { data } = await withTimeout(
-      supabase.from("site_settings").select("key, value"),
-      5000,
-      { data: null }
-    )
+    const [{ data }, pageContent] = await Promise.all([
+      withTimeout(
+        supabase.from("site_settings").select("key, value"),
+        5000,
+        { data: null }
+      ),
+      getPageWebsiteContent("footer"),
+    ])
     settings = extractSettings(data)
+    content = pageContent
   } catch (error) {
-    console.error("[Footer] Failed to load site settings:", error)
+    console.error("[Footer] Failed to load settings/content:", error)
   }
   const s = settings
+  const c = content
   const currentYear = new Date().getFullYear()
 
   const phone = s.store_phone || "+92 300 1234567"
@@ -33,14 +41,13 @@ export default async function Footer() {
           <div>
             <Logo className="h-10 w-32" />
             <p className="mt-2 text-sm text-white/70">
-              Handcrafted Pakistani fashion, made with love. Premium quality kurtas, dupattas,
-              suits, and accessories.
+              {c?.description.text ?? "Handcrafted Pakistani fashion, made with love. Premium quality kurtas, dupattas, suits, and accessories."}
             </p>
           </div>
 
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/80">
-              Quick Links
+              {c?.quick_links.heading ?? "Quick Links"}
             </h4>
             <ul className="space-y-2 text-sm text-white/70">
               <li>
@@ -93,7 +100,7 @@ export default async function Footer() {
 
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/80">
-              Payment Methods
+              {c?.payment_methods.heading ?? "Payment Methods"}
             </h4>
             <ul className="space-y-2 text-sm text-white/70">
               <li className="flex items-center gap-2">
@@ -105,7 +112,7 @@ export default async function Footer() {
 
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/80">
-              Contact Us
+              {c?.contact.heading ?? "Contact Us"}
             </h4>
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-2">
@@ -140,7 +147,7 @@ export default async function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
-          &copy; {currentYear} Textile Impressions. All rights reserved.
+          {(c?.copyright.text ?? "© {year} Textile Impressions. All rights reserved.").replace("{year}", String(currentYear))}
         </div>
       </div>
     </footer>

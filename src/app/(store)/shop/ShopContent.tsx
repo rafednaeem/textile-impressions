@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
 import { useSiteSettings } from "@/hooks/useSiteSettings"
+import type { getPageWebsiteContent } from "@/lib/website-content/server"
 
 const PAGE_SIZE = 12
 
@@ -23,7 +24,12 @@ interface CategoryGroup {
   children: Category[]
 }
 
-export default function ShopContent() {
+export default function ShopContent({
+  content,
+}: {
+  content: Awaited<ReturnType<typeof getPageWebsiteContent>>
+}) {
+  const c = content
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -176,8 +182,8 @@ export default function ShopContent() {
         <div>
           <h1 className="font-heading text-3xl font-bold text-brand-forest">
             {categorySlug
-              ? categories.find((c) => c.slug === categorySlug)?.name || "Shop"
-              : "Shop All"}
+              ? categories.find((cat) => cat.slug === categorySlug)?.name || c.page_intro.heading
+              : c.page_intro.heading}
           </h1>
           {!loading && <p className="text-sm text-muted-foreground">{count} products</p>}
         </div>
@@ -213,9 +219,9 @@ export default function ShopContent() {
               <Scissors className="h-5 w-5 text-brand-crimson" />
             </div>
             <div>
-              <h2 className="font-heading text-lg font-semibold text-brand-indigo">Ready for Dyeing (RFD) Fabric</h2>
+              <h2 className="font-heading text-lg font-semibold text-brand-indigo">{c.rfd_promo.heading}</h2>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Small-quantity RFD fabric for quality printing, available for students, designers, and entrepreneurs.
+                {c.rfd_promo.description}
               </p>
             </div>
           </div>
@@ -225,7 +231,7 @@ export default function ShopContent() {
             rel="noopener noreferrer"
             className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-brand-saffron px-5 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90"
           >
-            Enquire on WhatsApp
+            {c.rfd_promo.button_text}
           </a>
         </div>
       </div>

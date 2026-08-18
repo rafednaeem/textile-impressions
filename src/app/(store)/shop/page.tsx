@@ -6,6 +6,8 @@ import { storeName, baseUrl } from "@/lib/constants"
 import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
 import ShopContent from "./ShopContent"
 import ProductGridSkeleton from "@/components/store/ProductGridSkeleton"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 
 export const revalidate = 300
 
@@ -51,7 +53,14 @@ export async function generateMetadata({
   }
 }
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  let content = defaultWebsiteContent.shop
+  try {
+    content = await getPageWebsiteContent("shop")
+  } catch (error) {
+    console.error("[ShopPage] Failed to load content:", error)
+  }
+
   const breadcrumb = breadcrumbSchema([
     { name: "Home", url: canonicalUrl("/") },
     { name: "Shop", url: canonicalUrl("/shop") },
@@ -63,7 +72,7 @@ export default function ShopPage() {
         {JSON.stringify(breadcrumb)}
       </Script>
       <Suspense fallback={<ProductGridSkeleton />}>
-        <ShopContent />
+        <ShopContent content={content} />
       </Suspense>
     </>
   )

@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import Script from "next/script"
 import { storeName, baseUrl } from "@/lib/constants"
 import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 import AboutContent from "./AboutContent"
 
 export const metadata: Metadata = {
@@ -17,7 +19,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  let content = defaultWebsiteContent.about
+  try {
+    content = await getPageWebsiteContent("about")
+  } catch (error) {
+    console.error("[AboutPage] Failed to load content:", error)
+  }
+
   const breadcrumb = breadcrumbSchema([
     { name: "Home", url: canonicalUrl("/") },
     { name: "About", url: canonicalUrl("/about") },
@@ -28,7 +37,7 @@ export default function AboutPage() {
       <Script id="breadcrumb-about" type="application/ld+json" strategy="afterInteractive">
         {JSON.stringify(breadcrumb)}
       </Script>
-      <AboutContent />
+      <AboutContent content={content} />
     </>
   )
 }

@@ -8,6 +8,7 @@ import { Calendar, Clock, MapPin, Monitor, Users, Filter, ChevronDown, BookOpen,
 import { createClient } from "@/lib/supabase/client"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS, WORKSHOP_LEVEL_LABELS } from "@/lib/constants"
+import type { getPageWebsiteContent } from "@/lib/website-content/server"
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -26,7 +27,12 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-export default function SkillsStudioContent() {
+export default function SkillsStudioContent({
+  content,
+}: {
+  content: Awaited<ReturnType<typeof getPageWebsiteContent>>
+}) {
+  const c = content
   const supabase = createClient()
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,13 +72,12 @@ export default function SkillsStudioContent() {
         </div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Skills Studio</p>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">{c.hero.label}</p>
             <h1 className="mt-4 font-heading text-4xl font-semibold sm:text-5xl lg:text-6xl">
-              Learn. Create. Earn.
+              {c.hero.heading}
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-brand-ivory/80">
-              Theory and practical workshops on sustainable production, natural dyes, block printing, and
-              value addition — designed for students, small businesses, and textile schools across Pakistan.
+              {c.hero.description}
             </p>
           </motion.div>
         </div>
@@ -184,29 +189,28 @@ export default function SkillsStudioContent() {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Workspace Facility</p>
-          <h2 className="mt-3 font-heading text-4xl font-semibold text-brand-indigo">Learn in a fully equipped space</h2>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">{c.workspace.label}</p>
+          <h2 className="mt-3 font-heading text-4xl font-semibold text-brand-indigo">{c.workspace.heading}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Our classroom, lecture space, and working lab give students the resources to experiment with textiles
-            and apply their knowledge to different materials.
+            {c.workspace.description}
           </p>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {[
             {
               icon: BookOpen,
-              title: "Classroom & Lectures",
-              description: "A fully equipped classroom for theory sessions, demonstrations, and group learning.",
+              title: c.facility_cards.card_1_title,
+              description: c.facility_cards.card_1_description,
             },
             {
               icon: FlaskConical,
-              title: "Working Lab",
-              description: "Hands-on space to experiment with dyes, prints, fabrics, and finishing techniques.",
+              title: c.facility_cards.card_2_title,
+              description: c.facility_cards.card_2_description,
             },
             {
               icon: Building2,
-              title: "Collaborative Spaces",
-              description: "Partnerships with institutes and producers so designers can access resources beyond our walls.",
+              title: c.facility_cards.card_3_title,
+              description: c.facility_cards.card_3_description,
             },
           ].map((item) => (
             <motion.div
@@ -225,10 +229,9 @@ export default function SkillsStudioContent() {
       <section className="bg-brand-indigo py-16 text-brand-ivory sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div {...fadeUp}>
-            <h2 className="font-heading text-3xl font-semibold sm:text-4xl">Ready to start your craft journey?</h2>
+            <h2 className="font-heading text-3xl font-semibold sm:text-4xl">{c.cta.heading}</h2>
             <p className="mt-4 text-lg text-brand-ivory/80">
-              Our workshops blend theory with practice so you can build skills that create real opportunities —
-              whether you are a beginner, a student, or a small business looking to add value through sustainability.
+              {c.cta.description}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
@@ -237,13 +240,13 @@ export default function SkillsStudioContent() {
                 rel="noopener noreferrer"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90"
               >
-                Ask on WhatsApp
+                {c.cta.button_primary}
               </a>
               <Link
                 href="/shop"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-brand-ivory px-7 text-sm font-bold text-brand-ivory transition hover:bg-brand-ivory hover:text-brand-indigo"
               >
-                Browse Products
+                {c.cta.button_secondary}
               </Link>
             </div>
           </motion.div>

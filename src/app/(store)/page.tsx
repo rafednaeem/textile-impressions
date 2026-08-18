@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server"
 import { extractSettings } from "@/lib/settings"
 import { canonicalUrl, organizationSchema, websiteSchema, breadcrumbSchema } from "@/lib/seo"
 import { withTimeout } from "@/lib/promise-timeout"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 import HomeContent from "./HomeContent"
 
 export const revalidate = 600
@@ -36,17 +38,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   let whatsapp = "923001234567"
+  let content = defaultWebsiteContent.home
   try {
     const supabase = await createClient()
-    const { data } = await withTimeout(
-      supabase.from("site_settings").select("key, value"),
-      5000,
-      { data: null }
-    )
+    const [{ data }, pageContent] = await Promise.all([
+      withTimeout(
+        supabase.from("site_settings").select("key, value"),
+        5000,
+        { data: null }
+      ),
+      getPageWebsiteContent("home"),
+    ])
     const s = extractSettings(data)
     if (s.store_whatsapp) whatsapp = s.store_whatsapp
+    content = pageContent
   } catch (error) {
-    console.error("[HomePage] Failed to load site settings:", error)
+    console.error("[HomePage] Failed to load settings/content:", error)
   }
 
   const orgSchema = {
@@ -75,7 +82,7 @@ export default async function HomePage() {
       <Script id="breadcrumb-schema" type="application/ld+json" strategy="afterInteractive">
         {JSON.stringify(breadcrumbSchema([{ name: "Home", url: canonicalUrl("/") }]))}
       </Script>
-      <HomeContent />
+      <HomeContent content={content} />
     </>
   )
 }

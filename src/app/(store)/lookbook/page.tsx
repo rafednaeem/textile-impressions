@@ -5,6 +5,8 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { storeName, baseUrl } from "@/lib/constants"
 import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -77,6 +79,13 @@ const fallbackCollections: LookbookCollection[] = [
 ]
 
 export default async function LookbookPage() {
+  let content = defaultWebsiteContent.lookbook
+  try {
+    content = await getPageWebsiteContent("lookbook")
+  } catch (error) {
+    console.error("[LookbookPage] Failed to load content:", error)
+  }
+
   const supabase = await createClient()
   const { data } = await supabase
     .from("collections")
@@ -98,8 +107,8 @@ export default async function LookbookPage() {
       </Script>
       <div className="bg-brand-ivory pb-20 pt-28 text-brand-umber">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Lookbook</p>
-          <h1 className="mt-4 font-heading text-5xl font-semibold text-brand-indigo">Editorial collections</h1>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">{content.page_intro.label}</p>
+          <h1 className="mt-4 font-heading text-5xl font-semibold text-brand-indigo">{content.page_intro.heading}</h1>
         </div>
 
         <div className="mt-10 space-y-16">

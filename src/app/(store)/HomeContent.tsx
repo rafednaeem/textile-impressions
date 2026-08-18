@@ -10,6 +10,7 @@ import type { Artisan, Product } from "@/types/database"
 import Hero from "@/components/store/Hero"
 import ProductCard from "@/components/store/ProductCard"
 import ImpactCounters from "@/components/store/ImpactCounters"
+import type { getPageWebsiteContent } from "@/lib/website-content/server"
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -59,7 +60,12 @@ const fallbackArtisans: Artisan[] = [
 
 const fallbackUgc: { id: string; customer_name: string; image_url: string }[] = []
 
-export default function HomeContent() {
+export default function HomeContent({
+  content,
+}: {
+  content: Awaited<ReturnType<typeof getPageWebsiteContent>>
+}) {
+  const c = content
   const supabase = createClient()
   const [featured, setFeatured] = useState<Product[]>([])
   const [artisans, setArtisans] = useState<Artisan[]>(fallbackArtisans)
@@ -93,7 +99,7 @@ export default function HomeContent() {
 
   return (
     <div className="bg-white text-brand-indigo">
-      <Hero />
+      <Hero content={c.hero} />
 
       <section aria-hidden className="h-10 overflow-hidden bg-brand-ivory">
         <svg className="h-10 w-full" preserveAspectRatio="none" viewBox="0 0 400 40">
@@ -109,11 +115,9 @@ export default function HomeContent() {
 
       <section className="bg-brand-indigo py-4 text-brand-ivory">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 text-center font-heading text-sm font-semibold uppercase tracking-[0.18em] sm:px-6 lg:px-8">
-          <span>Handcrafted</span>
-          <span>Natural Dyes</span>
-          <span>Skills Training</span>
-          <span>Sustainable Livelihoods</span>
-          <span>Ships Nationwide</span>
+          {c.trust_bar.items.split(",").map((item) => (
+            <span key={item}>{item.trim()}</span>
+          ))}
         </div>
       </section>
 
@@ -122,10 +126,10 @@ export default function HomeContent() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div {...fadeUp} className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-heading text-4xl font-semibold text-brand-indigo">Featured products</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Handpicked pieces from our studio floor.</p>
+                <h2 className="font-heading text-4xl font-semibold text-brand-indigo">{c.featured_products.heading}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{c.featured_products.description}</p>
               </div>
-              <Link href="/shop" className="text-sm font-bold text-brand-crimson hover:text-brand-indigo">View all products</Link>
+              <Link href="/shop" className="text-sm font-bold text-brand-crimson hover:text-brand-indigo">{c.featured_products.link_text}</Link>
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((product) => (
@@ -139,7 +143,7 @@ export default function HomeContent() {
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="mb-8">
-            <h2 className="font-heading text-4xl font-semibold text-brand-indigo">The hands behind the craft</h2>
+            <h2 className="font-heading text-4xl font-semibold text-brand-indigo">{c.artisans.heading}</h2>
           </motion.div>
           <motion.div {...fadeUp} className="grid gap-5 md:grid-cols-3">
             {artisans.map((artisan) => (
@@ -160,9 +164,9 @@ export default function HomeContent() {
       <section className="bg-brand-indigo py-16 text-brand-ivory sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-[1.2fr_0.8fr] lg:px-8">
           <motion.div {...fadeUp}>
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-saffron">Our Impact</p>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-saffron">{c.impact.label}</p>
             <h2 className="mt-3 max-w-2xl font-heading text-4xl font-semibold sm:text-5xl">
-              Empowering cottage artisans since 2018
+              {c.impact.heading}
             </h2>
           </motion.div>
           <motion.div {...fadeUp}>
@@ -174,23 +178,22 @@ export default function HomeContent() {
       <section className="bg-brand-indigo/10 py-16 text-brand-forest sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-[1.2fr_0.8fr] lg:px-8">
           <motion.div {...fadeUp}>
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-terracotta">Incubator</p>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-terracotta">{c.incubator.label}</p>
             <h2 className="mt-3 max-w-2xl font-heading text-4xl font-semibold sm:text-5xl">
-              Where craft becomes enterprise
+              {c.incubator.heading}
             </h2>
             <p className="mt-4 max-w-xl text-brand-forest/80">
-              For artisans, graduates, and designers ready to turn textile skill into a sustainable business.
-              We provide studio access, practical mentoring, and connections to buyers.
+              {c.incubator.description}
             </p>
           </motion.div>
           <motion.div {...fadeUp} className="space-y-5">
             <ul className="space-y-3 text-lg">
-              {["Studio Access", "Mentorship & Counselling", "Market Linkage"].map((item) => (
-                <li key={item} className="border-b border-brand-forest/15 pb-3">{item}</li>
+              {c.incubator.list_items.split(",").map((item) => (
+                <li key={item} className="border-b border-brand-forest/15 pb-3">{item.trim()}</li>
               ))}
             </ul>
             <Link href="/incubator" className="inline-flex rounded-full bg-brand-saffron px-6 py-3 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
-              Learn about our incubator -&gt;
+              {c.incubator.cta}
             </Link>
           </motion.div>
         </div>
@@ -200,9 +203,9 @@ export default function HomeContent() {
         <section className="py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div {...fadeUp} className="mb-8 flex flex-wrap items-end justify-between gap-4">
-              <h2 className="font-heading text-4xl font-semibold text-brand-indigo">As worn by our customers</h2>
+              <h2 className="font-heading text-4xl font-semibold text-brand-indigo">{c.ugc.heading}</h2>
               <a href={shareHref} target="_blank" rel="noreferrer" className="rounded-full border border-brand-indigo px-5 py-2 text-sm font-bold text-brand-indigo transition hover:bg-brand-indigo hover:text-brand-ivory">
-                Share your look
+                {c.ugc.button_text}
               </a>
             </motion.div>
             <motion.div {...fadeUp} className="columns-2 gap-3 md:columns-3 lg:columns-6">

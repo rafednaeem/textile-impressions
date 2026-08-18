@@ -187,6 +187,15 @@ export interface SiteSetting {
   updated_at: string
 }
 
+export interface WebsiteContent {
+  id: string
+  page: string
+  section: string
+  field: string
+  value: string
+  updated_at: string
+}
+
 export interface WorkshopPayment {
   id: string
   registration_id: string
@@ -487,6 +496,12 @@ export interface Database {
         Row: SiteSetting
         Insert: Omit<SiteSetting, "updated_at">
         Update: Partial<Omit<SiteSetting, "key">>
+        Relationships: []
+      }
+      website_content: {
+        Row: WebsiteContent
+        Insert: Omit<WebsiteContent, "id" | "updated_at">
+        Update: Partial<Omit<WebsiteContent, "id" | "updated_at">>
         Relationships: []
       }
     }

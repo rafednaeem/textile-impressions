@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { Product, Category } from "@/types/database"
 import ProductCard from "@/components/store/ProductCard"
 import { useSiteSettings } from "@/hooks/useSiteSettings"
+import type { getPageWebsiteContent } from "@/lib/website-content/server"
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -16,31 +17,35 @@ const fadeUp = {
   transition: { duration: 0.55 },
 }
 
-const colorCategories = [
-  {
-    title: "Natural Dyes",
-    description: "Plant-based colors derived from madder root, indigo, pomegranate, and turmeric. Each batch carries the subtle variations that make hand-dyed textiles unique.",
-    icon: Leaf,
-    color: "bg-brand-forest/10 text-brand-forest",
-    href: "/shop?category=natural-dyes",
-  },
-  {
-    title: "Block Printing Paints",
-    description: "Formulated for traditional hand-carved block printing. Rich pigmentation with smooth transfer on cotton, linen, and silk.",
-    icon: Brush,
-    color: "bg-brand-terracotta/10 text-brand-terracotta",
-    href: "/shop?category=block-printing-paints",
-  },
-  {
-    title: "Fabric Paints",
-    description: "Versatile fabric paints for freehand painting, stenciling, and mixed media. Wash-resistant and designed for lasting vibrancy.",
-    icon: Palette,
-    color: "bg-brand-saffron/10 text-brand-umber",
-    href: "/shop?category=fabric-paints",
-  },
-]
-
-export default function ColorsContent() {
+export default function ColorsContent({
+  content,
+}: {
+  content: Awaited<ReturnType<typeof getPageWebsiteContent>>
+}) {
+  const c = content
+  const colorCategories = [
+    {
+      title: c.color_range.category_1_title,
+      description: c.color_range.category_1_description,
+      icon: Leaf,
+      color: "bg-brand-forest/10 text-brand-forest",
+      href: "/shop?category=natural-dyes",
+    },
+    {
+      title: c.color_range.category_2_title,
+      description: c.color_range.category_2_description,
+      icon: Brush,
+      color: "bg-brand-terracotta/10 text-brand-terracotta",
+      href: "/shop?category=block-printing-paints",
+    },
+    {
+      title: c.color_range.category_3_title,
+      description: c.color_range.category_3_description,
+      icon: Palette,
+      color: "bg-brand-saffron/10 text-brand-umber",
+      href: "/shop?category=fabric-paints",
+    },
+  ]
   const supabase = createClient()
   const { whatsappNumber } = useSiteSettings()
   const [products, setProducts] = useState<Product[]>([])
@@ -82,13 +87,12 @@ export default function ColorsContent() {
         </div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">Sustainable Colors</p>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-saffron">{c.hero.label}</p>
             <h1 className="mt-4 font-heading text-4xl font-semibold sm:text-5xl lg:text-6xl">
-              Colors rooted in nature
+              {c.hero.heading}
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-white/80">
-              From madder root reds to indigo blues — our palette is crafted by artisans using traditional methods
-              that honor both craft and environment.
+              {c.hero.description}
             </p>
           </motion.div>
         </div>
@@ -96,9 +100,9 @@ export default function ColorsContent() {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <motion.div {...fadeUp} className="mb-12">
-          <h2 className="font-heading text-3xl font-semibold text-brand-indigo">Our Color Range</h2>
+          <h2 className="font-heading text-3xl font-semibold text-brand-indigo">{c.color_range.heading}</h2>
           <p className="mt-2 text-muted-foreground">
-            Three categories of sustainable textile colors, each designed for different craft applications.
+            {c.color_range.description}
           </p>
         </motion.div>
 
@@ -127,38 +131,34 @@ export default function ColorsContent() {
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeUp} className="mb-8">
-            <h2 className="font-heading text-3xl font-semibold text-brand-indigo">Why Our Colors Matter</h2>
+            <h2 className="font-heading text-3xl font-semibold text-brand-indigo">{c.why_colors.heading}</h2>
           </motion.div>
           <div className="grid gap-8 md:grid-cols-2">
             <motion.div {...fadeUp} className="space-y-6">
               <div className="rounded-xl border border-border p-6">
-                <h3 className="font-heading text-lg font-semibold text-brand-forest">Zero Synthetic Chemicals</h3>
+                <h3 className="font-heading text-lg font-semibold text-brand-forest">{c.why_colors.card_1_title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Our natural dye range uses only plant-based colorants. No heavy metals, no azo dyes, no formaldehyde.
-                  Safe for artisans and safe for the people who wear the finished textiles.
+                  {c.why_colors.card_1_description}
                 </p>
               </div>
               <div className="rounded-xl border border-border p-6">
-                <h3 className="font-heading text-lg font-semibold text-brand-forest">Water-Based Formulas</h3>
+                <h3 className="font-heading text-lg font-semibold text-brand-forest">{c.why_colors.card_2_title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  All our block printing paints and fabric paints use water-based formulations that are easy to clean,
-                  low-odor, and gentle on natural fibers like cotton and linen.
+                  {c.why_colors.card_2_description}
                 </p>
               </div>
             </motion.div>
             <motion.div {...fadeUp} className="space-y-6">
               <div className="rounded-xl border border-border p-6">
-                <h3 className="font-heading text-lg font-semibold text-brand-forest">Artisan Crafted</h3>
+                <h3 className="font-heading text-lg font-semibold text-brand-forest">{c.why_colors.card_3_title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Each color batch is prepared by hand by our artisan partners. The natural variations you see are not
-                  defects — they are proof of human touch in an age of mass production.
+                  {c.why_colors.card_3_description}
                 </p>
               </div>
               <div className="rounded-xl border border-border p-6">
-                <h3 className="font-heading text-lg font-semibold text-brand-forest">Supporting Livelihoods</h3>
+                <h3 className="font-heading text-lg font-semibold text-brand-forest">{c.why_colors.card_4_title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Every purchase of our colors and paints directly supports the artisan families who prepare them.
-                  Your creative projects become part of a larger story of sustainable craft livelihoods.
+                  {c.why_colors.card_4_description}
                 </p>
               </div>
             </motion.div>
@@ -171,10 +171,10 @@ export default function ColorsContent() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div {...fadeUp} className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-heading text-3xl font-semibold text-brand-indigo">Shop Colors & Paints</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Browse our full collection of sustainable textile colors.</p>
+                <h2 className="font-heading text-3xl font-semibold text-brand-indigo">{c.shop_colors.heading}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{c.shop_colors.description}</p>
               </div>
-              <Link href="/shop" className="text-sm font-bold text-brand-terracotta hover:text-brand-indigo">View all products</Link>
+              <Link href="/shop" className="text-sm font-bold text-brand-terracotta hover:text-brand-indigo">{c.shop_colors.link_text}</Link>
             </motion.div>
             <motion.div {...fadeUp} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((product) => (
@@ -188,17 +188,16 @@ export default function ColorsContent() {
       <section className="bg-brand-indigo py-16 text-brand-ivory sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div {...fadeUp}>
-            <h2 className="font-heading text-3xl font-semibold sm:text-4xl">Ready to create something beautiful?</h2>
+            <h2 className="font-heading text-3xl font-semibold sm:text-4xl">{c.cta.heading}</h2>
             <p className="mt-4 text-lg text-brand-ivory/80">
-              Whether you are a professional textile artist or just starting out, our sustainable colors are designed
-              for your next project.
+              {c.cta.description}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/shop" className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-7 text-sm font-bold text-brand-umber transition hover:bg-brand-saffron/90">
-                Shop Colors & Paints
+                {c.cta.button_primary}
               </Link>
               <Link href="/custom-orders" className="inline-flex h-12 items-center justify-center rounded-full border border-brand-ivory px-7 text-sm font-bold text-brand-ivory transition hover:bg-brand-ivory hover:text-brand-indigo">
-                Custom Orders
+                {c.cta.button_secondary}
               </Link>
             </div>
           </motion.div>

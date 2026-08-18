@@ -3,6 +3,8 @@ import Script from "next/script"
 import { storeName, baseUrl } from "@/lib/constants"
 import { canonicalUrl, breadcrumbSchema } from "@/lib/seo"
 import ColorsContent from "./ColorsContent"
+import { defaultWebsiteContent } from "@/lib/website-content"
+import { getPageWebsiteContent } from "@/lib/website-content/server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -18,7 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function ColorsPage() {
+export default async function ColorsPage() {
+  let content = defaultWebsiteContent.colors
+  try {
+    content = await getPageWebsiteContent("colors")
+  } catch (error) {
+    console.error("[ColorsPage] Failed to load content:", error)
+  }
+
   const breadcrumb = breadcrumbSchema([
     { name: "Home", url: canonicalUrl("/") },
     { name: "Colors & Paints", url: canonicalUrl("/colors") },
@@ -29,7 +38,7 @@ export default function ColorsPage() {
       <Script id="breadcrumb-colors" type="application/ld+json" strategy="afterInteractive">
         {JSON.stringify(breadcrumb)}
       </Script>
-      <ColorsContent />
+      <ColorsContent content={content} />
     </>
   )
 }

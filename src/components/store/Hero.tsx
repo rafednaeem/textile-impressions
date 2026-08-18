@@ -5,8 +5,14 @@ import { motion } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import ShaderBackground from "./ShaderBackground"
 import Logo from "@/components/shared/Logo"
+import type { getPageWebsiteContent } from "@/lib/website-content/server"
 
-export default function Hero() {
+export default function Hero({
+  content,
+}: {
+  content: Awaited<ReturnType<typeof getPageWebsiteContent>>["hero"]
+}) {
+  const c = content
   function scrollToNextSection() {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
@@ -32,26 +38,24 @@ export default function Hero() {
           className="mx-auto w-full max-w-7xl"
         >
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-            <h1 className="font-display text-[clamp(3.5rem,15vw,6.5rem)] font-medium leading-[0.9] tracking-tight text-brand-indigo md:text-[clamp(4.5rem,10vw,7.5rem)]">
-              From Craft
-              <br /> to Career
+            <h1 className="font-display whitespace-pre-line text-[clamp(3.5rem,15vw,6.5rem)] font-medium leading-[0.9] tracking-tight text-brand-indigo md:text-[clamp(4.5rem,10vw,7.5rem)]">
+              {c.heading}
             </h1>
             <p className="mt-6 max-w-md font-heading text-lg italic leading-relaxed text-brand-indigo/80 sm:text-xl md:mt-8 md:text-2xl">
-              Handcrafted Pakistani textiles, artisan led skills training,
-              sustainable livelihoods.
+              {c.subtitle}
             </p>
             <div className="mt-8 flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center md:mt-10">
               <Link
                 href="/shop"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-brand-saffron px-10 text-center text-[11px] font-bold uppercase tracking-wider text-white shadow-lg shadow-brand-saffron/20 transition hover:bg-brand-saffron/90 sm:h-14 sm:min-w-[220px] sm:text-xs"
               >
-                Shop the Collection
+                {c.cta_primary}
               </Link>
               <Link
                 href="/skills-studio"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-brand-indigo/40 bg-white px-10 text-center text-[11px] font-bold uppercase tracking-wider text-brand-indigo transition hover:border-brand-indigo hover:bg-brand-indigo/5 sm:h-14 sm:min-w-[180px] sm:text-xs"
               >
-                Learn a Craft
+                {c.cta_secondary}
               </Link>
             </div>
           </div>

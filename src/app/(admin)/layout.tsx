@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  LayoutDashboard, ShoppingBag, Package, Users, Boxes, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap,
+  LayoutDashboard, ShoppingBag, Package, Users, Boxes, Settings, LogOut, Menu, X, ChevronDown, Camera, Images, Palette, ClipboardList, Handshake, GraduationCap, FileText,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Toaster } from "@/components/ui/sonner"
@@ -19,6 +19,7 @@ const navItems = [
   { href: "/admin/inventory", label: "Inventory", icon: Boxes },
   { href: "/admin/skills-studio", label: "Skills Studio", icon: GraduationCap },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/website-content", label: "Website Content", icon: FileText },
   { href: "/admin/artisans", label: "Artisans", icon: Palette },
   { href: "/admin/ugc-photos", label: "Customer Looks", icon: Images },
   { href: "/admin/collections", label: "Collections", icon: Camera },
