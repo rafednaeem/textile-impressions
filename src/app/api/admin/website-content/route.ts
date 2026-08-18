@@ -27,7 +27,11 @@ export async function GET() {
     .order("field")
 
   if (dbError) {
-    return NextResponse.json({ error: "Failed to load content" }, { status: 500 })
+    console.error("[WebsiteContentAPI] Load error:", dbError)
+    return NextResponse.json(
+      { error: `Failed to load content: ${dbError.message}` },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ data: data ?? [] })
@@ -69,7 +73,15 @@ export async function POST(request: Request) {
       .upsert(updates, { onConflict: "page,section,field" })
 
     if (upsertError) {
-      return NextResponse.json({ error: "Failed to save content" }, { status: 500 })
+      console.error("[WebsiteContentAPI] Save error:", upsertError)
+      let message = upsertError.message
+      if (message.toLowerCase().includes("row-level security") || message.toLowerCase().includes("rls")) {
+        message = `${message}. Check that migration 00014_website_content.sql has been applied and you are logged in as an admin.`
+      }
+      return NextResponse.json(
+        { error: `Failed to save content: ${message}` },
+        { status: 500 }
+      )
     }
 
     // Revalidate affected public paths.
@@ -85,7 +97,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+  } catch (err) {
+    console.error("[WebsiteContentAPI] Unexpected error:", err)
+    const message = err instanceof Error ? err.message : "Invalid request"
+    return NextResponse.json({ error: `Save failed: ${message}` }, { status: 400 })
   }
 }

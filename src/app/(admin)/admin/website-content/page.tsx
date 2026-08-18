@@ -47,15 +47,19 @@ export default function WebsiteContentAdminPage() {
 
   useEffect(() => {
     fetch("/api/admin/website-content")
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await parseError(res))
+        return res.json()
+      })
       .then((res) => {
         const data: WebsiteContent[] = res.data ?? []
         setRows(data)
         setEdits(buildMap(data))
         setLoading(false)
       })
-      .catch(() => {
-        toast.error("Failed to load content")
+      .catch((err) => {
+        console.error("[WebsiteContentAdmin] Load failed:", err)
+        toast.error(err instanceof Error ? err.message : "Failed to load content")
         setLoading(false)
       })
   }, [])
@@ -81,6 +85,16 @@ export default function WebsiteContentAdminPage() {
     }))
   }
 
+  const parseError = async (res: Response): Promise<string> => {
+    const text = await res.text()
+    try {
+      const json = JSON.parse(text)
+      return json.error || `Server returned ${res.status}`
+    } catch {
+      return `Server error ${res.status}: ${text.slice(0, 200)}`
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     const updates: { page: string; section: string; field: string; value: string }[] = []
@@ -104,15 +118,17 @@ export default function WebsiteContentAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Save failed")
+      if (!res.ok) throw new Error(await parseError(res))
 
       // Refresh rows so subsequent edits compare against DB.
-      const refreshed = await fetch("/api/admin/website-content").then((r) => r.json())
-      setRows(refreshed.data ?? [])
-      setEdits(buildMap(refreshed.data ?? []))
+      const refreshed = await fetch("/api/admin/website-content")
+      if (!refreshed.ok) throw new Error(await parseError(refreshed))
+      const refreshedData = await refreshed.json()
+      setRows(refreshedData.data ?? [])
+      setEdits(buildMap(refreshedData.data ?? []))
       toast.success("Content saved")
     } catch (err) {
+      console.error("[WebsiteContentAdmin] Save failed:", err)
       toast.error(err instanceof Error ? err.message : "Failed to save content")
     } finally {
       setSaving(false)
@@ -129,11 +145,12 @@ export default function WebsiteContentAdminPage() {
         method: "POST",
         body: formData,
       })
+      if (!res.ok) throw new Error(await parseError(res))
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Upload failed")
       setValue(section, field, data.url)
       toast.success("Image uploaded")
     } catch (err) {
+      console.error("[WebsiteContentAdmin] Upload failed:", err)
       toast.error(err instanceof Error ? err.message : "Failed to upload image")
     } finally {
       setUploadingField(null)
