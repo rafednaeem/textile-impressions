@@ -42,7 +42,7 @@ export default function WebsiteContentAdminPage() {
   const [rows, setRows] = useState<WebsiteContent[]>([])
   const [selectedPage, setSelectedPage] = useState<WebsiteContentPage>("home")
   const [edits, setEdits] = useState<ContentMap>({})
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [uploadingField, setUploadingField] = useState<string | null>(null)
 
   useEffect(() => {
@@ -241,7 +241,7 @@ export default function WebsiteContentAdminPage() {
                         )}
                         <div className="mt-2">
                           <button
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => fileInputRefs.current[`${section}.${field}`]?.click()}
                             disabled={uploadingField === `${section}.${field}`}
                             className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
                           >
@@ -253,7 +253,7 @@ export default function WebsiteContentAdminPage() {
                             {value ? "Replace Image" : "Upload Image"}
                           </button>
                           <input
-                            ref={fileInputRef}
+                            ref={(el) => { fileInputRefs.current[`${section}.${field}`] = el }}
                             type="file"
                             accept="image/jpeg,image/png,image/webp,image/avif"
                             className="hidden"
