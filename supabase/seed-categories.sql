@@ -42,6 +42,10 @@ BEGIN
     SELECT gen_random_uuid(), 'Fabric Paints', 'fabric-paints', 'Fabric paints and pigments', id, 3, TRUE
     FROM public.categories WHERE slug = 'sustainable-colors';
 
+    INSERT INTO public.categories (id, name, slug, description, parent_id, sort_order, is_active)
+    SELECT gen_random_uuid(), 'Screen Printing', 'screen-printing', 'Screen printing inks, supplies and tools', id, 4, TRUE
+    FROM public.categories WHERE slug = 'sustainable-colors';
+
     RAISE NOTICE 'Categories seeded successfully';
 
   ELSE

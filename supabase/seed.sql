@@ -99,6 +99,10 @@ INSERT INTO public.categories (id, name, slug, description, parent_id, sort_orde
 VALUES (gen_random_uuid(), 'Fabric Paints', 'fabric-paints', 'Fabric paints and pigments', v_cat_colors, 3, TRUE)
 RETURNING id INTO v_cat_fabric;
 
+-- Subcategory: Screen Printing (under Sustainable Colors)
+INSERT INTO public.categories (id, name, slug, description, parent_id, sort_order, is_active)
+VALUES (gen_random_uuid(), 'Screen Printing', 'screen-printing', 'Screen printing inks, supplies and tools', v_cat_colors, 4, TRUE);
+
 -- ============================================================
 -- PRODUCTS — Kurtas
 -- ============================================================
