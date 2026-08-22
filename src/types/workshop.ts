@@ -2,6 +2,8 @@ export type WorkshopFormat = 'in_person' | 'online' | 'hybrid'
 export type WorkshopLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels'
 export type WorkshopStatus = 'draft' | 'published' | 'completed' | 'cancelled'
 
+import type { WorkshopMedia } from './database'
+
 export type WorkshopRegistrationStatus =
   | 'pending'
   | 'awaiting_payment'
@@ -45,6 +47,7 @@ export interface Workshop {
   is_featured: boolean
   created_at: string
   updated_at: string
+  workshop_media?: WorkshopMedia[] | null
 }
 
 export interface WorkshopRegistration {

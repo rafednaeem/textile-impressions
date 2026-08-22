@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import type { MediaInput } from "@/lib/media"
 
 export async function GET(request: Request) {
   const { supabase, error } = await requireAdmin()
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     format, level, date_start, date_end, duration_minutes,
     location_address, online_meeting_platform, online_meeting_url,
     max_seats, fee, materials_included, materials_list,
-    status, is_featured,
+    status, is_featured, videos,
   } = body
 
   if (!title?.trim()) {
@@ -80,6 +81,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A workshop with this title already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: `Failed to create workshop: ${insertError.message}` }, { status: 500 })
+  }
+
+  const mediaItems: MediaInput[] = Array.isArray(videos) ? videos : []
+  if (mediaItems.length) {
+    await supabase.from("workshop_media").insert(
+      mediaItems.map((item: MediaInput, i: number) => ({
+        workshop_id: workshop.id,
+        url: item.url,
+        storage_path: item.storage_path ?? null,
+        alt_text: item.alt_text || title.trim(),
+        sort_order: i,
+        is_primary: i === 0,
+        media_type: item.media_type || "video",
+      }))
+    )
   }
 
   return NextResponse.json({ id: workshop.id })

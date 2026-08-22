@@ -5,14 +5,25 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { toast } from "sonner"
-import { ChevronLeft, Loader2, ImagePlus, X } from "lucide-react"
+import { ChevronLeft, Loader2, ImagePlus, X, Film, Play } from "lucide-react"
 import { WORKSHOP_FORMATS, WORKSHOP_LEVELS, WORKSHOP_STATUSES } from "@/lib/constants"
+import { createClient } from "@/lib/supabase/client"
+import type { MediaType } from "@/lib/media"
+
+interface VideoItem {
+  url: string
+  media_type: MediaType
+  storage_path?: string
+}
 
 export default function NewWorkshopPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingVideos, setUploadingVideos] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [videos, setVideos] = useState<VideoItem[]>([])
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -54,6 +65,68 @@ export default function NewWorkshopPage() {
     }
   }
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+
+    setUploadingVideos(true)
+    for (const file of files) {
+      try {
+        const metaRes = await fetch("/api/admin/upload/workshop-media/signed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            mediaType: "video",
+          }),
+        })
+
+        const data = await metaRes.json()
+        if (!metaRes.ok || !data.signedUrl) {
+          toast.error(`Upload failed for ${file.name}`, {
+            description: data.error || `Server returned ${metaRes.status}`,
+          })
+          continue
+        }
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .uploadToSignedUrl(data.path, data.token, file)
+
+        if (uploadError) {
+          toast.error(`Upload failed for ${file.name}`, {
+            description: uploadError.message || "Supabase upload failed",
+          })
+          continue
+        }
+
+        setVideos((prev) => [...prev, { url: data.url, media_type: data.media_type, storage_path: data.path }])
+        toast.success("Video uploaded", { description: file.name })
+      } catch (err) {
+        toast.error(`Upload failed for ${file.name}`, {
+          description: err instanceof Error ? err.message : "Unexpected error",
+        })
+      }
+    }
+    setUploadingVideos(false)
+  }
+
+  const removeVideo = (index: number) => {
+    setVideos((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const moveVideo = (index: number, direction: "up" | "down") => {
+    setVideos((prev) => {
+      const next = [...prev]
+      const target = direction === "up" ? index - 1 : index + 1
+      if (target < 0 || target >= next.length) return prev
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim()) {
@@ -73,6 +146,12 @@ export default function NewWorkshopPage() {
           duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
           max_seats: form.max_seats ? parseInt(form.max_seats) : null,
           fee: parseFloat(form.fee) || 0,
+          videos: videos.map((v) => ({
+            url: v.url,
+            storage_path: v.storage_path ?? null,
+            alt_text: form.title.trim(),
+            media_type: v.media_type,
+          })),
         }),
       })
 
@@ -122,6 +201,55 @@ export default function NewWorkshopPage() {
               </button>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="font-heading text-lg font-semibold">Workshop Videos</h2>
+          <p className="text-sm text-muted-foreground">Short clips showing the work participants will do (MP4, WebM or MOV, max 50MB).</p>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {videos.map((item, i) => (
+              <div key={i} className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
+                <video src={item.url} preload="metadata" className="h-full w-full object-cover" muted playsInline />
+
+                {i === 0 && (
+                  <span className="absolute left-1 top-1 rounded bg-brand-forest px-1.5 py-0.5 text-[10px] text-white">Primary</span>
+                )}
+
+                <span className="absolute right-1 top-1 flex items-center gap-1 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
+                  <Film className="h-3 w-3" /> Video
+                </span>
+
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <Play className="h-8 w-8 text-white/80 drop-shadow-md" />
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
+                  <button type="button" onClick={() => moveVideo(i, "up")} disabled={i === 0} className="rounded bg-white p-1 disabled:opacity-30">
+                    <ChevronLeft className="h-3 w-3 text-brand-forest" />
+                  </button>
+                  <button type="button" onClick={() => moveVideo(i, "down")} disabled={i === videos.length - 1} className="rotate-180 rounded bg-white p-1 disabled:opacity-30">
+                    <ChevronLeft className="h-3 w-3 text-brand-forest" />
+                  </button>
+                  <button type="button" onClick={() => removeVideo(i)} className="rounded bg-white p-1">
+                    <X className="h-3 w-3 text-red-500" />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:border-brand-forest">
+              {uploadingVideos ? (
+                <Loader2 className="h-5 w-5 animate-spin text-brand-forest" />
+              ) : (
+                <>
+                  <Film className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Upload Videos</span>
+                </>
+              )}
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" multiple className="hidden" onChange={handleVideoUpload} disabled={uploadingVideos} />
+            </label>
           </div>
         </div>
 

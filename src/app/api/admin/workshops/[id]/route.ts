@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/supabase/admin"
+import {
+  WORKSHOP_MEDIA_BUCKET,
+  deleteStorageObject,
+  getStoragePathFromUrl,
+  type MediaInput,
+} from "@/lib/media"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { supabase, error } = await requireAdmin()
@@ -8,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const { data, error: fetchError } = await supabase
     .from("workshops")
-    .select("*")
+    .select("*, workshop_media(*)")
     .eq("id", id)
     .single()
 
@@ -75,6 +81,42 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Failed to update workshop" }, { status: 500 })
   }
 
+  const hasVideos = body.videos !== undefined
+  if (hasVideos) {
+    const mediaItems: MediaInput[] = Array.isArray(body.videos) ? body.videos : []
+
+    const { data: existingMedia } = await supabase
+      .from("workshop_media")
+      .select("url, storage_path")
+      .eq("workshop_id", id)
+
+    const newUrls = new Set(mediaItems.map((m) => m.url))
+    const removed = (existingMedia || []).filter(
+      (m: { url: string; storage_path: string | null }) => !newUrls.has(m.url)
+    )
+
+    await supabase.from("workshop_media").delete().eq("workshop_id", id)
+
+    if (mediaItems.length) {
+      await supabase.from("workshop_media").insert(
+        mediaItems.map((item: MediaInput, i: number) => ({
+          workshop_id: id,
+          url: item.url,
+          storage_path: item.storage_path ?? null,
+          alt_text: item.alt_text || "",
+          sort_order: i,
+          is_primary: i === 0,
+          media_type: item.media_type || "video",
+        }))
+      )
+    }
+
+    for (const removedItem of removed) {
+      const path = removedItem.storage_path || getStoragePathFromUrl(removedItem.url, WORKSHOP_MEDIA_BUCKET)
+      if (path) await deleteStorageObject(supabase, WORKSHOP_MEDIA_BUCKET, path)
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }
 
@@ -83,8 +125,18 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   if (error) return error
 
   const { id } = await params
+  const { data: mediaToDelete } = await supabase
+    .from("workshop_media")
+    .select("url, storage_path")
+    .eq("workshop_id", id)
+
   const { error: deleteError } = await supabase.from("workshops").delete().eq("id", id)
   if (deleteError) return NextResponse.json({ error: "Failed to delete workshop" }, { status: 500 })
+
+  for (const item of mediaToDelete || []) {
+    const path = item.storage_path || getStoragePathFromUrl(item.url, WORKSHOP_MEDIA_BUCKET)
+    if (path) await deleteStorageObject(supabase, WORKSHOP_MEDIA_BUCKET, path)
+  }
 
   return NextResponse.json({ ok: true })
 }

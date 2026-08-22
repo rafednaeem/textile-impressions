@@ -237,6 +237,18 @@ export interface ProductMedia {
 /** @deprecated Use ProductMedia for new code. ProductImage is kept for backward compatibility. */
 export type ProductImage = ProductMedia
 
+export interface WorkshopMedia {
+  id: string
+  workshop_id: string
+  url: string
+  storage_path: string | null
+  alt_text: string | null
+  sort_order: number
+  is_primary: boolean
+  media_type: MediaType
+  created_at: string
+}
+
 export interface ProductVariant {
   id: string
   product_id: string
@@ -472,6 +484,12 @@ export interface Database {
         Row: Workshop
         Insert: Omit<Workshop, "id" | "created_at" | "updated_at">
         Update: Partial<Omit<Workshop, "id">>
+        Relationships: []
+      }
+      workshop_media: {
+        Row: WorkshopMedia
+        Insert: Omit<WorkshopMedia, "id" | "created_at">
+        Update: Partial<Omit<WorkshopMedia, "id" | "created_at">>
         Relationships: []
       }
       workshop_registrations: {

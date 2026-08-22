@@ -40,7 +40,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const supabase = await createClient()
   const { data: workshop } = await supabase
     .from("workshops")
-    .select("*")
+    .select("*, workshop_media(*)")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -94,7 +94,6 @@ export default async function WorkshopDetailPage({ params }: Props) {
       <WorkshopDetailContent
         workshop={workshop as any}
         userRegistrationStatus={userRegistrationStatus}
-      />
-    </>
+      />    </>
   )
 }

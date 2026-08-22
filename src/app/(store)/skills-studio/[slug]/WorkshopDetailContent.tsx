@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import type { Workshop } from "@/types/workshop"
 import { WORKSHOP_FORMAT_LABELS, WORKSHOP_LEVEL_LABELS } from "@/lib/constants"
+import { getWorkshopVideos } from "@/lib/media"
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return null
@@ -32,6 +33,7 @@ export default function WorkshopDetailContent({
   const spotsLeft = workshop.seats_remaining ?? null
   const isConfirmed = userRegistrationStatus === "confirmed"
   const showMeetingLink = isConfirmed && workshop.online_meeting_url && workshop.format !== "in_person"
+  const videos = getWorkshopVideos(workshop.workshop_media)
 
   return (
     <div className="bg-brand-ivory">
@@ -50,6 +52,24 @@ export default function WorkshopDetailContent({
             ) : (
               <div className="flex aspect-[16/9] items-center justify-center rounded-xl bg-brand-indigo/10">
                 <Calendar className="h-16 w-16 text-brand-indigo/30" />
+              </div>
+            )}
+
+            {videos.length > 0 && (
+              <div className="mt-6">
+                <h2 className="mb-3 font-heading text-lg font-semibold text-brand-indigo">Workshop Preview</h2>
+                <div className={`grid gap-4 ${videos.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                  {videos.map((video) => (
+                    <video
+                      key={video.id}
+                      src={video.url}
+                      controls
+                      preload="metadata"
+                      aria-label={video.alt_text || `${workshop.title} preview video`}
+                      className="aspect-[16/9] w-full rounded-xl border border-border bg-black object-cover"
+                    />
+                  ))}
+                </div>
               </div>
             )}
 

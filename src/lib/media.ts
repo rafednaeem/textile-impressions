@@ -1,9 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { ProductMedia } from "@/types/database"
+import type { ProductMedia, WorkshopMedia } from "@/types/database"
 
 export type MediaType = "image" | "video"
 
 export const PRODUCT_MEDIA_BUCKET = "product-images"
+export const WORKSHOP_MEDIA_BUCKET = "product-images"
+
+export type MediaContext = "products" | "workshops"
 
 export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"]
 export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
@@ -55,8 +58,9 @@ export function validateMediaMetadata(
   return { ok: true }
 }
 
-export function mediaFolder(mediaType: MediaType): string {
-  return mediaType === "video" ? "products/videos" : "products"
+export function mediaFolder(mediaType: MediaType, context: MediaContext = "products"): string {
+  const prefix = context === "workshops" ? "workshops" : "products"
+  return mediaType === "video" ? `${prefix}/videos` : prefix
 }
 
 export function getStoragePathFromUrl(url: string, bucket: string): string | null {
@@ -123,4 +127,8 @@ export function getPrimaryImage(media: ProductMedia[] | null | undefined): Produ
 
 export function hasProductVideo(media: ProductMedia[] | null | undefined): boolean {
   return getProductVideos(media).length > 0
+}
+
+export function getWorkshopVideos(media: WorkshopMedia[] | null | undefined): WorkshopMedia[] {
+  return (media ?? []).filter(isVideo)
 }
